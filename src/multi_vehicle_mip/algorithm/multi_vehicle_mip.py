@@ -1,35 +1,41 @@
 from typing import Sequence
-from ortools.linear_solver import pywraplp
 
 import attr
+from ortools.linear_solver import pywraplp
 
 from common.custom_types import (
     AMatrix,
     BMatrix,
     ControlVector,
+    CostVector,
     PointXYArray,
     Polygon2DArray,
     StateTrajectoryArray,
     StateVector,
     VelocityXYArray,
 )
-from src.multi_vehicle_mip.algorithm.utils import control_variable_str_from_ids, state_variable_str_from_ids
+from src.multi_vehicle_mip.algorithm.utils import (
+    control_variable_str_from_ids,
+    state_variable_str_from_ids,
+)
 
 
-@attr.s(auto_attribs=True, frozen=True)
+@attr.frozen
 class MVMIPVehicleDynamics:
     a_matrix: AMatrix
     b_matrix: BMatrix
     initial_state: StateVector
     final_state: StateVector
+    # Clearance for other vehicles around this one.
+    clearance_m: float
 
 
 @attr.s(auto_attribs=True, frozen=True)
 class MVMIPVehicleOptimizationParams:
     num_time_steps: int
-    q_cost: float
-    r_cost: float
-    p_cost: float
+    q_cost_vector: CostVector
+    r_cost_vector: CostVector
+    p_cost_vector: CostVector
     state_min: StateVector
     state_max: StateVector
     control_min: ControlVector
@@ -47,6 +53,7 @@ class MVMIPObstacle:
     polygon: Polygon2DArray
     start_xy: PointXYArray
     velocity_xy: VelocityXYArray
+    clearance_m: float
 
 
 def solve_mv_mip(
