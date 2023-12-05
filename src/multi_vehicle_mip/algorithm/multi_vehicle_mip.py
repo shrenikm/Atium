@@ -14,10 +14,14 @@ from common.custom_types import (
     StateVector,
     VelocityXYArray,
 )
-from src.multi_vehicle_mip.algorithm.utils import (
-    control_variable_str_from_ids,
-    state_variable_str_from_ids,
-)
+from src.multi_vehicle_mip.algorithm.utils import \
+    control_slack_variable_str_from_ids as csv
+from src.multi_vehicle_mip.algorithm.utils import \
+    control_variable_str_from_ids as cv
+from src.multi_vehicle_mip.algorithm.utils import \
+    state_slack_variable_str_from_ids as ssv
+from src.multi_vehicle_mip.algorithm.utils import \
+    state_variable_str_from_ids as sv
 
 
 @attr.frozen
@@ -26,7 +30,7 @@ class MVMIPVehicleDynamics:
     b_matrix: BMatrix
     initial_state: StateVector
     final_state: StateVector
-    # Clearance for other vehicles around this one.
+    # Clearance required to be maintained by other vehicles to this one.
     clearance_m: float
 
 
@@ -72,9 +76,10 @@ def solve_mv_mip(
         nt = vehicle.optimization_params.num_time_steps
         nx = vehicle.dynamics.a_matrix.shape[0]
         nu = vehicle.dynamics.b_matrix.shape[1]
-        for time_step_id in range(nt):
+        for time_step_id in range(1, nt + 1):
             for state_id in range(nx):
-                var_str = state_variable_str_from_ids(
+                # State variable
+                var_str = sv(
                     vehicle_id=vehicle_id,
                     time_step_id=time_step_id,
                     state_id=state_id,
@@ -83,8 +88,18 @@ def solve_mv_mip(
                 max_limit = vehicle.optimization_params.state_max[state_id]
                 vars[var_str] = solver.NumVar(min_limit, max_limit, var_str)
 
+                # State slack variable
+                var_str = ssv(
+                    vehicle_id=vehicle_id,
+                    time_step_id=time_step_id,
+                    state_id=state_id,
+                )
+                vars[var_str] = solver.NumVar(-solver.infinity(), solver.infinity(), var_str)
+
+        for time_step_id in range(0, nt):
             for control_id in range(nu):
-                var_str = control_variable_str_from_ids(
+                # Control variable
+                var_str = cv(
                     vehicle_id=vehicle_id,
                     time_step_id=time_step_id,
                     control_id=control_id,
@@ -92,3 +107,12 @@ def solve_mv_mip(
                 min_limit = vehicle.optimization_params.state_min[control_id]
                 max_limit = vehicle.optimization_params.state_max[control_id]
                 vars[var_str] = solver.NumVar(min_limit, max_limit, var_str)
+
+                # Control slack variable
+                var_str = csv(
+                    vehicle_id=vehicle_id,
+                    time_step_id=time_step_id,
+                    control_id=control_id,
+                )
+                vars[var_str] = solver.NumVar(-solver.infinity(), solver.infinity(), var_str)
+
