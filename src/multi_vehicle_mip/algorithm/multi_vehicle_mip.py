@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Dict, Sequence
 
 import attr
 from ortools.linear_solver import pywraplp
@@ -20,18 +20,23 @@ from src.multi_vehicle_mip.algorithm.utils import \
 from src.multi_vehicle_mip.algorithm.utils import \
     control_variable_str_from_ids as cv
 from src.multi_vehicle_mip.algorithm.utils import \
+    obstacle_collision_binary_slack_variable_str_from_ids as obsv
+from src.multi_vehicle_mip.algorithm.utils import \
     state_slack_variable_str_from_ids as ssv
 from src.multi_vehicle_mip.algorithm.utils import \
     state_variable_str_from_ids as sv
 from src.multi_vehicle_mip.algorithm.utils import \
     vehicle_collision_binary_slack_variable_str_from_ids as vbsv
-from src.multi_vehicle_mip.algorithm.utils import \
-    obstacle_collision_binary_slack_variable_str_from_ids as obsv
+
+# Types
+SolverVariable = pywraplp.Variable
+Solver = pywraplp.Solver
 
 
 @attr.frozen
 class MVMIPOptimizationParams:
     num_time_steps: int
+
 
 @attr.frozen
 class MVMIPVehicleDynamics:
@@ -64,11 +69,13 @@ class MVMIPVehicle:
 class MVMIPObstacle:
     pass
 
+
 @attr.frozen
 class MVMIPRectangleObstacle(MVMIPObstacle):
     center: PointXYVector
     x_size_m: float
     y_size_m: float
+
 
 @attr.frozen
 class MVMIPPolygonObstacle(MVMIPObstacle):
@@ -78,16 +85,12 @@ class MVMIPPolygonObstacle(MVMIPObstacle):
     clearance_m: float
 
 
-def solve_mv_mip(
+def create_variables_for_mv_mip(
+    solver: Solver,
     mvmip_params: MVMIPOptimizationParams,
     vehicles: Sequence[MVMIPVehicle],
     obstacles: Sequence[MVMIPObstacle],
-) -> Sequence[StateTrajectoryArray]:
-
-    # TODO: Check validity of vehicles and obstacles.
-
-    solver: pywraplp.Solver = pywraplp.Solver.CreateSolver("GLOP")
-    assert solver is not None, "Solver could not be created."
+) -> Dict[str, SolverVariable]:
 
     nt = mvmip_params.num_time_steps
 
@@ -114,7 +117,9 @@ def solve_mv_mip(
                     time_step_id=time_step_id,
                     state_id=state_id,
                 )
-                vars[var_str] = solver.NumVar(-solver.infinity(), solver.infinity(), var_str)
+                vars[var_str] = solver.NumVar(
+                    -solver.infinity(), solver.infinity(), var_str
+                )
 
         for time_step_id in range(nt):
             for control_id in range(nu):
@@ -134,20 +139,21 @@ def solve_mv_mip(
                     time_step_id=time_step_id,
                     control_id=control_id,
                 )
-                vars[var_str] = solver.NumVar(-solver.infinity(), solver.infinity(), var_str)
+                vars[var_str] = solver.NumVar(
+                    -solver.infinity(), solver.infinity(), var_str
+                )
 
         # Binary variables for vehicle-vehicle collision constraint variables.
         for time_step_id in range(1, nt + 1):
             for other_vehicle_id in range(vehicle_id + 1, len(vehicles)):
                 for var_id in range(4):
                     var_str = vbsv(
-                            vehicle_id=vehicle_id,
-                            other_vehicle_id=other_vehicle_id,
-                            time_step_id=time_step_id,
-                            var_id=var_id,
+                        vehicle_id=vehicle_id,
+                        other_vehicle_id=other_vehicle_id,
+                        time_step_id=time_step_id,
+                        var_id=var_id,
                     )
                     vars[var_str] = solver.IntVar(0, 1, var_str)
-
 
         # Vehicle-obstacle collision constraint variables.
         for time_step_id in range(1, nt + 1):
@@ -155,15 +161,34 @@ def solve_mv_mip(
                 if isinstance(obstacle, MVMIPRectangleObstacle):
                     for var_id in range(4):
                         var_str = obsv(
-                                vehicle_id=vehicle_id,
-                                obstacle_id=obstacle_id,
-                                time_step_id=time_step_id,
-                                var_id=var_id,
+                            vehicle_id=vehicle_id,
+                            obstacle_id=obstacle_id,
+                            time_step_id=time_step_id,
+                            var_id=var_id,
                         )
                         vars[var_str] = solver.IntVar(0, 1, var_str)
                 else:
-                    raise NotImplemented("Only rectangular obstacles have been implemented.")
+                    raise NotImplemented(
+                        "Only rectangular obstacles have been implemented."
+                    )
+
+    return vars
 
 
+def solve_mv_mip(
+    mvmip_params: MVMIPOptimizationParams,
+    vehicles: Sequence[MVMIPVehicle],
+    obstacles: Sequence[MVMIPObstacle],
+) -> Sequence[StateTrajectoryArray]:
 
+    # TODO: Check validity of vehicles and obstacles.
 
+    solver: pywraplp.Solver = pywraplp.Solver.CreateSolver("SCIP")
+    assert solver is not None, "Solver could not be created."
+
+    vars = create_variables_for_mv_mip(
+        solver=solver,
+        mvmip_params=mvmip_params,
+        vehicles=vehicles,
+        obstacles=obstacles,
+    )
