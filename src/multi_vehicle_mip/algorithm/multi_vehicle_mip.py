@@ -85,7 +85,7 @@ class MVMIPPolygonObstacle(MVMIPObstacle):
     clearance_m: float
 
 
-def create_variables_for_mv_mip(
+def create_variables_for_mvmip(
     solver: Solver,
     mvmip_params: MVMIPOptimizationParams,
     vehicles: Sequence[MVMIPVehicle],
@@ -175,7 +175,7 @@ def create_variables_for_mv_mip(
     return vars
 
 
-def solve_mv_mip(
+def solve_mvmip(
     mvmip_params: MVMIPOptimizationParams,
     vehicles: Sequence[MVMIPVehicle],
     obstacles: Sequence[MVMIPObstacle],
@@ -186,7 +186,7 @@ def solve_mv_mip(
     solver: pywraplp.Solver = pywraplp.Solver.CreateSolver("SCIP")
     assert solver is not None, "Solver could not be created."
 
-    vars = create_variables_for_mv_mip(
+    vars = create_variables_for_mvmip(
         solver=solver,
         mvmip_params=mvmip_params,
         vehicles=vehicles,
