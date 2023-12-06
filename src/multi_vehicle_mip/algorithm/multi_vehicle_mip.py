@@ -9,6 +9,7 @@ from common.custom_types import (
     ControlVector,
     CostVector,
     PointXYArray,
+    PointXYVector,
     Polygon2DArray,
     StateTrajectoryArray,
     StateVector,
@@ -22,7 +23,15 @@ from src.multi_vehicle_mip.algorithm.utils import \
     state_slack_variable_str_from_ids as ssv
 from src.multi_vehicle_mip.algorithm.utils import \
     state_variable_str_from_ids as sv
+from src.multi_vehicle_mip.algorithm.utils import \
+    vehicle_collision_binary_slack_variable_str_from_ids as vbsv
+from src.multi_vehicle_mip.algorithm.utils import \
+    obstacle_collision_binary_slack_variable_str_from_ids as obsv
 
+
+@attr.frozen
+class MVMIPOptimizationParams:
+    num_time_steps: int
 
 @attr.frozen
 class MVMIPVehicleDynamics:
@@ -34,9 +43,8 @@ class MVMIPVehicleDynamics:
     clearance_m: float
 
 
-@attr.s(auto_attribs=True, frozen=True)
+@attr.frozen
 class MVMIPVehicleOptimizationParams:
-    num_time_steps: int
     q_cost_vector: CostVector
     r_cost_vector: CostVector
     p_cost_vector: CostVector
@@ -46,21 +54,32 @@ class MVMIPVehicleOptimizationParams:
     control_max: ControlVector
 
 
-@attr.s(auto_attribs=True, frozen=True)
+@attr.frozen
 class MVMIPVehicle:
     dynamics: MVMIPVehicleDynamics
     optimization_params: MVMIPVehicleOptimizationParams
 
 
-@attr.s(auto_attribs=True, frozen=True)
+@attr.frozen
 class MVMIPObstacle:
+    pass
+
+@attr.frozen
+class MVMIPRectangleObstacle(MVMIPObstacle):
+    center: PointXYVector
+    x_size_m: float
+    y_size_m: float
+
+@attr.frozen
+class MVMIPPolygonObstacle(MVMIPObstacle):
     polygon: Polygon2DArray
     start_xy: PointXYArray
-    velocity_xy: VelocityXYArray
+    velocity_xy_mps: VelocityXYArray
     clearance_m: float
 
 
 def solve_mv_mip(
+    mvmip_params: MVMIPOptimizationParams,
     vehicles: Sequence[MVMIPVehicle],
     obstacles: Sequence[MVMIPObstacle],
 ) -> Sequence[StateTrajectoryArray]:
@@ -70,10 +89,11 @@ def solve_mv_mip(
     solver: pywraplp.Solver = pywraplp.Solver.CreateSolver("GLOP")
     assert solver is not None, "Solver could not be created."
 
+    nt = mvmip_params.num_time_steps
+
     vars = dict()
     # Creating state and control trajectory variables for each vehicle.
     for vehicle_id, vehicle in enumerate(vehicles):
-        nt = vehicle.optimization_params.num_time_steps
         nx = vehicle.dynamics.a_matrix.shape[0]
         nu = vehicle.dynamics.b_matrix.shape[1]
         for time_step_id in range(1, nt + 1):
@@ -96,7 +116,7 @@ def solve_mv_mip(
                 )
                 vars[var_str] = solver.NumVar(-solver.infinity(), solver.infinity(), var_str)
 
-        for time_step_id in range(0, nt):
+        for time_step_id in range(nt):
             for control_id in range(nu):
                 # Control variable
                 var_str = cv(
@@ -115,4 +135,35 @@ def solve_mv_mip(
                     control_id=control_id,
                 )
                 vars[var_str] = solver.NumVar(-solver.infinity(), solver.infinity(), var_str)
+
+        # Binary variables for vehicle-vehicle collision constraint variables.
+        for time_step_id in range(1, nt + 1):
+            for other_vehicle_id in range(vehicle_id + 1, len(vehicles)):
+                for var_id in range(4):
+                    var_str = vbsv(
+                            vehicle_id=vehicle_id,
+                            other_vehicle_id=other_vehicle_id,
+                            time_step_id=time_step_id,
+                            var_id=var_id,
+                    )
+                    vars[var_str] = solver.IntVar(0, 1, var_str)
+
+
+        # Vehicle-obstacle collision constraint variables.
+        for time_step_id in range(1, nt + 1):
+            for obstacle_id, obstacle in enumerate(obstacles):
+                if isinstance(obstacle, MVMIPRectangleObstacle):
+                    for var_id in range(4):
+                        var_str = obsv(
+                                vehicle_id=vehicle_id,
+                                obstacle_id=obstacle_id,
+                                time_step_id=time_step_id,
+                                var_id=var_id,
+                        )
+                        vars[var_str] = solver.IntVar(0, 1, var_str)
+                else:
+                    raise NotImplemented("Only rectangular obstacles have been implemented.")
+
+
+
 
