@@ -1,6 +1,6 @@
 from typing import Dict, Sequence
-
 import attr
+
 from ortools.linear_solver import pywraplp
 
 from common.custom_types import (
@@ -15,18 +15,21 @@ from common.custom_types import (
     StateVector,
     VelocityXYArray,
 )
-from src.multi_vehicle_mip.algorithm.utils import \
-    control_slack_variable_str_from_ids as csv
-from src.multi_vehicle_mip.algorithm.utils import \
-    control_variable_str_from_ids as cv
-from src.multi_vehicle_mip.algorithm.utils import \
-    obstacle_collision_binary_slack_variable_str_from_ids as obsv
-from src.multi_vehicle_mip.algorithm.utils import \
-    state_slack_variable_str_from_ids as ssv
-from src.multi_vehicle_mip.algorithm.utils import \
-    state_variable_str_from_ids as sv
-from src.multi_vehicle_mip.algorithm.utils import \
-    vehicle_collision_binary_slack_variable_str_from_ids as vbsv
+from src.multi_vehicle_mip.algorithm.utils import (
+    control_slack_constraint_var_from_var_strs as csc,
+    control_slack_variable_str_from_ids as csv,
+    control_variable_str_from_ids as cv,
+    state_slack_constraint_var_from_var_strs as ssc,
+    state_slack_variable_str_from_ids as ssv,
+    state_transition_constraint_var_from_var_strs as stc,
+    state_variable_str_from_ids as sv,
+    vehicle_obstacle_collision_binary_constraint_var_from_ids as ocbc,
+    vehicle_obstacle_collision_binary_slack_variable_str_from_ids as obsv,
+    vehicle_obstacle_collision_constraint_var_from_var_strs as occ,
+    vehicle_vehicle_collision_binary_constraint_var_from_ids as vcbc,
+    vehicle_vehicle_collision_binary_slack_variable_str_from_ids as vbsv,
+    vehicle_vehicle_collision_constraint_var_from_var_strs as vcc,
+)
 
 # Types
 SolverVariable = pywraplp.Variable
@@ -169,10 +172,47 @@ def create_variables_for_mvmip(
                         vars[var_str] = solver.IntVar(0, 1, var_str)
                 else:
                     raise NotImplemented(
-                        "Only rectangular obstacles have been implemented."
+                        "Only rectangular obstacles have been implemented so far."
                     )
 
     return vars
+
+
+def construct_constraints_for_mvmip(
+    solver: Solver,
+    mvmip_params: MVMIPOptimizationParams,
+    vehicles: Sequence[MVMIPVehicle],
+    obstacles: Sequence[MVMIPObstacle],
+) -> None:
+
+    nt = mvmip_params.num_time_steps
+
+    constraints = dict()
+
+    for vehicle_id, vehicle in enumerate(vehicles):
+
+        # State slack constraints
+        nx = vehicle.dynamics.a_matrix.shape[0]
+        nu = vehicle.dynamics.b_matrix.shape[1]
+        for time_step_id in range(1, nt + 1):
+            for state_id in range(nx):
+                # State and state slack variables
+                s_var_str = sv(
+                    vehicle_id=vehicle_id,
+                    time_step_id=time_step_id,
+                    state_id=state_id,
+                )
+                w_var_str = ssv(
+                    vehicle_id=vehicle_id,
+                    time_step_id=time_step_id,
+                    state_id=state_id,
+                )
+                constraint = solver.Constraint(
+                    -solver.infinity(), 0, f"c_{s_var_str}_{w_var_str}"
+                )
+                vars[var_str] = solver.NumVar(min_limit, max_limit, var_str)
+
+                # State slack variable
 
 
 def solve_mvmip(
