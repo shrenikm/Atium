@@ -102,3 +102,4 @@ def vehicle_obstacle_collision_binary_constraint_var_from_ids(
     time_step_id: int,
 ) -> str:
     return f"c_ts_{vehicle_id}_{obstacle_id}_{time_step_id}"  # Sum of t's constraint
+

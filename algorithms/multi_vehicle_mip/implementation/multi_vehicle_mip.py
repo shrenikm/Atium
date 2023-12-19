@@ -15,7 +15,7 @@ from common.custom_types import (
     StateVector,
     VelocityXYArray,
 )
-from src.multi_vehicle_mip.algorithm.utils import (
+from algorithms.multi_vehicle_mip.implementation.utils import (
     control_slack_constraint_var_from_var_strs as csc,
     control_slack_variable_str_from_ids as csv,
     control_variable_str_from_ids as cv,
@@ -39,6 +39,7 @@ Solver = pywraplp.Solver
 @attr.frozen
 class MVMIPOptimizationParams:
     num_time_steps: int
+    dt: float
 
 
 @attr.frozen
@@ -78,6 +79,8 @@ class MVMIPRectangleObstacle(MVMIPObstacle):
     center: PointXYVector
     x_size_m: float
     y_size_m: float
+    velocity_xy_mps: VelocityXYArray
+    clearance_m: float
 
 
 @attr.frozen
@@ -208,7 +211,7 @@ def construct_constraints_for_mvmip(
                     state_id=state_id,
                 )
                 constraint = solver.Constraint(
-                    -solver.infinity(), 0, f"c_{s_var_str}_{w_var_str}"
+                    -solver.infinity(), 0.0, f"c_{s_var_str}_{w_var_str}"
                 )
                 vars[var_str] = solver.NumVar(min_limit, max_limit, var_str)
 
