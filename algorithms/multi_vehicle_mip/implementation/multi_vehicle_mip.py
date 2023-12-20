@@ -16,24 +16,27 @@ from common.custom_types import (
     VelocityXYArray,
 )
 from algorithms.multi_vehicle_mip.implementation.utils import (
-    control_slack_constraint_var_from_var_strs as csc,
-    control_slack_variable_str_from_ids as csv,
-    control_variable_str_from_ids as cv,
-    state_slack_constraint_var_from_var_strs as ssc,
-    state_slack_variable_str_from_ids as ssv,
-    state_transition_constraint_var_from_var_strs as stc,
     state_variable_str_from_ids as sv,
-    vehicle_obstacle_collision_binary_constraint_var_from_ids as ocbc,
+    state_slack_variable_str_from_ids as ssv,
+    control_variable_str_from_ids as cv,
+    control_slack_variable_str_from_ids as csv,
     vehicle_obstacle_collision_binary_slack_variable_str_from_ids as obsv,
-    vehicle_obstacle_collision_constraint_var_from_var_strs as occ,
-    vehicle_vehicle_collision_binary_constraint_var_from_ids as vcbc,
     vehicle_vehicle_collision_binary_slack_variable_str_from_ids as vbsv,
+    state_slack_constraint_var_from_var_strs as ssc,
+    control_slack_constraint_var_from_var_strs as csc,
+    state_transition_constraint_var_from_var_strs as stc,
+    vehicle_obstacle_collision_constraint_var_from_var_strs as occ,
+    vehicle_obstacle_collision_binary_constraint_var_from_ids as ocbc,
     vehicle_vehicle_collision_constraint_var_from_var_strs as vcc,
+    vehicle_vehicle_collision_binary_constraint_var_from_ids as vcbc,
 )
 
 # Types
-SolverVariable = pywraplp.Variable
 Solver = pywraplp.Solver
+SolverVariable = pywraplp.Variable
+SolverVariableMap = Dict[str, SolverVariable]
+SolverConstraint = pywraplp.Constraint
+SolverConstraintMap = Dict[str, pywraplp.Constraint]
 
 
 @attr.frozen
@@ -96,11 +99,11 @@ def create_variables_for_mvmip(
     mvmip_params: MVMIPOptimizationParams,
     vehicles: Sequence[MVMIPVehicle],
     obstacles: Sequence[MVMIPObstacle],
-) -> Dict[str, SolverVariable]:
+) -> SolverVariableMap:
 
     nt = mvmip_params.num_time_steps
 
-    vars = dict()
+    vars_map = dict()
     # Creating state and control trajectory variables for each vehicle.
     for vehicle_id, vehicle in enumerate(vehicles):
         nx = vehicle.dynamics.a_matrix.shape[0]
@@ -115,7 +118,8 @@ def create_variables_for_mvmip(
                 )
                 min_limit = vehicle.optimization_params.state_min[state_id]
                 max_limit = vehicle.optimization_params.state_max[state_id]
-                vars[var_str] = solver.NumVar(min_limit, max_limit, var_str)
+                assert var_str not in vars_map
+                vars_map[var_str] = solver.NumVar(min_limit, max_limit, var_str)
 
                 # State slack variable
                 var_str = ssv(
@@ -123,7 +127,8 @@ def create_variables_for_mvmip(
                     time_step_id=time_step_id,
                     state_id=state_id,
                 )
-                vars[var_str] = solver.NumVar(
+                assert var_str not in vars_map
+                vars_map[var_str] = solver.NumVar(
                     -solver.infinity(), solver.infinity(), var_str
                 )
 
@@ -137,7 +142,8 @@ def create_variables_for_mvmip(
                 )
                 min_limit = vehicle.optimization_params.state_min[control_id]
                 max_limit = vehicle.optimization_params.state_max[control_id]
-                vars[var_str] = solver.NumVar(min_limit, max_limit, var_str)
+                assert var_str not in vars_map
+                vars_map[var_str] = solver.NumVar(min_limit, max_limit, var_str)
 
                 # Control slack variable
                 var_str = csv(
@@ -145,7 +151,8 @@ def create_variables_for_mvmip(
                     time_step_id=time_step_id,
                     control_id=control_id,
                 )
-                vars[var_str] = solver.NumVar(
+                assert var_str not in vars_map
+                vars_map[var_str] = solver.NumVar(
                     -solver.infinity(), solver.infinity(), var_str
                 )
 
@@ -159,7 +166,8 @@ def create_variables_for_mvmip(
                         time_step_id=time_step_id,
                         var_id=var_id,
                     )
-                    vars[var_str] = solver.IntVar(0, 1, var_str)
+                    assert var_str not in vars_map
+                    vars_map[var_str] = solver.IntVar(0, 1, var_str)
 
         # Vehicle-obstacle collision constraint variables.
         for time_step_id in range(1, nt + 1):
@@ -172,34 +180,37 @@ def create_variables_for_mvmip(
                             time_step_id=time_step_id,
                             var_id=var_id,
                         )
-                        vars[var_str] = solver.IntVar(0, 1, var_str)
+                        assert var_str not in vars_map
+                        vars_map[var_str] = solver.IntVar(0, 1, var_str)
                 else:
                     raise NotImplemented(
                         "Only rectangular obstacles have been implemented so far."
                     )
 
-    return vars
+    return vars_map
 
 
 def construct_constraints_for_mvmip(
     solver: Solver,
+    vars_map: SolverVariableMap,
     mvmip_params: MVMIPOptimizationParams,
     vehicles: Sequence[MVMIPVehicle],
     obstacles: Sequence[MVMIPObstacle],
-) -> None:
+) -> SolverConstraintMap:
 
     nt = mvmip_params.num_time_steps
 
-    constraints = dict()
+    cons_map = dict()
 
     for vehicle_id, vehicle in enumerate(vehicles):
 
         # State slack constraints
         nx = vehicle.dynamics.a_matrix.shape[0]
         nu = vehicle.dynamics.b_matrix.shape[1]
+
+        # Defining state slack constraints.
         for time_step_id in range(1, nt + 1):
             for state_id in range(nx):
-                # State and state slack variables
                 s_var_str = sv(
                     vehicle_id=vehicle_id,
                     time_step_id=time_step_id,
@@ -210,12 +221,90 @@ def construct_constraints_for_mvmip(
                     time_step_id=time_step_id,
                     state_id=state_id,
                 )
-                constraint = solver.Constraint(
-                    -solver.infinity(), 0.0, f"c_{s_var_str}_{w_var_str}"
-                )
-                vars[var_str] = solver.NumVar(min_limit, max_limit, var_str)
 
-                # State slack variable
+                # s_pi - s_pf <= w_pi (For each state index)
+                # => -inf <= s_pi - w_pi <= s_pf
+                constraint_var = ssc(
+                    state_var_str=s_var_str,
+                    state_slack_var_str=w_var_str,
+                    constraint_id=1,
+                )
+                constraint = solver.Constraint(
+                    -solver.infinity(),
+                    vehicle.dynamics.final_state[state_id],
+                    constraint_var,
+                )
+                constraint.SetCoefficient(vars_map[s_var_str], 1.0)
+                constraint.SetCoefficient(vars_map[w_var_str], -1.0)
+                assert constraint_var not in cons_map
+                cons_map[constraint_var] = constraint
+
+                # -s_pi + s_pf <= w_pi (For each state index)
+                # => -inf <= -s_pi - w_pi <= -s_pf
+                constraint_var = ssc(
+                    state_var_str=s_var_str,
+                    state_slack_var_str=w_var_str,
+                    constraint_id=2,
+                )
+                constraint = solver.Constraint(
+                    -solver.infinity(),
+                    -vehicle.dynamics.final_state[state_id],
+                    constraint_var,
+                )
+                constraint.SetCoefficient(vars_map[s_var_str], -1.0)
+                constraint.SetCoefficient(vars_map[w_var_str], -1.0)
+                assert constraint_var not in cons_map
+                cons_map[constraint_var] = constraint
+
+        # Defining control slack constraints.
+        for time_step_id in range(nt):
+            for control_id in range(nu):
+                u_var_str = cv(
+                    vehicle_id=vehicle_id,
+                    time_step_id=time_step_id,
+                    control_id=control_id,
+                )
+                v_var_str = csv(
+                    vehicle_id=vehicle_id,
+                    time_step_id=time_step_id,
+                    control_id=control_id,
+                )
+
+                # u_pi <= vpi (For each control index)
+                # => u_pi - v_pi <= 0
+                constraint_var = csc(
+                    control_var_str=u_var_str,
+                    control_slack_var_str=v_var_str,
+                    constraint_id=1,
+                )
+                constraint = solver.Constraint(
+                    -solver.infinity(),
+                    0.0,
+                    constraint_var,
+                )
+                constraint.SetCoefficient(vars_map[u_var_str], 1.0)
+                constraint.SetCoefficient(vars_map[v_var_str], -1.0)
+                assert constraint_var not in cons_map
+                cons_map[constraint_var] = constraint
+
+                # -u_pi <= vpi (For each control index)
+                # => -u_pi - v_pi <= 0
+                constraint_var = csc(
+                    control_var_str=u_var_str,
+                    control_slack_var_str=v_var_str,
+                    constraint_id=2,
+                )
+                constraint = solver.Constraint(
+                    -solver.infinity(),
+                    0.0,
+                    constraint_var,
+                )
+                constraint.SetCoefficient(vars_map[u_var_str], -1.0)
+                constraint.SetCoefficient(vars_map[v_var_str], -1.0)
+                assert constraint_var not in cons_map
+                cons_map[constraint_var] = constraint
+
+    return cons_map
 
 
 def solve_mvmip(
@@ -229,9 +318,19 @@ def solve_mvmip(
     solver: pywraplp.Solver = pywraplp.Solver.CreateSolver("SCIP")
     assert solver is not None, "Solver could not be created."
 
-    vars = create_variables_for_mvmip(
+    vars_map = create_variables_for_mvmip(
         solver=solver,
         mvmip_params=mvmip_params,
         vehicles=vehicles,
         obstacles=obstacles,
     )
+    assert len(vars_map) == solver.NumVariables()
+
+    cons_map = construct_constraints_for_mvmip(
+        solver=solver,
+        vars_map=vars_map,
+        mvmip_params=mvmip_params,
+        vehicles=vehicles,
+        obstacles=obstacles,
+    )
+    assert len(cons_map) == solver.NumConstraints()
