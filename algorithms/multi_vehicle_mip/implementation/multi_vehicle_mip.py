@@ -9,6 +9,9 @@ from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPVehicle,
     MVMIPObstacle,
 )
+from algorithms.multi_vehicle_mip.implementation.objective import (
+    construct_objective_for_mvmip,
+)
 from algorithms.multi_vehicle_mip.implementation.variables import (
     construct_variables_for_mvmip,
 )
@@ -26,6 +29,7 @@ def solve_mvmip(
     solver: pywraplp.Solver = pywraplp.Solver.CreateSolver("SCIP")
     assert solver is not None, "Solver could not be created."
 
+    # Variables
     vars_map = construct_variables_for_mvmip(
         solver=solver,
         mvmip_params=mvmip_params,
@@ -36,6 +40,7 @@ def solve_mvmip(
     for var_name, var in vars_map.items():
         assert var_name == var.name()
 
+    # Constraints
     cons_map = construct_constraints_for_mvmip(
         solver=solver,
         vars_map=vars_map,
@@ -47,12 +52,21 @@ def solve_mvmip(
     for cons_name, cons in cons_map.items():
         assert cons_name == cons.name()
 
+    # Objective
+    objective = construct_objective_for_mvmip(
+        solver=solver,
+        vars_map=vars_map,
+        mvmip_params=mvmip_params,
+        vehicles=vehicles,
+    )
+
     status = solver.Solve()
 
     if status == solver.OPTIMAL:
         print("Optimal solution for MVMIP found!")
         for vars_str, vars in vars_map.items():
             print(vars_str, vars.solution_value())
+        print(objective.Value())
 
     else:
         print("Optimal solution for MVMIP could not be found :(")

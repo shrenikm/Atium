@@ -6,3 +6,4 @@ SolverVariable = pywraplp.Variable
 SolverVariableMap = Dict[str, SolverVariable]
 SolverConstraint = pywraplp.Constraint
 SolverConstraintMap = Dict[str, pywraplp.Constraint]
+SolverObjective = pywraplp.Objective
