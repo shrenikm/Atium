@@ -33,6 +33,8 @@ def solve_mvmip(
         obstacles=obstacles,
     )
     assert len(vars_map) == solver.NumVariables()
+    for var_name, var in vars_map.items():
+        assert var_name == var.name()
 
     cons_map = construct_constraints_for_mvmip(
         solver=solver,
@@ -42,3 +44,15 @@ def solve_mvmip(
         obstacles=obstacles,
     )
     assert len(cons_map) == solver.NumConstraints()
+    for cons_name, cons in cons_map.items():
+        assert cons_name == cons.name()
+
+    status = solver.Solve()
+
+    if status == solver.OPTIMAL:
+        print("Optimal solution for MVMIP found!")
+        for vars_str, vars in vars_map.items():
+            print(vars_str, vars.solution_value())
+
+    else:
+        print("Optimal solution for MVMIP could not be found :(")
