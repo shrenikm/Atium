@@ -1,13 +1,14 @@
 import numpy as np
 import time
-from algorithms.multi_vehicle_mip.implementation.multi_vehicle_mip import (
+from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPOptimizationParams,
     MVMIPRectangleObstacle,
-    MVMIPVehicle,
     MVMIPVehicleDynamics,
     MVMIPVehicleOptimizationParams,
-    solve_mvmip,
+    MVMIPVehicle,
 )
+from algorithms.multi_vehicle_mip.implementation.multi_vehicle_mip import solve_mvmip
+
 from algorithms.multi_vehicle_mip.standard_vehicles import (
     create_standard_omni_vehicle_dynamics,
 )
@@ -19,11 +20,13 @@ if __name__ == "__main__":
     dt = 0.1
     world_size = 10.0
     control_max = 2.0
+    M = 1e6
 
     # Optimization params
     mvmip_params = MVMIPOptimizationParams(
         num_time_steps=num_time_steps,
         dt=dt,
+        M=M,
     )
 
     # Setup vehicles
@@ -56,16 +59,19 @@ if __name__ == "__main__":
 
     # Setup obstacles
     obstacle = MVMIPRectangleObstacle(
-        center=np.array([world_size / 2.0, world_size / 2.0], dtype=np.float64),
-        x_size_m=2.0,
-        y_size_m=2.0,
-        velocity_xy_mps=np.array([0.0, 0.0], dtype=np.float64),
+        initial_center_xy=np.array(
+            [world_size / 2.0, world_size / 2.0], dtype=np.float64
+        ),
+        size_xy_m=np.array([2.0, 2.0], dtype=np.float64),
+        velocities_xy_mps=np.array([0.0, 0.0], dtype=np.float64),
         clearance_m=0.2,
+        # TODO: Figure out another way to access these in the obstacle
+        num_time_steps=num_time_steps,
+        dt=dt,
     )
     obstacles = [
         obstacle,
     ]
-
 
     start_time = time.perf_counter()
     solve_mvmip(

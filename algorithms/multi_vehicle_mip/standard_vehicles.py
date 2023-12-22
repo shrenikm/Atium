@@ -1,8 +1,6 @@
 import numpy as np
+from algorithms.multi_vehicle_mip.implementation.definitions import MVMIPVehicleDynamics
 from common.custom_types import StateVector
-from algorithms.multi_vehicle_mip.implementation.multi_vehicle_mip import (
-    MVMIPVehicleDynamics,
-)
 
 
 def create_standard_omni_vehicle_dynamics(

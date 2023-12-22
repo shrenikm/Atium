@@ -1,3 +1,6 @@
+import numpy as np
+from functools import cached_property
+from typing import Union
 import attr
 
 from common.custom_types import (
@@ -8,8 +11,10 @@ from common.custom_types import (
     PointXYArray,
     PointXYVector,
     Polygon2DArray,
+    SizeXYVector,
     StateVector,
     VelocityXYArray,
+    VelocityXYVector,
 )
 
 
@@ -17,6 +22,7 @@ from common.custom_types import (
 class MVMIPOptimizationParams:
     num_time_steps: int
     dt: float
+    M: float
 
 
 @attr.frozen
@@ -51,13 +57,55 @@ class MVMIPObstacle:
     pass
 
 
-@attr.frozen
+@attr.frozen(slots=False)
 class MVMIPRectangleObstacle(MVMIPObstacle):
-    center: PointXYVector
-    x_size_m: float
-    y_size_m: float
-    velocity_xy_mps: VelocityXYArray
+    initial_center_xy: PointXYVector
+    size_xy_m: SizeXYVector
+    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray]
     clearance_m: float
+
+    # TODO: Not a fan of having these attributes here (duplciated from optimization params)
+    num_time_steps: int
+    dt: float
+
+    @cached_property
+    def centers_xy(self) -> PointXYArray:
+        centers_xy = np.empty((self.num_time_steps + 1, 2), dtype=np.float64)
+
+        if self.velocities_xy_mps.size == 2:
+            velocities_xy_mps = np.repeat(
+                self.velocities_xy_mps.reshape(1, 2), self.num_time_steps, axis=0
+            )
+        else:
+            assert self.velocities_xy_mps.ndim == 2
+            assert self.velocities_xy_mps.shape[0] == self.num_time_steps
+            velocities_xy_mps = self.velocities_xy_mps
+
+        centers_xy[0] = self.initial_center_xy
+        for i in range(1, self.num_time_steps + 1):
+            centers_xy[i] = centers_xy[i - 1] + self.dt * velocities_xy_mps[i - 1]
+
+        return centers_xy
+
+    def compute_min_limits_xy(
+        self,
+        time_step_id: int,
+    ) -> PointXYVector:
+        """
+        Min limit for MVMIP optimization.
+        This corresponds to the bottom left coordinate (including clearance)
+        """
+        return self.centers_xy[time_step_id] - 0.5 * self.size_xy_m - self.clearance_m
+
+    def compute_max_limits_xy(
+        self,
+        time_step_id: int,
+    ) -> PointXYVector:
+        """
+        Max limit for MVMIP optimization.
+        This corresponds to the bottom left coordinate (including clearance)
+        """
+        return self.centers_xy[time_step_id] + 0.5 * self.size_xy_m + self.clearance_m
 
 
 @attr.frozen
