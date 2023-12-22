@@ -107,15 +107,16 @@ def vehicle_vehicle_collision_binary_constraint_var_from_ids(
     return f"c_bs_{current_vehicle_id}_{other_vehicle_id}_{time_step_id}"  # Sum of b's constraint
 
 
-def assert_uniqueness_and_update_cons_map(
-    cons_map_to_be_added: Dict,
-    cons_map: Dict,
+def assert_uniqueness_and_update_mvmip_map(
+    mvmip_map_to_be_added: Dict,
+    mvmip_map: Dict,
 ) -> None:
     """
-    Adding the contents of cons_map_to_be_added into cons_map, but while first making sure
-    that they keys are unique and don't already exist in cons_map as we don't want to
-    overwrite constraints.
+    The map is going to be from a str value to some MVMIP construct (variable/constraint/etc).
+    Adding the contents of mvmip_map_to_be_added into mvmip_map, but while first making sure
+    that they keys are unique and don't already exist in mvmip_map as we don't want to
+    overwrite constraints/variables.
     """
-    for cons_var in cons_map_to_be_added.keys():
-        assert cons_var not in cons_map
-    cons_map.update(cons_map_to_be_added)
+    for mvmip_key in mvmip_map_to_be_added.keys():
+        assert mvmip_key not in mvmip_map
+    mvmip_map.update(mvmip_map_to_be_added)
