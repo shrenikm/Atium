@@ -1,5 +1,17 @@
+from typing import Any, Callable
 import nptyping as npt
 
+# File/directory types
+FileName = str
+DirectoryName = str
+FilePath = str
+DirectoryPath = str
+
+# Attrs stuff
+AttrsConverterFunc = Callable[[Any], Any]
+
+
+# Array stuff
 Arr = npt.NDArray
 Shape = npt.Shape
 f64 = npt.Float64
@@ -23,4 +35,3 @@ ControlTrajectoryArray = Arr[Shape["N, Nu"], f64]
 
 # Optimization
 CostVector = Arr[Shape["N"], f64]
-

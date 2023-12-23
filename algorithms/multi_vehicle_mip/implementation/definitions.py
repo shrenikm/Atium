@@ -6,6 +6,7 @@ from algorithms.multi_vehicle_mip.implementation.custom_types import (
     VehicleControlTrajectoryMap,
     VehicleStateTrajectoryMap,
 )
+from common.attrs_utils import AttrsConverters
 
 from common.custom_types import (
     AMatrix,
@@ -32,23 +33,23 @@ class MVMIPOptimizationParams:
 
 @attr.frozen
 class MVMIPVehicleDynamics:
-    a_matrix: AMatrix
-    b_matrix: BMatrix
-    initial_state: StateVector
-    final_state: StateVector
+    a_matrix: AMatrix = attr.ib(converter=AttrsConverters.np_f64_converter())
+    b_matrix: BMatrix = attr.ib(converter=AttrsConverters.np_f64_converter())
+    initial_state: StateVector = attr.ib(converter=AttrsConverters.np_f64_converter())
+    final_state: StateVector = attr.ib(converter=AttrsConverters.np_f64_converter())
     # Clearance required to be maintained by other vehicles to this one.
     clearance_m: float
 
 
 @attr.frozen
 class MVMIPVehicleOptimizationParams:
-    q_cost_vector: CostVector
-    r_cost_vector: CostVector
-    p_cost_vector: CostVector
-    state_min: StateVector
-    state_max: StateVector
-    control_min: ControlVector
-    control_max: ControlVector
+    q_cost_vector: CostVector = attr.ib(converter=AttrsConverters.np_f64_converter())
+    r_cost_vector: CostVector = attr.ib(converter=AttrsConverters.np_f64_converter())
+    p_cost_vector: CostVector = attr.ib(converter=AttrsConverters.np_f64_converter())
+    state_min: StateVector = attr.ib(converter=AttrsConverters.np_f64_converter())
+    state_max: StateVector = attr.ib(converter=AttrsConverters.np_f64_converter())
+    control_min: ControlVector = attr.ib(converter=AttrsConverters.np_f64_converter())
+    control_max: ControlVector = attr.ib(converter=AttrsConverters.np_f64_converter())
 
 
 @attr.frozen
@@ -59,9 +60,13 @@ class MVMIPVehicle:
 
 @attr.frozen(slots=False, eq=False)
 class MVMIPObstacle(Protocol):
-    initial_center_xy: PointXYVector
-    size_xy_m: SizeXYVector
-    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray]
+    initial_center_xy: PointXYVector = attr.ib(
+        converter=AttrsConverters.np_f64_converter()
+    )
+    size_xy_m: SizeXYVector = attr.ib(converter=AttrsConverters.np_f64_converter())
+    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray] = attr.ib(
+        converter=AttrsConverters.np_f64_converter()
+    )
     clearance_m: float
 
     def ordered_corner_points_xy(
@@ -76,9 +81,13 @@ class MVMIPObstacle(Protocol):
 
 @attr.frozen(slots=False, eq=False)
 class MVMIPRectangleObstacle:
-    initial_center_xy: PointXYVector
-    size_xy_m: SizeXYVector
-    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray]
+    initial_center_xy: PointXYVector = attr.ib(
+        converter=AttrsConverters.np_f64_converter()
+    )
+    size_xy_m: SizeXYVector = attr.ib(converter=AttrsConverters.np_f64_converter())
+    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray] = attr.ib(
+        converter=AttrsConverters.np_f64_converter()
+    )
     clearance_m: float
 
     @lru_cache
@@ -159,9 +168,13 @@ class MVMIPRectangleObstacle:
 
 @attr.frozen
 class MVMIPPolygonObstacle:
-    polygon: Polygon2DArray
-    initial_center_xy: PointXYArray
-    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray]
+    polygon: Polygon2DArray = attr.ib(converter=AttrsConverters.np_f64_converter())
+    initial_center_xy: PointXYArray = attr.ib(
+        converter=AttrsConverters.np_f64_converter()
+    )
+    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray] = attr.ib(
+        converter=AttrsConverters.np_f64_converter()
+    )
     clearance_m: float
 
     def ordered_corner_points_xy(
