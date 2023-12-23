@@ -33,7 +33,6 @@ from algorithms.multi_vehicle_mip.implementation.custom_types import (
 
 def construct_state_slack_constraints(
     solver: Solver,
-    vars_map: SolverVariableMap,
     mvmip_params: MVMIPOptimizationParams,
     vehicle_id: int,
     vehicle: MVMIPVehicle,
@@ -70,8 +69,8 @@ def construct_state_slack_constraints(
                 vehicle.dynamics.final_state[state_id],
                 cons_var,
             )
-            constraint.SetCoefficient(vars_map[s_var_str], 1.0)
-            constraint.SetCoefficient(vars_map[w_var_str], -1.0)
+            constraint.SetCoefficient(solver.LookupVariable(s_var_str), 1.0)
+            constraint.SetCoefficient(solver.LookupVariable(w_var_str), -1.0)
             cons_map[cons_var] = constraint
 
             # -s_pi + s_pf <= w_pi (For each state index)
@@ -87,8 +86,8 @@ def construct_state_slack_constraints(
                 -vehicle.dynamics.final_state[state_id],
                 cons_var,
             )
-            constraint.SetCoefficient(vars_map[s_var_str], -1.0)
-            constraint.SetCoefficient(vars_map[w_var_str], -1.0)
+            constraint.SetCoefficient(solver.LookupVariable(s_var_str), -1.0)
+            constraint.SetCoefficient(solver.LookupVariable(w_var_str), -1.0)
             cons_map[cons_var] = constraint
 
     return cons_map
@@ -96,7 +95,6 @@ def construct_state_slack_constraints(
 
 def construct_control_slack_constraints(
     solver: Solver,
-    vars_map: SolverVariableMap,
     mvmip_params: MVMIPOptimizationParams,
     vehicle_id: int,
     vehicle: MVMIPVehicle,
@@ -132,8 +130,8 @@ def construct_control_slack_constraints(
                 0.0,
                 cons_var,
             )
-            constraint.SetCoefficient(vars_map[u_var_str], 1.0)
-            constraint.SetCoefficient(vars_map[v_var_str], -1.0)
+            constraint.SetCoefficient(solver.LookupVariable(u_var_str), 1.0)
+            constraint.SetCoefficient(solver.LookupVariable(v_var_str), -1.0)
             cons_map[cons_var] = constraint
 
             # -u_pi <= vpi (For each control index)
@@ -149,8 +147,8 @@ def construct_control_slack_constraints(
                 0.0,
                 cons_var,
             )
-            constraint.SetCoefficient(vars_map[u_var_str], -1.0)
-            constraint.SetCoefficient(vars_map[v_var_str], -1.0)
+            constraint.SetCoefficient(solver.LookupVariable(u_var_str), -1.0)
+            constraint.SetCoefficient(solver.LookupVariable(v_var_str), -1.0)
             cons_map[cons_var] = constraint
 
     return cons_map
@@ -158,7 +156,6 @@ def construct_control_slack_constraints(
 
 def construct_state_transition_constraints(
     solver: Solver,
-    vars_map: SolverVariableMap,
     mvmip_params: MVMIPOptimizationParams,
     vehicle_id: int,
     vehicle: MVMIPVehicle,
@@ -175,7 +172,7 @@ def construct_state_transition_constraints(
     assert a_mat.shape[1] == nx
     assert initial_state.size == nx
 
-    for time_step_id in range(nt - 1):
+    for time_step_id in range(nt):
 
         current_time_step_id = time_step_id
         next_time_step_id = time_step_id + 1
@@ -207,7 +204,7 @@ def construct_state_transition_constraints(
 
             constraint = solver.Constraint(cons_eq_value, cons_eq_value, cons_var)
             # Either way the coefficient for s_p(i+1)j is 1.
-            constraint.SetCoefficient(vars_map[next_s_var_str], 1.0)
+            constraint.SetCoefficient(solver.LookupVariable(next_s_var_str), 1.0)
 
             # In the constraint, each row of s_p(i+1) is a function of all of s_pi and u_pi, hence we need to iterate over nx and nu again.
             # Note that this is only true for time steps > 0 as other s_pi is not a variable otherwise (for the first step).
@@ -220,7 +217,7 @@ def construct_state_transition_constraints(
                     )
                     # Coeffient of s_pij is A_p(row)j Where A_p's row is defined by next_state_id or the s_p(i+1) element under consideration.
                     constraint.SetCoefficient(
-                        vars_map[current_s_var_str],
+                        solver.LookupVariable(current_s_var_str),
                         -1.0 * a_mat[next_state_id, current_state_id],
                     )
 
@@ -233,7 +230,7 @@ def construct_state_transition_constraints(
                 )
                 # Coeffient of u_pij is B_p(row)j Where B_p's row is defined by next_state_id or the s_p(i+1) element under consideration.
                 constraint.SetCoefficient(
-                    vars_map[current_u_var_str],
+                    solver.LookupVariable(current_u_var_str),
                     -1.0 * b_mat[next_state_id, current_control_id],
                 )
 
@@ -244,7 +241,6 @@ def construct_state_transition_constraints(
 
 def construct_vehicle_obstacle_constraints(
     solver: Solver,
-    vars_map: SolverVariableMap,
     mvmip_params: MVMIPOptimizationParams,
     vehicle_id: int,
     obstacles: Sequence[MVMIPObstacle],
@@ -301,8 +297,10 @@ def construct_vehicle_obstacle_constraints(
                     min_limits_xy[state_id],
                     cons_var,
                 )
-                constraint.SetCoefficient(vars_map[s_var_str], 1.0)
-                constraint.SetCoefficient(vars_map[t_var_str], -mvmip_params.M)
+                constraint.SetCoefficient(solver.LookupVariable(s_var_str), 1.0)
+                constraint.SetCoefficient(
+                    solver.LookupVariable(t_var_str), -mvmip_params.M
+                )
                 cons_map[cons_var] = constraint
 
                 # Second constraint
@@ -326,8 +324,10 @@ def construct_vehicle_obstacle_constraints(
                     -max_limits_xy[state_id],
                     cons_var,
                 )
-                constraint.SetCoefficient(vars_map[s_var_str], -1.0)
-                constraint.SetCoefficient(vars_map[t_var_str], -mvmip_params.M)
+                constraint.SetCoefficient(solver.LookupVariable(s_var_str), -1.0)
+                constraint.SetCoefficient(
+                    solver.LookupVariable(t_var_str), -mvmip_params.M
+                )
                 cons_map[cons_var] = constraint
 
             # Constraint for the sum of binary slack variables
@@ -350,7 +350,7 @@ def construct_vehicle_obstacle_constraints(
                     time_step_id=time_step_id,
                     var_id=var_id,
                 )
-                constraint.SetCoefficient(vars_map[t_var_str], 1.0)
+                constraint.SetCoefficient(solver.LookupVariable(t_var_str), 1.0)
             cons_map[cons_var] = constraint
 
     return cons_map
@@ -358,7 +358,6 @@ def construct_vehicle_obstacle_constraints(
 
 def construct_constraints_for_mvmip(
     solver: Solver,
-    vars_map: SolverVariableMap,
     mvmip_params: MVMIPOptimizationParams,
     vehicles: Sequence[MVMIPVehicle],
     obstacles: Sequence[MVMIPObstacle],
@@ -371,7 +370,6 @@ def construct_constraints_for_mvmip(
         # State slack constraints
         ss_cons_map = construct_state_slack_constraints(
             solver=solver,
-            vars_map=vars_map,
             mvmip_params=mvmip_params,
             vehicle_id=vehicle_id,
             vehicle=vehicle,
@@ -379,7 +377,6 @@ def construct_constraints_for_mvmip(
         # Control slack constraints
         cs_cons_map = construct_control_slack_constraints(
             solver=solver,
-            vars_map=vars_map,
             mvmip_params=mvmip_params,
             vehicle_id=vehicle_id,
             vehicle=vehicle,
@@ -387,14 +384,12 @@ def construct_constraints_for_mvmip(
         # State transition constraints
         st_cons_map = construct_state_transition_constraints(
             solver=solver,
-            vars_map=vars_map,
             mvmip_params=mvmip_params,
             vehicle_id=vehicle_id,
             vehicle=vehicle,
         )
         voc_cons_map = construct_vehicle_obstacle_constraints(
             solver=solver,
-            vars_map=vars_map,
             mvmip_params=mvmip_params,
             vehicle_id=vehicle_id,
             obstacles=obstacles,

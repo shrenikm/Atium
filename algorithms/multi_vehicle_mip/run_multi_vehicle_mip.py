@@ -21,17 +21,19 @@ if __name__ == "__main__":
     world_size = 10.0
     control_max = 2.0
     M = 1e6
+    result_float_precision = 3
 
     # Optimization params
     mvmip_params = MVMIPOptimizationParams(
         num_time_steps=num_time_steps,
         dt=dt,
         M=M,
+        result_float_precision=result_float_precision,
     )
 
     # Setup vehicles
     initial_state = np.array([1.0, 1.0], dtype=np.float64)
-    final_state = np.array([8.0, 8.0], dtype=np.float64)
+    final_state = np.array([10.0, 10.0], dtype=np.float64)
     clearance_m = 0.5
 
     dynamics: MVMIPVehicleDynamics = create_standard_omni_vehicle_dynamics(
@@ -41,9 +43,9 @@ if __name__ == "__main__":
         dt=mvmip_params.dt,
     )
     optimization_params = MVMIPVehicleOptimizationParams(
-        q_cost_vector=np.array([1.0, 1.0], dtype=np.float64),
+        q_cost_vector=np.array([10.0, 10.0], dtype=np.float64),
         r_cost_vector=np.array([1.0, 1.0], dtype=np.float64),
-        p_cost_vector=np.array([1.0, 1.0], dtype=np.float64),
+        p_cost_vector=np.array([100.0, 100.0], dtype=np.float64),
         state_min=np.array([0.0, 0.0], dtype=np.float64),
         state_max=np.array([world_size, world_size], dtype=np.float64),
         control_min=np.array([-control_max, -control_max], dtype=np.float64),
@@ -74,10 +76,11 @@ if __name__ == "__main__":
     ]
 
     start_time = time.perf_counter()
-    solve_mvmip(
+    result = solve_mvmip(
         mvmip_params=mvmip_params,
         vehicles=vehicles,
         obstacles=obstacles,
     )
+    print(result)
     end_time = time.perf_counter()
     print(f"Time to solve MVMIP: {end_time - start_time} seconds")

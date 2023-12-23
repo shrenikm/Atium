@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Optional, Sequence
 
 from ortools.linear_solver import pywraplp
 from algorithms.multi_vehicle_mip.implementation.constraints import (
@@ -6,23 +6,24 @@ from algorithms.multi_vehicle_mip.implementation.constraints import (
 )
 from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPOptimizationParams,
+    MVMIPResult,
     MVMIPVehicle,
     MVMIPObstacle,
 )
 from algorithms.multi_vehicle_mip.implementation.objective import (
     construct_objective_for_mvmip,
+    mvmip_result_from_solver,
 )
 from algorithms.multi_vehicle_mip.implementation.variables import (
     construct_variables_for_mvmip,
 )
-from common.custom_types import StateTrajectoryArray
 
 
 def solve_mvmip(
     mvmip_params: MVMIPOptimizationParams,
     vehicles: Sequence[MVMIPVehicle],
     obstacles: Sequence[MVMIPObstacle],
-) -> Sequence[StateTrajectoryArray]:
+) -> Optional[MVMIPResult]:
 
     # TODO: Check validity of vehicles and obstacles.
 
@@ -43,7 +44,6 @@ def solve_mvmip(
     # Constraints
     cons_map = construct_constraints_for_mvmip(
         solver=solver,
-        vars_map=vars_map,
         mvmip_params=mvmip_params,
         vehicles=vehicles,
         obstacles=obstacles,
@@ -55,7 +55,6 @@ def solve_mvmip(
     # Objective
     objective = construct_objective_for_mvmip(
         solver=solver,
-        vars_map=vars_map,
         mvmip_params=mvmip_params,
         vehicles=vehicles,
     )
@@ -64,9 +63,11 @@ def solve_mvmip(
 
     if status == solver.OPTIMAL:
         print("Optimal solution for MVMIP found!")
-        for vars_str, vars in vars_map.items():
-            print(vars_str, vars.solution_value())
-        print(objective.Value())
-
+        return mvmip_result_from_solver(
+            solver=solver,
+            mvmip_params=mvmip_params,
+            vehicles=vehicles,
+        )
     else:
         print("Optimal solution for MVMIP could not be found :(")
+        return None

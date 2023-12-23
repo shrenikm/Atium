@@ -78,8 +78,8 @@ def construct_control_slack_variables(
                 time_step_id=time_step_id,
                 control_id=control_id,
             )
-            min_limit = vehicle.optimization_params.state_min[control_id]
-            max_limit = vehicle.optimization_params.state_max[control_id]
+            min_limit = vehicle.optimization_params.control_min[control_id]
+            max_limit = vehicle.optimization_params.control_max[control_id]
             assert var_str not in vars_map
             vars_map[var_str] = solver.NumVar(min_limit, max_limit, var_str)
 

@@ -2,6 +2,10 @@ import numpy as np
 from functools import cached_property
 from typing import Union
 import attr
+from algorithms.multi_vehicle_mip.implementation.custom_types import (
+    VehicleControlTrajectoryMap,
+    VehicleStateTrajectoryMap,
+)
 
 from common.custom_types import (
     AMatrix,
@@ -23,6 +27,7 @@ class MVMIPOptimizationParams:
     num_time_steps: int
     dt: float
     M: float
+    result_float_precision: int
 
 
 @attr.frozen
@@ -114,3 +119,10 @@ class MVMIPPolygonObstacle(MVMIPObstacle):
     start_xy: PointXYArray
     velocity_xy_mps: VelocityXYArray
     clearance_m: float
+
+
+@attr.frozen
+class MVMIPResult:
+    objective_value: float
+    vehicle_state_trajectory_map: VehicleStateTrajectoryMap
+    vehicle_control_trajectory_map: VehicleControlTrajectoryMap
