@@ -11,6 +11,7 @@ from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPResult,
     MVMIPVehicle,
 )
+from algorithms.multi_vehicle_mip.results.utils import get_full_path_of_output_video
 
 
 @attr.frozen
@@ -18,6 +19,8 @@ class MVMIPAnimationParams:
     # Params and colors
     interval: float
     repeat: bool
+    save_video: bool
+    output_video_filename: str
 
     vehicle_colors: List[str]
     vehicle_start_color: str
@@ -165,6 +168,8 @@ def _create_animation_elements(
             y=y,
             dx=0,  # 0 control initially
             dy=0,  # 0 control initially
+            width=0.01,
+            head_width=0.2,
             length_includes_head=True,
             color=animation_params.vehicle_control_color,
         )
@@ -223,7 +228,7 @@ def visualize_mvmip_result(
     )
 
     def anim_update(time_step_id):
-        ax.set_title(f"MVMIP time step: {time_step_id}")
+        ax.set_title(f"MVMIP time step: {time_step_id}/{nt}")
         for obstacle_id, obstacle in enumerate(obstacles):
             corner_points_xy = obstacle.ordered_corner_points_xy(
                 time_step_id=time_step_id,
@@ -269,12 +274,22 @@ def visualize_mvmip_result(
                 state_trajectory[: time_step_id + 1, 1]
             )
 
-    _ = anim.FuncAnimation(
+    animation = anim.FuncAnimation(
         fig=fig,
         func=anim_update,
         frames=nt + 1,
         interval=animation_params.interval,
         repeat=animation_params.repeat,
     )
+    # Save the animation if required.
+    if animation_params.save_video:
+        print("Saving the animation ...")
+        output_video_path = get_full_path_of_output_video(
+            output_video_filename=animation_params.output_video_filename,
+        )
+        animation.save(
+            filename=output_video_path,
+        )
+        print(f"Animation saved to: {output_video_path}")
 
     plt.show()

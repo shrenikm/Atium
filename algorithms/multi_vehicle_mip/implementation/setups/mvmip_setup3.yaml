@@ -26,7 +26,7 @@ obstacles:
   obstacle1:
     initial_center_xy: [5., 5.]
     size_xy_m: [2., 2.]
-    velocities_xy_mps: [0., 0.]
+    velocities_xy_mps: [-1., 0.]
     clearance_m: 0.2
 
 # Animation params

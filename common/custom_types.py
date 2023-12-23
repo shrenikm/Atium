@@ -6,6 +6,8 @@ FileName = str
 DirectoryName = str
 FilePath = str
 DirectoryPath = str
+OutputVideoName = str
+OutputVideoPath = str
 
 # Attrs stuff
 AttrsConverterFunc = Callable[[Any], Any]
