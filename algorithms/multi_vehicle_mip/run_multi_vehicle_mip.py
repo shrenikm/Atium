@@ -11,7 +11,7 @@ from algorithms.multi_vehicle_mip.implementation.visualization import (
     visualize_mvmip_result,
 )
 
-from algorithms.multi_vehicle_mip.standard_vehicles import (
+from algorithms.multi_vehicle_mip.implementation.standard_vehicles import (
     create_standard_omni_vehicle_dynamics,
 )
 
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     num_time_steps = 50
     dt = 0.1
     world_size = 10.0
-    control_max = 2.0
+    control_max = 2
     M = 1e6
     result_float_precision = 3
 
@@ -69,9 +69,6 @@ if __name__ == "__main__":
         size_xy_m=np.array([2.0, 2.0], dtype=np.float64),
         velocities_xy_mps=np.array([-0.5, 0.0], dtype=np.float64),
         clearance_m=0.2,
-        # TODO: Figure out another way to access these in the obstacle
-        num_time_steps=num_time_steps,
-        dt=dt,
     )
     obstacles = [
         obstacle,
@@ -86,6 +83,4 @@ if __name__ == "__main__":
     if result is not None:
         print(f"MVMIP setup time: {result.solver_setup_time_s} s")
         print(f"MVMIP solve time: {result.solver_solving_time_s} s")
-        visualize_mvmip_result(
-            mvmip_result=result,
-        )
+        visualize_mvmip_result(mvmip_result=result)

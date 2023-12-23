@@ -7,6 +7,7 @@ import numpy as np
 
 from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPObstacle,
+    MVMIPOptimizationParams,
     MVMIPResult,
     MVMIPVehicle,
 )
@@ -119,6 +120,7 @@ def _draw_fixed_elements(
 def _create_animation_elements(
     ax: plt.Axes,
     animation_colors: _MVMIPAnimationColors,
+    mvmip_params: MVMIPOptimizationParams,
     vehicles: Sequence[MVMIPVehicle],
     obstacles: Sequence[MVMIPObstacle],
 ) -> _MVMIPAnimationElements:
@@ -131,15 +133,21 @@ def _create_animation_elements(
     obstacle_core_map = {}
     obstacle_clearance_map = {}
 
+    nt, dt = mvmip_params.num_time_steps, mvmip_params.dt
+
     # Plot the initial positions of the vehicles and obstacles.
     # Also sets up the patch elements for later animation.
     for obstacle_id, obstacle in enumerate(obstacles):
         corner_points_xy = obstacle.ordered_corner_points_xy(
             time_step_id=0,
+            num_time_steps=nt,
+            dt=dt,
             add_clearance=False,
         )
         clearance_corner_points_xy = obstacle.ordered_corner_points_xy(
             time_step_id=0,
+            num_time_steps=nt,
+            dt=dt,
             add_clearance=True,
         )
         core_polygon = patches.Polygon(
@@ -216,8 +224,8 @@ def visualize_mvmip_result(
     mvmip_result: MVMIPResult,
 ) -> None:
 
-    dt = mvmip_result.mvmip_params.dt
     nt = mvmip_result.mvmip_params.num_time_steps
+    dt = mvmip_result.mvmip_params.dt
     vst_map = mvmip_result.vehicle_state_trajectory_map
     vct_map = mvmip_result.vehicle_control_trajectory_map
     vehicles = mvmip_result.vehicles
@@ -240,6 +248,7 @@ def visualize_mvmip_result(
     animation_elements = _create_animation_elements(
         ax=ax,
         animation_colors=animation_colors,
+        mvmip_params=mvmip_result.mvmip_params,
         vehicles=vehicles,
         obstacles=obstacles,
     )
@@ -249,10 +258,14 @@ def visualize_mvmip_result(
         for obstacle_id, obstacle in enumerate(obstacles):
             corner_points_xy = obstacle.ordered_corner_points_xy(
                 time_step_id=time_step_id,
+                num_time_steps=nt,
+                dt=dt,
                 add_clearance=False,
             )
             clearance_corner_points_xy = obstacle.ordered_corner_points_xy(
                 time_step_id=time_step_id,
+                num_time_steps=nt,
+                dt=dt,
                 add_clearance=True,
             )
 

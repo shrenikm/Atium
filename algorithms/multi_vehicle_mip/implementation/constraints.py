@@ -249,6 +249,7 @@ def construct_vehicle_obstacle_constraints(
     cons_map = {}
 
     nt = mvmip_params.num_time_steps
+    dt = mvmip_params.dt
 
     # Note that we assume the first two values in the state vector are x & y
     for obstacle_id, obstacle in enumerate(obstacles):
@@ -291,6 +292,8 @@ def construct_vehicle_obstacle_constraints(
                 assert cons_var not in cons_map
                 min_limits_xy = obstacle.compute_min_limits_xy(
                     time_step_id=time_step_id,
+                    num_time_steps=nt,
+                    dt=dt,
                 )
                 constraint = solver.Constraint(
                     -solver.infinity(),
@@ -318,6 +321,8 @@ def construct_vehicle_obstacle_constraints(
                 assert cons_var not in cons_map
                 max_limits_xy = obstacle.compute_max_limits_xy(
                     time_step_id=time_step_id,
+                    num_time_steps=nt,
+                    dt=dt,
                 )
                 constraint = solver.Constraint(
                     -solver.infinity(),

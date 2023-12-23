@@ -1,0 +1,12 @@
+mvmip_params:
+  num_time_steps: 50
+  dt: 0.1
+  M: 1e6
+  result_float_precision: 3
+
+vehicles:
+  vehicle1:
+    initial_state: [1., 1.]
+    final_state: [9., 9.]
+
+
