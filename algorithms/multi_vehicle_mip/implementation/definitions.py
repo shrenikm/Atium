@@ -1,6 +1,6 @@
 import numpy as np
 from functools import cached_property
-from typing import Sequence, Union
+from typing import Protocol, Sequence, Union
 import attr
 from algorithms.multi_vehicle_mip.implementation.custom_types import (
     VehicleControlTrajectoryMap,
@@ -58,8 +58,9 @@ class MVMIPVehicle:
 
 
 @attr.frozen
-class MVMIPObstacle:
-    pass
+class MVMIPObstacle(Protocol):
+    def ordered_corner_points(self, time_step_id: int) -> Polygon2DArray:
+        raise NotImplemented
 
 
 @attr.frozen(slots=False)
@@ -112,13 +113,30 @@ class MVMIPRectangleObstacle(MVMIPObstacle):
         """
         return self.centers_xy[time_step_id] + 0.5 * self.size_xy_m + self.clearance_m
 
+    def ordered_corner_points(self, time_step_id: int) -> Polygon2DArray:
+        xc, yc = self.centers_xy[time_step_id]
+        xhs, yhs = 0.5 * self.size_xy_m  # Half sizes.
+
+        return np.array(
+            [
+                [xc - xhs, yc - yhs],
+                [xc - xhs, yc + yhs],
+                [xc + xhs, yc + yhs],
+                [xc + xhs, yc - yhs],
+            ],
+            dtype=np.float64,
+        )
+
 
 @attr.frozen
 class MVMIPPolygonObstacle(MVMIPObstacle):
     polygon: Polygon2DArray
-    start_xy: PointXYArray
-    velocity_xy_mps: VelocityXYArray
+    initial_center_xy: PointXYArray
+    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray]
     clearance_m: float
+
+    def ordered_corner_points(self) -> Polygon2DArray:
+        return self.polygon
 
 
 @attr.frozen
