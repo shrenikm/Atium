@@ -59,12 +59,16 @@ class MVMIPVehicle:
 
 @attr.frozen
 class MVMIPObstacle(Protocol):
-    def ordered_corner_points(self, time_step_id: int) -> Polygon2DArray:
+    def ordered_corner_points_xy(
+        self,
+        time_step_id: int,
+        add_clearance: bool,
+    ) -> Polygon2DArray:
         raise NotImplemented
 
 
 @attr.frozen(slots=False)
-class MVMIPRectangleObstacle(MVMIPObstacle):
+class MVMIPRectangleObstacle:
     initial_center_xy: PointXYVector
     size_xy_m: SizeXYVector
     velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray]
@@ -113,9 +117,18 @@ class MVMIPRectangleObstacle(MVMIPObstacle):
         """
         return self.centers_xy[time_step_id] + 0.5 * self.size_xy_m + self.clearance_m
 
-    def ordered_corner_points(self, time_step_id: int) -> Polygon2DArray:
+    def ordered_corner_points_xy(
+        self,
+        time_step_id: int,
+        add_clearance: bool,
+    ) -> Polygon2DArray:
         xc, yc = self.centers_xy[time_step_id]
-        xhs, yhs = 0.5 * self.size_xy_m  # Half sizes.
+        if add_clearance:
+            # Half sizes with clearance.
+            xhs, yhs = 0.5 * self.size_xy_m + self.clearance_m
+        else:
+            # Half sizes.
+            xhs, yhs = 0.5 * self.size_xy_m
 
         return np.array(
             [
@@ -135,7 +148,11 @@ class MVMIPPolygonObstacle(MVMIPObstacle):
     velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray]
     clearance_m: float
 
-    def ordered_corner_points(self) -> Polygon2DArray:
+    def ordered_corner_points_xy(
+        self,
+        time_step_id: float,
+        add_clearance: bool,
+    ) -> Polygon2DArray:
         return self.polygon
 
 

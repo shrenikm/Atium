@@ -67,7 +67,7 @@ if __name__ == "__main__":
             [world_size / 2.0, world_size / 2.0], dtype=np.float64
         ),
         size_xy_m=np.array([2.0, 2.0], dtype=np.float64),
-        velocities_xy_mps=np.array([0.0, 0.0], dtype=np.float64),
+        velocities_xy_mps=np.array([-0.5, 0.0], dtype=np.float64),
         clearance_m=0.2,
         # TODO: Figure out another way to access these in the obstacle
         num_time_steps=num_time_steps,

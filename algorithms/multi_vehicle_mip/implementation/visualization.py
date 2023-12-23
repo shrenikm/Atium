@@ -32,6 +32,9 @@ class _MVMIPAnimationElements:
     vehicle_control_map: Dict[int, patches.FancyArrow]
     vehicle_trajectory_map: Dict[int, plt.Line2D]
 
+    obstacle_core_map: Dict[int, patches.Polygon]
+    obstacle_clearance_map: Dict[int, patches.Polygon]
+
 
 def _setup_figure(
     vehicles: Sequence[MVMIPVehicle],
@@ -125,7 +128,37 @@ def _create_animation_elements(
     vehicle_control_map = {}
     vehicle_trajectory_map = {}
 
+    obstacle_core_map = {}
+    obstacle_clearance_map = {}
+
     # Plot the initial positions of the vehicles and obstacles.
+    # Also sets up the patch elements for later animation.
+    for obstacle_id, obstacle in enumerate(obstacles):
+        corner_points_xy = obstacle.ordered_corner_points_xy(
+            time_step_id=0,
+            add_clearance=False,
+        )
+        clearance_corner_points_xy = obstacle.ordered_corner_points_xy(
+            time_step_id=0,
+            add_clearance=True,
+        )
+        core_polygon = patches.Polygon(
+            xy=corner_points_xy,
+            color=animation_colors.obstacle_colors[obstacle_id],
+            fill=True,
+        )
+        clearance_polygon = patches.Polygon(
+            xy=clearance_corner_points_xy,
+            color=animation_colors.obstacle_clearance_color,
+            fill=False,
+            alpha=0.5,
+        )
+        ax.add_patch(core_polygon)
+        ax.add_patch(clearance_polygon)
+
+        obstacle_core_map[obstacle_id] = core_polygon
+        obstacle_clearance_map[obstacle_id] = clearance_polygon
+
     for vehicle_id, vehicle in enumerate(vehicles):
         x, y = vehicle.dynamics.initial_state[:2]
         c_m = vehicle.dynamics.clearance_m
@@ -169,12 +202,14 @@ def _create_animation_elements(
         vehicle_control_map[vehicle_id] = control_arrow
         vehicle_trajectory_map[vehicle_id] = trajectory_line
 
-    return _MVMIPAnimationElements(
-        vehicle_core_map=vehicle_core_map,
-        vehicle_clearance_map=vehicle_clearance_map,
-        vehicle_control_map=vehicle_control_map,
-        vehicle_trajectory_map=vehicle_trajectory_map,
-    )
+        return _MVMIPAnimationElements(
+            vehicle_core_map=vehicle_core_map,
+            vehicle_clearance_map=vehicle_clearance_map,
+            vehicle_control_map=vehicle_control_map,
+            vehicle_trajectory_map=vehicle_trajectory_map,
+            obstacle_core_map=obstacle_core_map,
+            obstacle_clearance_map=obstacle_clearance_map,
+        )
 
 
 def visualize_mvmip_result(
@@ -211,6 +246,21 @@ def visualize_mvmip_result(
 
     def anim_update(time_step_id):
         ax.set_title(f"MVMIP time step: {time_step_id}")
+        for obstacle_id, obstacle in enumerate(obstacles):
+            corner_points_xy = obstacle.ordered_corner_points_xy(
+                time_step_id=time_step_id,
+                add_clearance=False,
+            )
+            clearance_corner_points_xy = obstacle.ordered_corner_points_xy(
+                time_step_id=time_step_id,
+                add_clearance=True,
+            )
+
+            animation_elements.obstacle_core_map[obstacle_id].set_xy(corner_points_xy)
+            animation_elements.obstacle_clearance_map[obstacle_id].set_xy(
+                clearance_corner_points_xy
+            )
+
         for vehicle_id, vehicle in enumerate(vehicles):
             state_trajectory = vst_map[vehicle_id]
             control_trajectory = vct_map[vehicle_id]
