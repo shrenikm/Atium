@@ -128,6 +128,7 @@ class MVMIPResult:
     vehicle_state_trajectory_map: VehicleStateTrajectoryMap
     vehicle_control_trajectory_map: VehicleControlTrajectoryMap
     # Attributes that make the result self-sufficient
+    mvmip_params: MVMIPOptimizationParams
     vehicles: Sequence[MVMIPVehicle]
     obstacles: Sequence[MVMIPObstacle]
     # Performance attributes.

@@ -9,5 +9,5 @@ SolverVariableMap = Dict[str, SolverVariable]
 SolverConstraint = pywraplp.Constraint
 SolverConstraintMap = Dict[str, pywraplp.Constraint]
 SolverObjective = pywraplp.Objective
-VehicleStateTrajectoryMap = Dict[str, StateTrajectoryArray]
-VehicleControlTrajectoryMap = Dict[str, ControlTrajectoryArray]
+VehicleStateTrajectoryMap = Dict[int, StateTrajectoryArray]
+VehicleControlTrajectoryMap = Dict[int, ControlTrajectoryArray]

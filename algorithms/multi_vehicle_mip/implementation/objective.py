@@ -147,9 +147,9 @@ def mvmip_result_from_solver(
         objective_value=objective_value,
         vehicle_state_trajectory_map=vst_map,
         vehicle_control_trajectory_map=vct_map,
+        mvmip_params=mvmip_params,
         vehicles=vehicles,
         obstacles=obstacles,
         solver_setup_time_s=solver_setup_time_s,
         solver_solving_time_s=solver_solve_time_s,
     )
-

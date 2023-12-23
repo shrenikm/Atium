@@ -7,6 +7,9 @@ from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPVehicle,
 )
 from algorithms.multi_vehicle_mip.implementation.multi_vehicle_mip import solve_mvmip
+from algorithms.multi_vehicle_mip.implementation.visualization import (
+    visualize_mvmip_result,
+)
 
 from algorithms.multi_vehicle_mip.standard_vehicles import (
     create_standard_omni_vehicle_dynamics,
@@ -83,3 +86,6 @@ if __name__ == "__main__":
     if result is not None:
         print(f"MVMIP setup time: {result.solver_setup_time_s} s")
         print(f"MVMIP solve time: {result.solver_solving_time_s} s")
+        visualize_mvmip_result(
+            mvmip_result=result,
+        )
