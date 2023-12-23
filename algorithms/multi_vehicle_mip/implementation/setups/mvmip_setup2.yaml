@@ -1,4 +1,3 @@
-# MVMIP params
 mvmip_params:
   num_time_steps: 50
   dt: 0.1
@@ -19,31 +18,17 @@ vehicles:
       p_cost_vector: [100., 100.]
       state_min: [0., 0.]
       state_max: [10., 10.]
-      control_min: [-10., -10.]
-      control_max: [10., 10.]
+      control_min: [-2., -2.]
+      control_max: [2., 2.]
 
 obstacles:
   # Only implemented rectangle obstacles for now.
   obstacle1:
     initial_center_xy: [5., 5.]
-    size_xy_m: [0.5, 0.5]
+    size_xy_m: [2., 2.]
     velocities_xy_mps: [0., 0.]
-    clearance_m: 0.
+    clearance_m: 0.2
 
-# Animation params
-animation_params:
-    interval: 200
-    repeat: True
 
-    # Vehicle and obstacle colors cycle through if their numbers exceed the number of colors
-    vehicle_colors: ["green", "cyan", "orange"]
-    vehicle_start_color: "skyblue"
-    vehicle_end_color: "mediumseagreen"
-    vehicle_control_color: "mediumpurple"
-    vehicle_clearance_color: "cadetblue"
-    vehicle_trajectory_color: "lightgray"
-
-    obstacle_colors: ["lightcoral"]
-    obstacle_clearance_color: "rosybrown"
 
 

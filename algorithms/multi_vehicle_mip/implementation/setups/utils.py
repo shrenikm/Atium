@@ -11,6 +11,9 @@ from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPVehicleDynamics,
     MVMIPVehicleOptimizationParams,
 )
+from algorithms.multi_vehicle_mip.implementation.visualization import (
+    MVMIPAnimationParams,
+)
 
 from common.custom_types import FileName, FilePath
 
@@ -22,6 +25,7 @@ SETUP_YAML_VEHICLE_DYNAMICS_A_MATRIX_KEY = "a_matrix"
 SETUP_YAML_VEHICLE_DYNAMICS_B_MATRIX_KEY = "b_matrix"
 SETUP_YAML_VEHICLE_OPTIMIZATION_PARAMS_KEY = "optimization_params"
 SETUP_YAML_OBSTACLES_KEY = "obstacles"
+SETUP_YAML_ANIMATION_PARAMS_KEY = "animation_params"
 
 
 def get_full_path_of_setup_yaml(
@@ -87,3 +91,11 @@ def obstacles_from_setup_yaml_dict(
         obstacles.append(obstacle)
 
     return obstacles
+
+
+def animation_params_from_setup_yaml_dict(
+    setup_yaml_dict: SetupYamlDict,
+) -> MVMIPAnimationParams:
+
+    animation_params_dict = setup_yaml_dict[SETUP_YAML_ANIMATION_PARAMS_KEY]
+    return MVMIPAnimationParams(**animation_params_dict)

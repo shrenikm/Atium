@@ -14,7 +14,11 @@ from algorithms.multi_vehicle_mip.implementation.definitions import (
 
 
 @attr.frozen
-class _MVMIPAnimationColors:
+class MVMIPAnimationParams:
+    # Params and colors
+    interval: float
+    repeat: bool
+
     vehicle_colors: List[str]
     vehicle_start_color: str
     vehicle_end_color: str
@@ -25,9 +29,15 @@ class _MVMIPAnimationColors:
     obstacle_colors: List[str]
     obstacle_clearance_color: str
 
+    def vehicle_color(self, vehicle_id: int) -> str:
+        return self.vehicle_colors[vehicle_id % len(self.vehicle_colors)]
+
+    def obstacle_color(self, obstacle_id: int) -> str:
+        return self.obstacle_colors[obstacle_id % len(self.obstacle_colors)]
+
 
 @attr.frozen
-class _MVMIPAnimationElements:
+class MVMIPAnimationElements:
     vehicle_core_map: Dict[int, plt.Line2D]
     vehicle_clearance_map: Dict[int, patches.Rectangle]
     vehicle_control_map: Dict[int, patches.FancyArrow]
@@ -67,63 +77,27 @@ def _setup_figure(
     return fig, ax
 
 
-def _initialize_animation_colors(
-    vehicles: Sequence[MVMIPVehicle],
-    obstacles: Sequence[MVMIPObstacle],
-) -> _MVMIPAnimationColors:
-
-    available_vehicle_colors = ["green", "cyan", "orange"]
-    available_obstacle_colors = ["lightcoral"]
-    vehicle_colors = [
-        available_vehicle_colors[i % len(available_vehicle_colors)]
-        for i in range(len(vehicles))
-    ]
-    obstacle_colors = [
-        available_obstacle_colors[i % len(available_obstacle_colors)]
-        for i in range(len(obstacles))
-    ]
-
-    vehicle_start_color = "skyblue"
-    vehicle_end_color = "mediumseagreen"
-    vehicle_control_color = "mediumpurple"
-    vehicle_clearance_color = "cadetblue"
-    vehicle_trajectory_color = "lightgray"
-
-    obstacle_clearance_color = "rosybrown"
-
-    return _MVMIPAnimationColors(
-        vehicle_colors=vehicle_colors,
-        vehicle_start_color=vehicle_start_color,
-        vehicle_end_color=vehicle_end_color,
-        vehicle_control_color=vehicle_control_color,
-        vehicle_clearance_color=vehicle_clearance_color,
-        vehicle_trajectory_color=vehicle_trajectory_color,
-        obstacle_colors=obstacle_colors,
-        obstacle_clearance_color=obstacle_clearance_color,
-    )
-
-
 def _draw_fixed_elements(
     ax: plt.Axes,
-    animation_colors: _MVMIPAnimationColors,
+    animation_params: MVMIPAnimationParams,
     vehicles: Sequence[MVMIPVehicle],
 ) -> None:
 
-    for vehicle_id, vehicle in enumerate(vehicles):
+    for vehicle in vehicles:
         sx, sy = vehicle.dynamics.initial_state[:2]
         fx, fy = vehicle.dynamics.final_state[:2]
 
-        ax.plot(sx, sy, marker="o", color=animation_colors.vehicle_start_color)
-        ax.plot(fx, fy, marker="o", color=animation_colors.vehicle_end_color)
+        ax.plot(sx, sy, marker="o", color=animation_params.vehicle_start_color)
+        ax.plot(fx, fy, marker="o", color=animation_params.vehicle_end_color)
 
 
 def _create_animation_elements(
     ax: plt.Axes,
-    animation_colors: _MVMIPAnimationColors,
+    animation_params: MVMIPAnimationParams,
     mvmip_params: MVMIPOptimizationParams,
     vehicles: Sequence[MVMIPVehicle],
     obstacles: Sequence[MVMIPObstacle],
-) -> _MVMIPAnimationElements:
+) -> MVMIPAnimationElements:
 
     vehicle_core_map = {}
     vehicle_clearance_map = {}
@@ -152,12 +126,12 @@ def _create_animation_elements(
         )
         core_polygon = patches.Polygon(
             xy=corner_points_xy,
-            color=animation_colors.obstacle_colors[obstacle_id],
+            color=animation_params.obstacle_color(obstacle_id),
             fill=True,
         )
         clearance_polygon = patches.Polygon(
             xy=clearance_corner_points_xy,
-            color=animation_colors.obstacle_clearance_color,
+            color=animation_params.obstacle_clearance_color,
             fill=False,
             alpha=0.5,
         )
@@ -176,13 +150,13 @@ def _create_animation_elements(
             ydata=[y],
             marker="o",
             markersize=7,
-            color=animation_colors.vehicle_colors[vehicle_id],
+            color=animation_params.vehicle_color(vehicle_id),
         )
         clearance_rect = patches.Rectangle(
             xy=(x - c_m, y - c_m),
             width=2 * c_m,
             height=2 * c_m,
-            color=animation_colors.vehicle_clearance_color,
+            color=animation_params.vehicle_clearance_color,
             fill=False,
             alpha=0.5,
         )
@@ -192,13 +166,13 @@ def _create_animation_elements(
             dx=0,  # 0 control initially
             dy=0,  # 0 control initially
             length_includes_head=True,
-            color=animation_colors.vehicle_control_color,
+            color=animation_params.vehicle_control_color,
         )
         trajectory_line = plt.Line2D(
             xdata=[x],
             ydata=[y],
             linestyle="dotted",
-            color=animation_colors.vehicle_trajectory_color,
+            color=animation_params.vehicle_trajectory_color,
         )
         ax.add_patch(trajectory_line)
         ax.add_patch(core_line)
@@ -210,18 +184,19 @@ def _create_animation_elements(
         vehicle_control_map[vehicle_id] = control_arrow
         vehicle_trajectory_map[vehicle_id] = trajectory_line
 
-        return _MVMIPAnimationElements(
-            vehicle_core_map=vehicle_core_map,
-            vehicle_clearance_map=vehicle_clearance_map,
-            vehicle_control_map=vehicle_control_map,
-            vehicle_trajectory_map=vehicle_trajectory_map,
-            obstacle_core_map=obstacle_core_map,
-            obstacle_clearance_map=obstacle_clearance_map,
-        )
+    return MVMIPAnimationElements(
+        vehicle_core_map=vehicle_core_map,
+        vehicle_clearance_map=vehicle_clearance_map,
+        vehicle_control_map=vehicle_control_map,
+        vehicle_trajectory_map=vehicle_trajectory_map,
+        obstacle_core_map=obstacle_core_map,
+        obstacle_clearance_map=obstacle_clearance_map,
+    )
 
 
 def visualize_mvmip_result(
     mvmip_result: MVMIPResult,
+    animation_params: MVMIPAnimationParams,
 ) -> None:
 
     nt = mvmip_result.mvmip_params.num_time_steps
@@ -230,24 +205,18 @@ def visualize_mvmip_result(
     vct_map = mvmip_result.vehicle_control_trajectory_map
     vehicles = mvmip_result.vehicles
     obstacles = mvmip_result.obstacles
-    num_vehicles, num_obstacles = len(vehicles), len(obstacles)
 
     fig, ax = _setup_figure(vehicles=vehicles)
 
-    animation_colors = _initialize_animation_colors(
-        vehicles=vehicles,
-        obstacles=obstacles,
-    )
-
     _draw_fixed_elements(
         ax=ax,
-        animation_colors=animation_colors,
+        animation_params=animation_params,
         vehicles=vehicles,
     )
 
     animation_elements = _create_animation_elements(
         ax=ax,
-        animation_colors=animation_colors,
+        animation_params=animation_params,
         mvmip_params=mvmip_result.mvmip_params,
         vehicles=vehicles,
         obstacles=obstacles,
@@ -304,8 +273,8 @@ def visualize_mvmip_result(
         fig=fig,
         func=anim_update,
         frames=nt + 1,
-        interval=100,
-        repeat=True,
+        interval=animation_params.interval,
+        repeat=animation_params.repeat,
     )
 
     plt.show()
