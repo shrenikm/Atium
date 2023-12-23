@@ -1,6 +1,6 @@
 import numpy as np
 from functools import cached_property
-from typing import Union
+from typing import Sequence, Union
 import attr
 from algorithms.multi_vehicle_mip.implementation.custom_types import (
     VehicleControlTrajectoryMap,
@@ -123,6 +123,13 @@ class MVMIPPolygonObstacle(MVMIPObstacle):
 
 @attr.frozen
 class MVMIPResult:
+    # Actual result attributes.
     objective_value: float
     vehicle_state_trajectory_map: VehicleStateTrajectoryMap
     vehicle_control_trajectory_map: VehicleControlTrajectoryMap
+    # Attributes that make the result self-sufficient
+    vehicles: Sequence[MVMIPVehicle]
+    obstacles: Sequence[MVMIPObstacle]
+    # Performance attributes.
+    solver_setup_time_s: float
+    solver_solving_time_s: float

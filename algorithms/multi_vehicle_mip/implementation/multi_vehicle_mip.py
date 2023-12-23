@@ -1,4 +1,5 @@
 from typing import Optional, Sequence
+import time
 
 from ortools.linear_solver import pywraplp
 from algorithms.multi_vehicle_mip.implementation.constraints import (
@@ -27,6 +28,7 @@ def solve_mvmip(
 
     # TODO: Check validity of vehicles and obstacles.
 
+    pre_setup_time = time.perf_counter()
     solver: pywraplp.Solver = pywraplp.Solver.CreateSolver("SCIP")
     assert solver is not None, "Solver could not be created."
 
@@ -58,8 +60,11 @@ def solve_mvmip(
         mvmip_params=mvmip_params,
         vehicles=vehicles,
     )
+    post_setup_time = time.perf_counter()
 
+    pre_solve_time = time.perf_counter()
     status = solver.Solve()
+    post_solve_time = time.perf_counter()
 
     if status == solver.OPTIMAL:
         print("Optimal solution for MVMIP found!")
@@ -67,6 +72,9 @@ def solve_mvmip(
             solver=solver,
             mvmip_params=mvmip_params,
             vehicles=vehicles,
+            obstacles=obstacles,
+            solver_setup_time_s=post_setup_time - pre_setup_time,
+            solver_solve_time_s=post_solve_time - pre_solve_time,
         )
     else:
         print("Optimal solution for MVMIP could not be found :(")

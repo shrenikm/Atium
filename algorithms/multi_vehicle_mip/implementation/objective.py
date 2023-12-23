@@ -2,6 +2,7 @@ from typing import Sequence, Tuple
 import numpy as np
 
 from algorithms.multi_vehicle_mip.implementation.definitions import (
+    MVMIPObstacle,
     MVMIPOptimizationParams,
     MVMIPResult,
     MVMIPVehicle,
@@ -127,6 +128,9 @@ def mvmip_result_from_solver(
     solver: Solver,
     mvmip_params: MVMIPOptimizationParams,
     vehicles: Sequence[MVMIPVehicle],
+    obstacles: Sequence[MVMIPObstacle],
+    solver_setup_time_s: float,
+    solver_solve_time_s: float,
 ) -> MVMIPResult:
 
     objective_value = np.round(
@@ -143,4 +147,9 @@ def mvmip_result_from_solver(
         objective_value=objective_value,
         vehicle_state_trajectory_map=vst_map,
         vehicle_control_trajectory_map=vct_map,
+        vehicles=vehicles,
+        obstacles=obstacles,
+        solver_setup_time_s=solver_setup_time_s,
+        solver_solving_time_s=solver_solve_time_s,
     )
+

@@ -1,5 +1,4 @@
 import numpy as np
-import time
 from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPOptimizationParams,
     MVMIPRectangleObstacle,
@@ -75,12 +74,12 @@ if __name__ == "__main__":
         obstacle,
     ]
 
-    start_time = time.perf_counter()
     result = solve_mvmip(
         mvmip_params=mvmip_params,
         vehicles=vehicles,
         obstacles=obstacles,
     )
     print(result)
-    end_time = time.perf_counter()
-    print(f"Time to solve MVMIP: {end_time - start_time} seconds")
+    if result is not None:
+        print(f"MVMIP setup time: {result.solver_setup_time_s} s")
+        print(f"MVMIP solve time: {result.solver_solving_time_s} s")
