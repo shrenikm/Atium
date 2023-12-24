@@ -240,7 +240,7 @@ def construct_state_transition_constraints(
     return cons_map
 
 
-def construct_vehicle_obstacle_constraints(
+def construct_vehicle_obstacle_collision_constraints(
     solver: Solver,
     mvmip_params: MVMIPOptimizationParams,
     vehicle_id: int,
@@ -362,6 +362,119 @@ def construct_vehicle_obstacle_constraints(
     return cons_map
 
 
+def construct_vehicle_vehicle_collision_constraints(
+    solver: Solver,
+    mvmip_params: MVMIPOptimizationParams,
+    vehicle_id: int,
+    vehicles: Sequence[MVMIPVehicle],
+) -> SolverConstraintMap:
+
+    cons_map = {}
+
+    nt = mvmip_params.num_time_steps
+    dt = mvmip_params.dt
+    current_vehicle_id = vehicle_id
+
+    for other_vehicle_id in range(vehicle_id + 1, len(vehicles)):
+        # Computing dx=dy=d
+        current_vehicle_d_m = vehicles[current_vehicle_id].dynamics.clearance_m
+        other_vehicle_d_m = vehicles[other_vehicle_id].dynamics.clearance_m
+        d_m = current_vehicle_d_m + other_vehicle_d_m
+
+        for time_step_id in range(1, nt + 1):
+            # Constraint is of the form
+            # x_pi - x_qi >= d_x - Mb_pqi1
+            # x_qi - x_pi >= d_x - Mb_pqi2
+            # y_pi - y_qi >= d_x - Mb_pqi3
+            # y_qi - y_pi >= d_x - Mb_pqi4
+            for state_id in range(2):
+                s_p_var_str = s_v(
+                    vehicle_id=vehicle_id,
+                    time_step_id=time_step_id,
+                    state_id=state_id,
+                )
+                s_q_var_str = s_v(
+                    vehicle_id=other_vehicle_id,
+                    time_step_id=time_step_id,
+                    state_id=state_id,
+                )
+                # First constraint
+                # x_pi - x_qi + Mb_piq1 >= dx
+                b_var_str = vvc_bsv(
+                    current_vehicle_id=current_vehicle_id,
+                    other_vehicle_id=other_vehicle_id,
+                    time_step_id=time_step_id,
+                    var_id=state_id * 2,
+                )
+                cons_var = vvc_c(
+                    current_state_var_str=s_p_var_str,
+                    other_state_var_str=s_q_var_str,
+                    binary_var_str=b_var_str,
+                )
+                assert cons_var not in cons_map
+                constraint = solver.Constraint(
+                    d_m,
+                    solver.infinity(),
+                    cons_var,
+                )
+                constraint.SetCoefficient(solver.LookupVariable(s_p_var_str), 1.0)
+                constraint.SetCoefficient(solver.LookupVariable(s_q_var_str), -1.0)
+                constraint.SetCoefficient(
+                    solver.LookupVariable(b_var_str), mvmip_params.M
+                )
+                cons_map[cons_var] = constraint
+
+                # Second constraint
+                b_var_str = vvc_bsv(
+                    current_vehicle_id=current_vehicle_id,
+                    other_vehicle_id=other_vehicle_id,
+                    time_step_id=time_step_id,
+                    var_id=state_id * 2 + 1,
+                )
+                cons_var = vvc_c(
+                    current_state_var_str=s_p_var_str,
+                    other_state_var_str=s_q_var_str,
+                    binary_var_str=b_var_str,
+                )
+                assert cons_var not in cons_map
+                constraint = solver.Constraint(
+                    d_m,
+                    solver.infinity(),
+                    cons_var,
+                )
+                constraint.SetCoefficient(solver.LookupVariable(s_p_var_str), -1.0)
+                constraint.SetCoefficient(solver.LookupVariable(s_q_var_str), 1.0)
+                constraint.SetCoefficient(
+                    solver.LookupVariable(b_var_str), mvmip_params.M
+                )
+                cons_map[cons_var] = constraint
+
+            # Constraint for the sum of binary slack variables
+            # Sum(b_*) <= 3
+            cons_var = vvc_bc(
+                current_vehicle_id=current_vehicle_id,
+                other_vehicle_id=other_vehicle_id,
+                time_step_id=time_step_id,
+            )
+            assert cons_var not in cons_map
+            constraint = solver.Constraint(
+                -solver.infinity(),
+                3.0,
+                cons_var,
+            )
+            for var_id in range(4):
+                b_var_str = vvc_bsv(
+                    current_vehicle_id=current_vehicle_id,
+                    other_vehicle_id=other_vehicle_id,
+                    time_step_id=time_step_id,
+                    var_id=var_id,
+                )
+                constraint.SetCoefficient(solver.LookupVariable(b_var_str), 1.0)
+            cons_map[cons_var] = constraint
+
+    return cons_map
+
+
 def construct_constraints_for_mvmip(
     solver: Solver,
     mvmip_params: MVMIPOptimizationParams,
@@ -394,11 +507,17 @@ def construct_constraints_for_mvmip(
             vehicle_id=vehicle_id,
             vehicle=vehicle,
         )
-        voc_cons_map = construct_vehicle_obstacle_constraints(
+        voc_cons_map = construct_vehicle_obstacle_collision_constraints(
             solver=solver,
             mvmip_params=mvmip_params,
             vehicle_id=vehicle_id,
             obstacles=obstacles,
+        )
+        vvc_cons_map = construct_vehicle_vehicle_collision_constraints(
+            solver=solver,
+            mvmip_params=mvmip_params,
+            vehicle_id=vehicle_id,
+            vehicles=vehicles,
         )
 
         for individual_cons_map in [
@@ -406,6 +525,7 @@ def construct_constraints_for_mvmip(
             cs_cons_map,
             st_cons_map,
             voc_cons_map,
+            vvc_cons_map,
         ]:
             assert_uniqueness_and_update_mvmip_map(
                 mvmip_map_to_be_added=individual_cons_map,

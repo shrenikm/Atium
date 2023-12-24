@@ -1,3 +1,4 @@
+import logging
 from typing import Optional, Sequence
 import time
 
@@ -27,6 +28,13 @@ def solve_mvmip(
 ) -> Optional[MVMIPResult]:
 
     # TODO: Check validity of vehicles and obstacles.
+    # mvmip_logger = logging.Logger("MVMIPLogger")
+
+    # TODO: Set up a logging wrapper. Forgot how much BS this thing is.
+    logging.basicConfig()
+    mvmip_logger = logging.getLogger("MVMIPLogger")
+    mvmip_logger.setLevel(logging.INFO)
+    mvmip_logger.info("Starting MVMIP problem setup ...")
 
     pre_setup_time = time.perf_counter()
     solver: pywraplp.Solver = pywraplp.Solver.CreateSolver("SCIP")
@@ -62,9 +70,15 @@ def solve_mvmip(
     )
     post_setup_time = time.perf_counter()
 
+    mvmip_logger.info("Problem setup complete.")
+
+    mvmip_logger.info("Starting MVMIP solve ...")
+
     pre_solve_time = time.perf_counter()
     status = solver.Solve()
     post_solve_time = time.perf_counter()
+
+    mvmip_logger.info("Solved MVMIP")
 
     if status == solver.OPTIMAL:
         print("Optimal solution for MVMIP found!")

@@ -42,7 +42,6 @@ if __name__ == "__main__":
         obstacles=obstacles,
     )
 
-    print(result)
     if result is not None:
         print(f"MVMIP setup time: {result.solver_setup_time_s} s")
         print(f"MVMIP solve time: {result.solver_solving_time_s} s")

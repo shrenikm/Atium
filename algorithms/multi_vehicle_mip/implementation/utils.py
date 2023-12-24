@@ -96,10 +96,11 @@ def vehicle_obstacle_collision_binary_constraint_var_from_ids(
 
 
 def vehicle_vehicle_collision_constraint_var_from_var_strs(
-    state_var_str: str,
+    current_state_var_str: str,
+    other_state_var_str: str,
     binary_var_str: str,
 ) -> str:
-    return f"c_vvc_{state_var_str}_{binary_var_str}"
+    return f"c_vvc_{current_state_var_str}_{other_state_var_str}_{binary_var_str}"
 
 
 def vehicle_vehicle_collision_binary_constraint_var_from_ids(
