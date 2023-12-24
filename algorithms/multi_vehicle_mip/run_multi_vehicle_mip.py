@@ -15,7 +15,7 @@ from algorithms.multi_vehicle_mip.implementation.visualization import (
 
 if __name__ == "__main__":
 
-    setup_yaml_filename = "mvmip_setup1.yaml"
+    setup_yaml_filename = "mvmip_setup2.yaml"
 
     setup_file_path = get_full_path_of_setup_yaml(
         setup_yaml_filename=setup_yaml_filename

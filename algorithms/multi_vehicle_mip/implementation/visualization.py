@@ -14,6 +14,16 @@ from algorithms.multi_vehicle_mip.implementation.definitions import (
 from algorithms.multi_vehicle_mip.results.utils import get_full_path_of_output_video
 
 
+# Visualization params. These could be parameterized later if need be.
+OBSTACLE_CLEARANCE_POLYGON_ALPHA = 0.5
+VEHICLE_CORE_MARKERSIZE = 7
+VEHICLE_CLEARANCE_RECT_ALPHA = 0.5
+VEHICLE_CONTROL_ARROW_WIDTH = 0.01
+VEHICLE_CONTROL_ARROW_LENGTH_LIMITS = [0.3, 1.0]
+VEHICLE_CONTROL_ARROW_HEAD_WIDTH_FACTOR = 0.25
+VEHICLE_CONTROL_ARROW_HEAD_LENGTH_FACTOR = 0.3
+
+
 @attr.frozen
 class MVMIPAnimationParams:
     # Params and colors
@@ -136,7 +146,7 @@ def _create_animation_elements(
             xy=clearance_corner_points_xy,
             color=animation_params.obstacle_clearance_color,
             fill=False,
-            alpha=0.5,
+            alpha=OBSTACLE_CLEARANCE_POLYGON_ALPHA,
         )
         ax.add_patch(core_polygon)
         ax.add_patch(clearance_polygon)
@@ -152,7 +162,7 @@ def _create_animation_elements(
             xdata=[x],
             ydata=[y],
             marker="o",
-            markersize=7,
+            markersize=VEHICLE_CORE_MARKERSIZE,
             color=animation_params.vehicle_color(vehicle_id),
         )
         clearance_rect = patches.Rectangle(
@@ -161,15 +171,13 @@ def _create_animation_elements(
             height=2 * c_m,
             color=animation_params.vehicle_clearance_color,
             fill=False,
-            alpha=0.5,
+            alpha=VEHICLE_CLEARANCE_RECT_ALPHA,
         )
         control_arrow = patches.FancyArrow(
             x=x,
             y=y,
             dx=0,  # 0 control initially
             dy=0,  # 0 control initially
-            width=0.01,
-            head_width=0.2,
             length_includes_head=True,
             color=animation_params.vehicle_control_color,
         )
@@ -253,6 +261,34 @@ def visualize_mvmip_result(
             control_trajectory = vct_map[vehicle_id]
 
             x, y = state_trajectory[time_step_id][:2]
+            # time_step_id is in [0, nt], but control isn't defined for nt
+            dx = dt * control_trajectory[min(time_step_id, nt - 1)][0]
+            dy = dt * control_trajectory[min(time_step_id, nt - 1)][1]
+
+            # To compute the plot arrow dimensions, we scale the length of the actual control solution
+            # in between two values that are look good visually.
+            # We could just use a constant value, but ideally the length is an indicator of the
+            # magnitude of the control input.
+            # Using the control input directly can cause the arrows to distort at the extremeties
+            # And also doesn't scale well as the problem and setup dimensionss change.
+            # To perform the mapping, we find the max control input in the entire trajectory and
+            # bind the current control length that is in betwen [0, max_control] to VEHICLE_CONTROL_ARROW_LENGTH_LIMITS
+            max_control_length = dt * np.max(
+                np.hypot(
+                    control_trajectory[:, 0],
+                    control_trajectory[:, 1],
+                )
+            )
+            # print(np.hypot(control_trajectory[:, 0], control_trajectory[:, 1]))
+            control_length = np.hypot(dx, dy)
+            arrow_length = np.interp(
+                control_length,
+                [0, max_control_length],
+                VEHICLE_CONTROL_ARROW_LENGTH_LIMITS,
+            )
+            # Using the computed arrow length to scale dx and dy
+            k_factor = arrow_length / control_length
+
             c_m = vehicle.dynamics.clearance_m
 
             animation_elements.vehicle_core_map[vehicle_id].set_xdata(x)
@@ -263,9 +299,11 @@ def visualize_mvmip_result(
             animation_elements.vehicle_control_map[vehicle_id].set_data(
                 x=x,
                 y=y,
-                # time_step_id is in [0, nt], but control isn't defined for nt
-                dx=control_trajectory[min(time_step_id, nt - 1)][0] * dt,
-                dy=control_trajectory[min(time_step_id, nt - 1)][1] * dt,
+                dx=k_factor * dx,
+                dy=k_factor * dy,
+                width=VEHICLE_CONTROL_ARROW_WIDTH,
+                head_width=VEHICLE_CONTROL_ARROW_HEAD_WIDTH_FACTOR * arrow_length,
+                head_length=VEHICLE_CONTROL_ARROW_HEAD_LENGTH_FACTOR * arrow_length,
             )
             animation_elements.vehicle_trajectory_map[vehicle_id].set_xdata(
                 state_trajectory[: time_step_id + 1, 0]

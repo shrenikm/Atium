@@ -34,7 +34,7 @@ obstacles:
 animation_params:
     interval: 500
     repeat: True
-    save_video: True
+    save_video: False
     output_video_filename: "mvmip_setup1.gif"
 
     # Vehicle and obstacle colors cycle through if their numbers exceed the number of colors
