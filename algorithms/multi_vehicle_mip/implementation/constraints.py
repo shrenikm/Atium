@@ -26,7 +26,6 @@ from algorithms.multi_vehicle_mip.implementation.utils import (
 )
 from algorithms.multi_vehicle_mip.implementation.custom_types import (
     Solver,
-    SolverVariableMap,
     SolverConstraintMap,
 )
 
@@ -372,7 +371,6 @@ def construct_vehicle_vehicle_collision_constraints(
     cons_map = {}
 
     nt = mvmip_params.num_time_steps
-    dt = mvmip_params.dt
     current_vehicle_id = vehicle_id
 
     for other_vehicle_id in range(vehicle_id + 1, len(vehicles)):

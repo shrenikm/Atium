@@ -1,5 +1,5 @@
 import numpy as np
-from functools import cached_property, lru_cache
+from functools import lru_cache
 from typing import Protocol, Sequence, Union
 import attr
 from algorithms.multi_vehicle_mip.implementation.custom_types import (

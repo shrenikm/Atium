@@ -17,7 +17,6 @@ from algorithms.multi_vehicle_mip.implementation.utils import (
 from algorithms.multi_vehicle_mip.implementation.custom_types import (
     Solver,
     SolverObjective,
-    SolverVariableMap,
     VehicleControlTrajectoryMap,
     VehicleStateTrajectoryMap,
 )
