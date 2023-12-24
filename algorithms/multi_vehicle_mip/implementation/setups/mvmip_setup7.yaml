@@ -1,6 +1,6 @@
 # MVMIP params
 mvmip_params:
-  num_time_steps: 50
+  num_time_steps: 75
   dt: 0.1
   M: 1000000.
   result_float_precision: 3
@@ -10,12 +10,12 @@ vehicles:
     dynamics:
       a_matrix: [[1., 0.], [0., 1.]]
       b_matrix: [[1., 0.], [0., 1.]]  # Note that this is without dt.
-      initial_state: [1., 1.]
-      final_state: [9., 9.]
+      initial_state: [5., 1.]
+      final_state: [5., 9.]
       clearance_m: 0.5
     optimization_params:
-      q_cost_vector: [10., 10.]
-      r_cost_vector: [1., 1.]
+      q_cost_vector: [1., 1.]
+      r_cost_vector: [10., 10.]
       p_cost_vector: [100., 100.]
       state_min: [0., 0.]
       state_max: [10., 10.]
@@ -25,17 +25,27 @@ vehicles:
 obstacles:
   # Only implemented rectangle obstacles for now.
   obstacle1:
-    initial_center_xy: [5., 5.]
-    size_xy_m: [2., 2.]
-    velocities_xy_mps: [-1., 0.]
+    initial_center_xy: [6., 2.5]
+    size_xy_m: [1., 1.]
+    velocities_xy_mps: [-2., 0.]
     clearance_m: 0.2
+  obstacle2:
+    initial_center_xy: [2., 7.]
+    size_xy_m: [3., 1.]
+    velocities_xy_mps: [1., 0.]
+    clearance_m: 0.5
+  obstacle3:
+    initial_center_xy: [8., 8.]
+    size_xy_m: [2., 2.]
+    velocities_xy_mps: [-1.5, -2.]
+    clearance_m: 0.1
 
 # Animation params
 animation_params:
     interval: 200
     repeat: True
     save_video: True
-    output_video_filename: "mvmip_setup3.gif"
+    output_video_filename: "mvmip_setup7.gif"
 
     # Vehicle and obstacle colors cycle through if their numbers exceed the number of colors
     vehicle_colors: ["green", "cyan", "orange"]

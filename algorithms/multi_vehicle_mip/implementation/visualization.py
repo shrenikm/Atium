@@ -287,7 +287,10 @@ def visualize_mvmip_result(
                 VEHICLE_CONTROL_ARROW_LENGTH_LIMITS,
             )
             # Using the computed arrow length to scale dx and dy
-            k_factor = arrow_length / control_length
+            if not np.isclose(control_length, 0.0):
+                k_factor = arrow_length / control_length
+            else:
+                k_factor = 0.0
 
             c_m = vehicle.dynamics.clearance_m
 

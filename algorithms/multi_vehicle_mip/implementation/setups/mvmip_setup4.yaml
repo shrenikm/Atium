@@ -14,9 +14,9 @@ vehicles:
       final_state: [9., 9.]
       clearance_m: 0.5
     optimization_params:
-      q_cost_vector: [10., 10.]
-      r_cost_vector: [1., 1.]
-      p_cost_vector: [100., 100.]
+      q_cost_vector: [1., 1.]
+      r_cost_vector: [4., 4.]
+      p_cost_vector: [1., 1.]
       state_min: [0., 0.]
       state_max: [10., 10.]
       control_min: [-2., -2.]
@@ -25,8 +25,8 @@ vehicles:
 obstacles:
   # Only implemented rectangle obstacles for now.
   obstacle1:
-    initial_center_xy: [5., 5.]
-    size_xy_m: [2., 2.]
+    initial_center_xy: [7., 5.]
+    size_xy_m: [4., 2.]
     velocities_xy_mps: [-1., 0.]
     clearance_m: 0.2
 
@@ -35,7 +35,7 @@ animation_params:
     interval: 200
     repeat: True
     save_video: True
-    output_video_filename: "mvmip_setup3.gif"
+    output_video_filename: "mvmip_setup4.gif"
 
     # Vehicle and obstacle colors cycle through if their numbers exceed the number of colors
     vehicle_colors: ["green", "cyan", "orange"]
