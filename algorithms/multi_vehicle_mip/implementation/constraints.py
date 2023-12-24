@@ -190,6 +190,7 @@ def construct_state_transition_constraints(
                 state_id=next_state_id,
             )
             cons_var = st_c(
+                vehicle_id=vehicle_id,
                 current_time_step_id=current_time_step_id,
                 next_time_step_id=next_time_step_id,
                 constraint_id=next_state_id,

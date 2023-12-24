@@ -70,11 +70,14 @@ def control_slack_constraint_var_from_var_strs(
 
 
 def state_transition_constraint_var_from_var_strs(
+    vehicle_id: int,
     current_time_step_id: int,
     next_time_step_id: int,
     constraint_id: int,
 ) -> str:
-    return f"c_st_{current_time_step_id}_{next_time_step_id}_{constraint_id}"
+    return (
+        f"c_st_{vehicle_id}_{current_time_step_id}_{next_time_step_id}_{constraint_id}"
+    )
 
 
 def vehicle_obstacle_collision_constraint_var_from_var_strs(
