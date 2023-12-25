@@ -1,0 +1,97 @@
+# MVMIP params
+mvmip_params:
+  num_time_steps: 100
+  dt: 0.1
+  M: 1000000.
+  result_float_precision: 3
+
+vehicles:
+  vehicle1:
+    dynamics:
+      a_matrix: [[1., 0.], [0., 1.]]
+      b_matrix: [[1., 0.], [0., 1.]]  # Note that this is without dt.
+      initial_state: [9., 9.]
+      final_state: [1., 1.]
+      clearance_m: 0.5
+    optimization_params:
+      q_cost_vector: [100., 100.]
+      r_cost_vector: [1., 1.]
+      p_cost_vector: [1000., 1000.]
+      state_min: [0., 0.]
+      state_max: [10., 10.]
+      control_min: [-3., -3.]
+      control_max: [3., 3.]
+  vehicle2:
+    dynamics:
+      a_matrix: [[1., 0.], [0., 1.]]
+      b_matrix: [[1., 0.], [0., 1.]]  # Note that this is without dt.
+      initial_state: [9., 1.]
+      final_state: [1., 9.]
+      clearance_m: 0.3
+    optimization_params:
+      q_cost_vector: [1., 1.]
+      r_cost_vector: [2., 2.]
+      p_cost_vector: [100., 100.]
+      state_min: [0., 0.]
+      state_max: [10., 10.]
+      control_min: [-2., -2.]
+      control_max: [2., 2.]
+  vehicle3:
+    dynamics:
+      a_matrix: [[1., 0.], [0., 1.]]
+      b_matrix: [[1., 0.], [0., 1.]]  # Note that this is without dt.
+      initial_state: [1., 5.]
+      final_state: [9., 5.]
+      clearance_m: 1.
+    optimization_params:
+      q_cost_vector: [1., 1.]
+      r_cost_vector: [10., 10.]
+      p_cost_vector: [100., 100.]
+      state_min: [0., 0.]
+      state_max: [10., 10.]
+      control_min: [-5., -5.]
+      control_max: [5., 5.]
+
+obstacles:
+  # Only implemented rectangle obstacles for now.
+  obstacle1:
+    initial_center_xy: [5., 2.]
+    size_xy_m: [1., 2.]
+    velocities_xy_mps: [0., 2.]
+    clearance_m: 0.4
+  obstacle2:
+    initial_center_xy: [2., 7.]
+    size_xy_m: [2., 2.]
+    velocities_xy_mps: [3., -2.]
+    clearance_m: 0.1
+  obstacle3:
+    initial_center_xy: [6., 9.]
+    size_xy_m: [2., 2.]
+    velocities_xy_mps: [-1.5, -1.]
+    clearance_m: 0.1
+  obstacle4:
+    initial_center_xy: [7., 2.]
+    size_xy_m: [0.2, 0.2]
+    velocities_xy_mps: [-0.5, 1.]
+    clearance_m: 1.
+
+# Animation params
+animation_params:
+    interval: 200
+    repeat: True
+    save_video: False
+    output_video_filename: "mvmip_setup8.gif"
+
+    # Vehicle and obstacle colors cycle through if their numbers exceed the number of colors
+    vehicle_colors: ["green", "cyan", "orange"]
+    vehicle_start_color: "skyblue"
+    vehicle_end_color: "mediumseagreen"
+    vehicle_control_color: "mediumpurple"
+    vehicle_clearance_color: "cadetblue"
+    vehicle_trajectory_color: "lightgray"
+
+    obstacle_colors: ["lightcoral"]
+    obstacle_clearance_color: "rosybrown"
+
+
+
