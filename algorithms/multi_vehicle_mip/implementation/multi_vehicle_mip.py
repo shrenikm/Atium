@@ -73,6 +73,8 @@ def solve_mvmip(
     mvmip_logger.info("Problem setup complete.")
 
     mvmip_logger.info("Starting MVMIP solve ...")
+    mvmip_logger.info(f"Number of variables: {solver.NumVariables()}")
+    mvmip_logger.info(f"Number of constraints: {solver.NumConstraints()}")
 
     pre_solve_time = time.perf_counter()
     status = solver.Solve()
@@ -81,7 +83,7 @@ def solve_mvmip(
     mvmip_logger.info("Solved MVMIP")
 
     if status == solver.OPTIMAL:
-        print("Optimal solution for MVMIP found!")
+        mvmip_logger.info("Optimal solution for MVMIP found!")
         return mvmip_result_from_solver(
             solver=solver,
             mvmip_params=mvmip_params,
@@ -91,5 +93,5 @@ def solve_mvmip(
             solver_solve_time_s=post_solve_time - pre_solve_time,
         )
     else:
-        print("Optimal solution for MVMIP could not be found :(")
+        mvmip_logger.info("Optimal solution for MVMIP could not be found :(")
         return None
