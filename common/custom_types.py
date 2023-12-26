@@ -1,4 +1,8 @@
-from typing import Any, Callable
+from typing import (
+    Any,
+    Callable,
+    Tuple,
+)
 import nptyping as npt
 
 # File/directory types
@@ -23,6 +27,7 @@ PointXYVector = Arr[Shape["2"], f64]
 Polygon2DArray = Arr[Shape["N, 2"], f64]
 PointXYArray = Arr[Shape["2"], f64]
 SizeXYVector = Arr[Shape["2"], f64]
+Coordinate2D = Tuple[int, int]
 
 # Kinematics/dynamics/control
 AMatrix = Arr[Shape["Nx, Nx"], f64]
@@ -37,3 +42,4 @@ ControlTrajectoryArray = Arr[Shape["N, Nu"], f64]
 
 # Optimization
 CostVector = Arr[Shape["N"], f64]
+CostMatrix = Arr[Shape["N,M"], f64]
