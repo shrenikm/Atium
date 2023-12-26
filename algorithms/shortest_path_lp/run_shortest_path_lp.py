@@ -5,6 +5,8 @@ References:
 1. https://www.cs.purdue.edu/homes/egrigore/580FT15/26-lp-jefferickson.pdf
 2. https://people.seas.harvard.edu/~cs125/fall16/section-notes/05.pdf
 """
+import cv2
+from typing import List
 import numpy as np
 import time
 
@@ -39,7 +41,7 @@ def find_shortest_path(
     cost_matrix: CostMatrix,
     start_coord: Coordinate2D,
     end_coord: Coordinate2D,
-) -> None:
+) -> List[Coordinate2D]:
 
     assert cost_matrix[start_coord] >= 0.0, "Start in collision"
     assert cost_matrix[end_coord] >= 0.0, "End in collision"
@@ -50,6 +52,7 @@ def find_shortest_path(
     m, n = cost_matrix.shape
     nodes = np.arange(m * n)
     ind_map = nodes.reshape(n, m)
+    coord_map = {}
 
     start_node = ind_map[start_coord]
     end_node = ind_map[end_coord]
@@ -66,6 +69,7 @@ def find_shortest_path(
 
             from_coord = (i, j)
             from_node = ind_map[from_coord]
+            coord_map[from_node] = (i, j)
 
             if cost_matrix[from_coord] < 0.0:
                 continue
@@ -94,8 +98,7 @@ def find_shortest_path(
                     var_str = _var_str(from_node=from_node, to_node=to_node)
                     assert var_str not in var_strs
                     var_strs.append(var_str)
-                    #solver.NumVar(0.0, 1.0, var_str)
-                    solver.NumVar(-solver.infinity(), solver.infinity(), var_str)
+                    solver.NumVar(0.0, 1.0, var_str)
 
                     # Objective
                     # Use the current node's cost as the edge weight.
@@ -104,12 +107,6 @@ def find_shortest_path(
 
     end_time = time.perf_counter()
     print(f"Time to setup variables and objective: {end_time - start_time} sec")
-
-    print(neighbor_out_map)
-    print("===")
-    print(neighbor_in_map)
-    print("===")
-    print(ind_map)
 
     # Constraints
     start_time = time.perf_counter()
@@ -162,25 +159,62 @@ def find_shortest_path(
     end_time = time.perf_counter()
     print(f"Time to solve: {end_time - start_time} sec")
 
-    for var_str in var_strs:
-        print(var_str, solver.LookupVariable(var_str).solution_value())
+    node_path = []
 
     if status == solver.OPTIMAL:
         print("Optimal solution found!")
+        # Constructing path.
+        node = start_node
+        node_path = [node]
+        while node != end_node:
+            found_shortest_path_neighbor = False
+            for neighbor_node in neighbor_out_map[node]:
+                var_str = _var_str(node, neighbor_node)
+                assert var_str in var_strs, f"{node}, {neighbor_out_map[node]}"
+                if solver.LookupVariable(var_str).solution_value() == 1.0:
+                    found_shortest_path_neighbor = True
+                    node = neighbor_node
+                    node_path.append(neighbor_node)
+                    break
+
+            assert (
+                found_shortest_path_neighbor
+            ), "No neighboring edges have a solution value of 1.0. Something has gone wrong."
+        assert node_path[0] == start_node
+        assert node_path[-1] == end_node
+
     else:
         print("Optimal solution could not be found :(")
+
+    coord_path = [coord_map[node] for node in node_path]
+    for coord in coord_path:
+        assert cost_matrix[coord] >= 0.0, "Invalid path found!"
+    return coord_path
 
 
 if __name__ == "__main__":
 
-    n = 10
+    n = 75
     start_coord = (0, 0)
     end_coord = (n - 1, n - 1)
     cost_matrix = np.ones((n, n), dtype=np.float64)
-    cost_matrix[3, 2] = -1.0
 
-    find_shortest_path(
+    obstacle_half_size = n // 8
+    lower = n // 2 - obstacle_half_size
+    upper = n // 2 + obstacle_half_size
+    cost_matrix[lower:upper, lower:upper] = -1.0
+
+    coord_path = find_shortest_path(
         cost_matrix=cost_matrix,
         start_coord=start_coord,
         end_coord=end_coord,
     )
+    print(coord_path)
+
+    img = np.interp(cost_matrix, [0.0, 1.0], [0, 255]).astype(np.uint8)
+    for coord in coord_path:
+        img[coord] = 200
+
+    cv2.namedWindow("img", cv2.WINDOW_NORMAL)
+    cv2.imshow("img", img)
+    cv2.waitKey(0)
