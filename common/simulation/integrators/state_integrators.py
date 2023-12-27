@@ -53,13 +53,8 @@ def mid_point_state_integrator_fn(
     return state + dt * state_derivative_fn(mid_point_state, control_input)
 
 
-def state_integrator_fn_from_type(
-    state_integrator_type: StateIntegratorType,
-) -> StateIntegratorCallable:
-
-    mapping = {
-        StateIntegratorType.EXPLICIT_EULER: explicit_euler_state_integrator_fn,
-        StateIntegratorType.IMPLICIT_EULER: implicit_euler_state_integrator_fn,
-        StateIntegratorType.MID_POINT: mid_point_state_integrator_fn,
-    }
-    return mapping[state_integrator_type]
+STATE_INTEGRATORS_FN_MAP = {
+    StateIntegratorType.EXPLICIT_EULER: explicit_euler_state_integrator_fn,
+    StateIntegratorType.IMPLICIT_EULER: implicit_euler_state_integrator_fn,
+    StateIntegratorType.MID_POINT: mid_point_state_integrator_fn,
+}

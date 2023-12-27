@@ -2,8 +2,7 @@
 Light-weight simulator for kinematic and simple dynamic systems.
 Useful for quick prototyping with custom visualization without having to set up a PyBullet/Drake env.
 """
-import time
-from typing import Protocol
+from abc import ABCMeta, abstractmethod
 
 import attr
 import numpy as np
@@ -11,22 +10,20 @@ import numpy as np
 from common.control.interfaces import Controller
 from common.custom_types import ControlInputVector, StateVector
 from common.dynamics.interfaces import Dynamics
-from common.simulation.integrators.state_integrators import StateIntegratorCallable
-
-
-@attr.frozen
-class SiliconSimulatorParams:
-    max_time_s: float
+from common.simulation.integrators.state_integrators import (
+    STATE_INTEGRATORS_FN_MAP,
+    StateIntegratorType,
+)
 
 
 @attr.define
-class SiliconSimulator(Protocol):
+class SiliconSimulator(metaclass=ABCMeta):
     state: StateVector
     control_input: ControlInputVector
     dynamics: Dynamics
-    state_integrator_fn: StateIntegratorCallable
-    timestamp_s: float
+    timestamp_s: float = 0.0
 
+    @abstractmethod
     def visualize(self) -> None:
         raise NotImplementedError
 
@@ -35,21 +32,25 @@ class SiliconSimulator(Protocol):
         controller: Controller,
         dt: float,
         max_time_s: float = np.inf,
+        state_integrator_type: StateIntegratorType = StateIntegratorType.EXPLICIT_EULER,
     ) -> None:
+        """
+        Lots of ugly side-effects here but it keeps things simple.
+        It isn't dirty if you avert your eyes.
+        """
+        state_integrator_fn = STATE_INTEGRATORS_FN_MAP[state_integrator_type]
 
-        sim_time_s = 0.0
-
-        while sim_time_s <= max_time_s:
+        while self.timestamp_s <= max_time_s:
             self.control_input = controller.compute_control_input(
                 state=self.state,
             )
-            self.state = self.state_integrator_fn(
+            self.state = state_integrator_fn(
                 state=self.state,
                 control_input=self.control_input,
                 state_derivative_fn=self.dynamics.compute_state_derivative,
                 dt=dt,
             )
-            self.timestamp_s = sim_time_s
+            self.timestamp_s += dt
 
             self.visualize()
 
@@ -58,6 +59,7 @@ class SiliconSimulator(Protocol):
         controller: Controller,
         realtime_rate: float,
         max_time_s: float = np.inf,
+        state_integrator_type: StateIntegratorType = StateIntegratorType.EXPLICIT_EULER,
     ) -> None:
         """
         Runs the simulation in real-time.
