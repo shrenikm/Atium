@@ -1,24 +1,26 @@
 from typing import Sequence
 
+from algorithms.multi_vehicle_mip.implementation.custom_types import Solver, SolverVariableMap
 from algorithms.multi_vehicle_mip.implementation.definitions import (
-    MVMIPOptimizationParams,
-    MVMIPVehicle,
     MVMIPObstacle,
+    MVMIPOptimizationParams,
     MVMIPRectangleObstacle,
+    MVMIPVehicle,
 )
-
+from algorithms.multi_vehicle_mip.implementation.utils import assert_uniqueness_and_update_mvmip_map
 from algorithms.multi_vehicle_mip.implementation.utils import (
-    assert_uniqueness_and_update_mvmip_map,
-    state_variable_str_from_ids as s_v,
-    state_slack_variable_str_from_ids as s_sv,
-    control_variable_str_from_ids as c_v,
     control_slack_variable_str_from_ids as c_sv,
-    vehicle_obstacle_collision_binary_slack_variable_str_from_ids as voc_bsv,
-    vehicle_vehicle_collision_binary_slack_variable_str_from_ids as vvc_bsv,
 )
-from algorithms.multi_vehicle_mip.implementation.custom_types import (
-    Solver,
-    SolverVariableMap,
+from algorithms.multi_vehicle_mip.implementation.utils import control_variable_str_from_ids as c_v
+from algorithms.multi_vehicle_mip.implementation.utils import (
+    state_slack_variable_str_from_ids as s_sv,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import state_variable_str_from_ids as s_v
+from algorithms.multi_vehicle_mip.implementation.utils import (
+    vehicle_obstacle_collision_binary_slack_variable_str_from_ids as voc_bsv,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import (
+    vehicle_vehicle_collision_binary_slack_variable_str_from_ids as vvc_bsv,
 )
 
 
@@ -53,9 +55,7 @@ def construct_state_slack_variables(
                 state_id=state_id,
             )
             assert var_str not in vars_map
-            vars_map[var_str] = solver.NumVar(
-                -solver.infinity(), solver.infinity(), var_str
-            )
+            vars_map[var_str] = solver.NumVar(-solver.infinity(), solver.infinity(), var_str)
 
     return vars_map
 
@@ -90,9 +90,7 @@ def construct_control_slack_variables(
                 control_id=control_id,
             )
             assert var_str not in vars_map
-            vars_map[var_str] = solver.NumVar(
-                -solver.infinity(), solver.infinity(), var_str
-            )
+            vars_map[var_str] = solver.NumVar(-solver.infinity(), solver.infinity(), var_str)
 
     return vars_map
 
@@ -109,9 +107,7 @@ def construct_vehicle_obstacle_collision_variables(
     # Vehicle-obstacle collision constraint variables.
     for obstacle_id, obstacle in enumerate(obstacles):
         if not isinstance(obstacle, MVMIPRectangleObstacle):
-            raise NotImplemented(
-                "Only rectangular obstacles have been implemented so far."
-            )
+            raise NotImplemented("Only rectangular obstacles have been implemented so far.")
         for time_step_id in range(1, nt + 1):
             for var_id in range(4):
                 var_str = voc_bsv(

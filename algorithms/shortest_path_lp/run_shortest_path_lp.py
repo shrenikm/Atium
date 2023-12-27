@@ -5,14 +5,14 @@ References:
 1. https://www.cs.purdue.edu/homes/egrigore/580FT15/26-lp-jefferickson.pdf
 2. https://people.seas.harvard.edu/~cs125/fall16/section-notes/05.pdf
 """
-import cv2
-from typing import List
-import numpy as np
 import time
+from typing import List
+
+import cv2
+import numpy as np
+from ortools.linear_solver import pywraplp
 
 from common.custom_types import CoordinateXY, CostMatrix
-
-from ortools.linear_solver import pywraplp
 
 NEIGHBOR_DELTA_I = [0, -1, -1, -1, 0, 1, 1, 1]
 NEIGHBOR_DELTA_J = [1, 1, 0, -1, -1, -1, 0, 1]

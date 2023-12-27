@@ -1,5 +1,7 @@
 from typing import Optional
+
 import numpy as np
+
 from common.custom_types import Arr, AttrsConverterFunc
 
 

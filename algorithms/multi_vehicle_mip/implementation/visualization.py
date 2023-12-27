@@ -1,8 +1,9 @@
-import attr
 from typing import Dict, List, Sequence, Tuple
+
+import attr
+import matplotlib.animation as anim
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
-import matplotlib.animation as anim
 import numpy as np
 
 from algorithms.multi_vehicle_mip.implementation.definitions import (
@@ -12,7 +13,6 @@ from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPVehicle,
 )
 from algorithms.multi_vehicle_mip.results.utils import get_full_path_of_output_video
-
 
 # Visualization params. These could be parameterized later if need be.
 OBSTACLE_CLEARANCE_POLYGON_ALPHA = 0.5
@@ -296,9 +296,7 @@ def visualize_mvmip_result(
 
             animation_elements.vehicle_core_map[vehicle_id].set_xdata(x)
             animation_elements.vehicle_core_map[vehicle_id].set_ydata(y)
-            animation_elements.vehicle_clearance_map[vehicle_id].set_xy(
-                (x - c_m, y - c_m)
-            )
+            animation_elements.vehicle_clearance_map[vehicle_id].set_xy((x - c_m, y - c_m))
             animation_elements.vehicle_control_map[vehicle_id].set_data(
                 x=x,
                 y=y,

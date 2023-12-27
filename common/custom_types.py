@@ -1,8 +1,5 @@
-from typing import (
-    Any,
-    Callable,
-    Tuple,
-)
+from typing import Any, Callable, Tuple
+
 import nptyping as npt
 
 # File/directory types

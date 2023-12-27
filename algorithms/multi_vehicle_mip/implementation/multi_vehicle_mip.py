@@ -1,24 +1,20 @@
-import logging
-from typing import Optional, Sequence
 import time
+from typing import Optional, Sequence
 
 from ortools.linear_solver import pywraplp
-from algorithms.multi_vehicle_mip.implementation.constraints import (
-    construct_constraints_for_mvmip,
-)
+
+from algorithms.multi_vehicle_mip.implementation.constraints import construct_constraints_for_mvmip
 from algorithms.multi_vehicle_mip.implementation.definitions import (
+    MVMIPObstacle,
     MVMIPOptimizationParams,
     MVMIPResult,
     MVMIPVehicle,
-    MVMIPObstacle,
 )
 from algorithms.multi_vehicle_mip.implementation.objective import (
     construct_objective_for_mvmip,
     mvmip_result_from_solver,
 )
-from algorithms.multi_vehicle_mip.implementation.variables import (
-    construct_variables_for_mvmip,
-)
+from algorithms.multi_vehicle_mip.implementation.variables import construct_variables_for_mvmip
 
 
 def solve_mvmip(

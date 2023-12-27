@@ -1,13 +1,14 @@
-import numpy as np
 from functools import lru_cache
 from typing import Protocol, Sequence, Union
+
 import attr
+import numpy as np
+
 from algorithms.multi_vehicle_mip.implementation.custom_types import (
     VehicleControlTrajectoryMap,
     VehicleStateTrajectoryMap,
 )
 from common.attrs_utils import AttrsConverters
-
 from common.custom_types import (
     AMatrix,
     BMatrix,
@@ -60,9 +61,7 @@ class MVMIPVehicle:
 
 @attr.frozen(slots=False, eq=False)
 class MVMIPObstacle(Protocol):
-    initial_center_xy: PointXYVector = attr.ib(
-        converter=AttrsConverters.np_f64_converter()
-    )
+    initial_center_xy: PointXYVector = attr.ib(converter=AttrsConverters.np_f64_converter())
     size_xy_m: SizeXYVector = attr.ib(converter=AttrsConverters.np_f64_converter())
     velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray] = attr.ib(
         converter=AttrsConverters.np_f64_converter()
@@ -81,9 +80,7 @@ class MVMIPObstacle(Protocol):
 
 @attr.frozen(slots=False, eq=False)
 class MVMIPRectangleObstacle:
-    initial_center_xy: PointXYVector = attr.ib(
-        converter=AttrsConverters.np_f64_converter()
-    )
+    initial_center_xy: PointXYVector = attr.ib(converter=AttrsConverters.np_f64_converter())
     size_xy_m: SizeXYVector = attr.ib(converter=AttrsConverters.np_f64_converter())
     velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray] = attr.ib(
         converter=AttrsConverters.np_f64_converter()
@@ -169,9 +166,7 @@ class MVMIPRectangleObstacle:
 @attr.frozen
 class MVMIPPolygonObstacle:
     polygon: PolygonXYArray = attr.ib(converter=AttrsConverters.np_f64_converter())
-    initial_center_xy: PointXYArray = attr.ib(
-        converter=AttrsConverters.np_f64_converter()
-    )
+    initial_center_xy: PointXYArray = attr.ib(converter=AttrsConverters.np_f64_converter())
     velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray] = attr.ib(
         converter=AttrsConverters.np_f64_converter()
     )

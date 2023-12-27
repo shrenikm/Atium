@@ -1,32 +1,49 @@
-import numpy as np
 from typing import Sequence
 
+import numpy as np
+
+from algorithms.multi_vehicle_mip.implementation.custom_types import Solver, SolverConstraintMap
 from algorithms.multi_vehicle_mip.implementation.definitions import (
+    MVMIPObstacle,
     MVMIPOptimizationParams,
     MVMIPRectangleObstacle,
     MVMIPVehicle,
-    MVMIPObstacle,
 )
-
+from algorithms.multi_vehicle_mip.implementation.utils import assert_uniqueness_and_update_mvmip_map
 from algorithms.multi_vehicle_mip.implementation.utils import (
-    assert_uniqueness_and_update_mvmip_map,
-    state_variable_str_from_ids as s_v,
-    state_slack_variable_str_from_ids as s_sv,
-    control_variable_str_from_ids as c_v,
-    control_slack_variable_str_from_ids as c_sv,
-    vehicle_obstacle_collision_binary_slack_variable_str_from_ids as voc_bsv,
-    vehicle_vehicle_collision_binary_slack_variable_str_from_ids as vvc_bsv,
-    state_slack_constraint_var_from_var_strs as s_sc,
     control_slack_constraint_var_from_var_strs as c_sc,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import (
+    control_slack_variable_str_from_ids as c_sv,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import control_variable_str_from_ids as c_v
+from algorithms.multi_vehicle_mip.implementation.utils import (
+    state_slack_constraint_var_from_var_strs as s_sc,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import (
+    state_slack_variable_str_from_ids as s_sv,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import (
     state_transition_constraint_var_from_var_strs as st_c,
-    vehicle_obstacle_collision_constraint_var_from_var_strs as voc_c,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import state_variable_str_from_ids as s_v
+from algorithms.multi_vehicle_mip.implementation.utils import (
     vehicle_obstacle_collision_binary_constraint_var_from_ids as voc_bc,
-    vehicle_vehicle_collision_constraint_var_from_var_strs as vvc_c,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import (
+    vehicle_obstacle_collision_binary_slack_variable_str_from_ids as voc_bsv,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import (
+    vehicle_obstacle_collision_constraint_var_from_var_strs as voc_c,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import (
     vehicle_vehicle_collision_binary_constraint_var_from_ids as vvc_bc,
 )
-from algorithms.multi_vehicle_mip.implementation.custom_types import (
-    Solver,
-    SolverConstraintMap,
+from algorithms.multi_vehicle_mip.implementation.utils import (
+    vehicle_vehicle_collision_binary_slack_variable_str_from_ids as vvc_bsv,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import (
+    vehicle_vehicle_collision_constraint_var_from_var_strs as vvc_c,
 )
 
 
@@ -254,9 +271,7 @@ def construct_vehicle_obstacle_collision_constraints(
     # Note that we assume the first two values in the state vector are x & y
     for obstacle_id, obstacle in enumerate(obstacles):
         if not isinstance(obstacle, MVMIPRectangleObstacle):
-            raise NotImplemented(
-                "Only rectangular obstacles have been implemented so far."
-            )
+            raise NotImplemented("Only rectangular obstacles have been implemented so far.")
         for time_step_id in range(1, nt + 1):
             # The constraints are of the form:
             # x_pi <= x_cmin + Mt_pci1
@@ -301,9 +316,7 @@ def construct_vehicle_obstacle_collision_constraints(
                     cons_var,
                 )
                 constraint.SetCoefficient(solver.LookupVariable(s_var_str), 1.0)
-                constraint.SetCoefficient(
-                    solver.LookupVariable(t_var_str), -mvmip_params.M
-                )
+                constraint.SetCoefficient(solver.LookupVariable(t_var_str), -mvmip_params.M)
                 cons_map[cons_var] = constraint
 
                 # Second constraint
@@ -330,9 +343,7 @@ def construct_vehicle_obstacle_collision_constraints(
                     cons_var,
                 )
                 constraint.SetCoefficient(solver.LookupVariable(s_var_str), -1.0)
-                constraint.SetCoefficient(
-                    solver.LookupVariable(t_var_str), -mvmip_params.M
-                )
+                constraint.SetCoefficient(solver.LookupVariable(t_var_str), -mvmip_params.M)
                 cons_map[cons_var] = constraint
 
             # Constraint for the sum of binary slack variables
@@ -417,9 +428,7 @@ def construct_vehicle_vehicle_collision_constraints(
                 )
                 constraint.SetCoefficient(solver.LookupVariable(s_p_var_str), 1.0)
                 constraint.SetCoefficient(solver.LookupVariable(s_q_var_str), -1.0)
-                constraint.SetCoefficient(
-                    solver.LookupVariable(b_var_str), mvmip_params.M
-                )
+                constraint.SetCoefficient(solver.LookupVariable(b_var_str), mvmip_params.M)
                 cons_map[cons_var] = constraint
 
                 # Second constraint
@@ -442,9 +451,7 @@ def construct_vehicle_vehicle_collision_constraints(
                 )
                 constraint.SetCoefficient(solver.LookupVariable(s_p_var_str), -1.0)
                 constraint.SetCoefficient(solver.LookupVariable(s_q_var_str), 1.0)
-                constraint.SetCoefficient(
-                    solver.LookupVariable(b_var_str), mvmip_params.M
-                )
+                constraint.SetCoefficient(solver.LookupVariable(b_var_str), mvmip_params.M)
                 cons_map[cons_var] = constraint
 
             # Constraint for the sum of binary slack variables
