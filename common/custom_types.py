@@ -24,10 +24,10 @@ f64 = npt.Float64
 
 # Geometry
 PointXYVector = Arr[Shape["2"], f64]
-Polygon2DArray = Arr[Shape["N, 2"], f64]
+PolygonXYArray = Arr[Shape["N, 2"], f64]
 PointXYArray = Arr[Shape["2"], f64]
 SizeXYVector = Arr[Shape["2"], f64]
-Coordinate2D = Tuple[int, int]
+CoordinateXY = Tuple[int, int]
 
 # Kinematics/dynamics/control
 AMatrix = Arr[Shape["Nx, Nx"], f64]

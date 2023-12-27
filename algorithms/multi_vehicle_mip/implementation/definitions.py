@@ -15,7 +15,7 @@ from common.custom_types import (
     CostVector,
     PointXYArray,
     PointXYVector,
-    Polygon2DArray,
+    PolygonXYArray,
     SizeXYVector,
     StateVector,
     VelocityXYArray,
@@ -75,7 +75,7 @@ class MVMIPObstacle(Protocol):
         num_time_steps: int,
         dt: float,
         add_clearance: bool,
-    ) -> Polygon2DArray:
+    ) -> PolygonXYArray:
         raise NotImplemented
 
 
@@ -145,7 +145,7 @@ class MVMIPRectangleObstacle:
         num_time_steps: int,
         dt: float,
         add_clearance: bool,
-    ) -> Polygon2DArray:
+    ) -> PolygonXYArray:
         centers_xy = self.get_centers_xy(num_time_steps, dt)
         xc, yc = centers_xy[time_step_id]
         if add_clearance:
@@ -168,7 +168,7 @@ class MVMIPRectangleObstacle:
 
 @attr.frozen
 class MVMIPPolygonObstacle:
-    polygon: Polygon2DArray = attr.ib(converter=AttrsConverters.np_f64_converter())
+    polygon: PolygonXYArray = attr.ib(converter=AttrsConverters.np_f64_converter())
     initial_center_xy: PointXYArray = attr.ib(
         converter=AttrsConverters.np_f64_converter()
     )
@@ -183,7 +183,7 @@ class MVMIPPolygonObstacle:
         num_time_steps: int,
         dt: float,
         add_clearance: bool,
-    ) -> Polygon2DArray:
+    ) -> PolygonXYArray:
         raise NotImplementedError
 
 

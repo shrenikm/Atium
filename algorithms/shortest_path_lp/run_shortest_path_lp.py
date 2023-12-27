@@ -10,7 +10,7 @@ from typing import List
 import numpy as np
 import time
 
-from common.custom_types import Coordinate2D, CostMatrix
+from common.custom_types import CoordinateXY, CostMatrix
 
 from ortools.linear_solver import pywraplp
 
@@ -39,9 +39,9 @@ def _graph_cons_var_str(node: int) -> str:
 
 def find_shortest_path(
     cost_matrix: CostMatrix,
-    start_coord: Coordinate2D,
-    end_coord: Coordinate2D,
-) -> List[Coordinate2D]:
+    start_coord: CoordinateXY,
+    end_coord: CoordinateXY,
+) -> List[CoordinateXY]:
 
     assert cost_matrix[start_coord] >= 0.0, "Start in collision"
     assert cost_matrix[end_coord] >= 0.0, "End in collision"
