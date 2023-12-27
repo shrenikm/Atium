@@ -2,14 +2,14 @@
 Light-weight simulator for kinematic and simple dynamic systems.
 Useful for quick prototyping with custom visualization without having to set up a PyBullet/Drake env.
 """
-
 import time
 from typing import Protocol
 
 import attr
+import numpy as np
 
 from common.control.controller import Controller
-from common.custom_types import ControlVector, StateVector
+from common.custom_types import ControlInputVector, StateVector
 
 
 @attr.frozen
@@ -24,7 +24,7 @@ class SiliconSimulator(Protocol):
 
     def udpate_state(
         self,
-        control: ControlVector,
+        control_input: ControlInputVector,
         dt: float,
     ) -> None:
         raise NotImplementedError
@@ -33,8 +33,17 @@ class SiliconSimulator(Protocol):
         self,
         controller: Controller,
         dt: float,
+        max_time_s: float = np.inf,
     ) -> None:
-        raise NotImplementedError
+
+        sim_time_s = 0.
+
+        while sim_time_s <= max_time_s:
+            control_input = controller.compute_control_input(
+                state=self.state,
+            )
+            self.state = self.update_state(
+                control
 
     def realtime_simulate(
         self,

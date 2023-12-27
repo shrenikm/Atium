@@ -12,7 +12,7 @@ from common.attrs_utils import AttrsConverters
 from common.custom_types import (
     AMatrix,
     BMatrix,
-    ControlVector,
+    ControlInputVector,
     CostVector,
     PointXYArray,
     PointXYVector,
@@ -49,8 +49,8 @@ class MVMIPVehicleOptimizationParams:
     p_cost_vector: CostVector = attr.ib(converter=AttrsConverters.np_f64_converter())
     state_min: StateVector = attr.ib(converter=AttrsConverters.np_f64_converter())
     state_max: StateVector = attr.ib(converter=AttrsConverters.np_f64_converter())
-    control_min: ControlVector = attr.ib(converter=AttrsConverters.np_f64_converter())
-    control_max: ControlVector = attr.ib(converter=AttrsConverters.np_f64_converter())
+    control_min: ControlInputVector = attr.ib(converter=AttrsConverters.np_f64_converter())
+    control_max: ControlInputVector = attr.ib(converter=AttrsConverters.np_f64_converter())
 
 
 @attr.frozen

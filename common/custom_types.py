@@ -30,7 +30,7 @@ CoordinateXY = Tuple[int, int]
 AMatrix = Arr[Shape["Nx, Nx"], f64]
 BMatrix = Arr[Shape["Nx, Nu"], f64]
 StateVector = Arr[Shape["Nx"], f64]
-ControlVector = Arr[Shape["Nu"], f64]
+ControlInputVector = Arr[Shape["Nu"], f64]
 VelocityXYVector = Arr[Shape["2"], f64]
 
 VelocityXYArray = Arr[Shape["N, 2"], f64]
