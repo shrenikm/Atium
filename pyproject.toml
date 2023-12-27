@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "Atium"
+version = "0.0.1"
+requires-python = ">=3.8"
+authors = [
+  {name = "Shrenik", email = "shrenik95@gmail.com"},
+]
+description = ""
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = [
+]
+
+[tool.black]
+line-length = 100
