@@ -12,6 +12,7 @@ from common.control.basic_controllers import (
 from common.dynamics.cartpole_dyn import CartpoleParams
 from common.dynamics.utils import ControlInputVectorLimits, StateVectorLimits
 from common.simulation.envs.cartpole_env import CartpoleSiliconEnv
+from common.simulation.integrators.state_integrators import StateIntegratorType
 
 if __name__ == "__main__":
 
@@ -19,7 +20,7 @@ if __name__ == "__main__":
     initial_state = np.zeros(4)
     initial_control_input = np.zeros(1)
 
-    x_min, x_max = -5.0, 5.0
+    x_min, x_max = -4.0, 4.0
     f_x_min, f_x_max = -50.0, 50.0
     state_lower = np.array([x_min, -np.inf, -np.inf, -np.inf], dtype=np.float64)
     state_upper = np.array([x_max, np.inf, np.inf, np.inf], dtype=np.float64)
@@ -64,11 +65,12 @@ if __name__ == "__main__":
 
     controllers = [zero_controller, constant_controller, uniform_controller]
 
-    controller_id = 1
+    controller_id = 2
     assert controller_id < len(controllers)
     controller = controllers[controller_id]
 
     cartpole_env.step_simulate(
         controller=controller,
         dt=dt,
+        state_integrator_type=StateIntegratorType.EXPLICIT_EULER,
     )

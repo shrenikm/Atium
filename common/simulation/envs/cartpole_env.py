@@ -19,7 +19,8 @@ from common.img_utils import (
 )
 from common.simulation.silicon.silicon_simulator import SiliconSimulator
 
-RESOLUTION = 0.01
+RESOLUTION = 0.015
+MIN_ENV_SIZE = 10.0
 
 
 @attr.define
@@ -56,21 +57,59 @@ class CartpoleSiliconEnv(SiliconSimulator[CartpoleDynamics]):
             self.dynamics.state_limits.upper[0] - self.dynamics.state_limits.lower[0]
         )
         env_height = max(env_width, 2 * self.dynamics.params.l)
+        env_size = max(env_width, env_height, MIN_ENV_SIZE)
 
-        img_width = int(env_width // RESOLUTION)
-        img_height = int(env_height // RESOLUTION)
+        img_width = int(env_size // RESOLUTION)
+        img_height = int(env_size // RESOLUTION)
 
         canvas = create_canvas(
             img_width=img_width,
             img_height=img_height,
             color=AtiumColorsBGR.WHITE,
         )
-        # Draw horizon line.
+
+        min_x, max_x = (
+            self.dynamics.state_limits.lower[0],
+            self.dynamics.state_limits.upper[0],
+        )
+        # To go from 'x' in the system frame to canvas frame (origin bottom left corner),
+        # we need to x - min_x + padding
+        # Where padding accounts for the fact that the canvas can be bigger than the system x limits.
+        padding = (env_size - (max_x - min_x)) / 2.0
+
+        def _system_x_to_canvas_x(x: float) -> float:
+            """
+            Changes frames from system fframe to the canvas frame.
+            """
+            return x - min_x + padding
+
+        # Max and min x in the canvas frame (still in meters)
+        min_x_canvas = _system_x_to_canvas_x(x=min_x)
+        max_x_canvas = _system_x_to_canvas_x(x=max_x)
+
+        # Draw horizon line for the track.
         draw_line_on_canvas(
             canvas=canvas,
-            start_xy=(0.0, env_height / 2.0),
-            end_xy=(env_width, env_height / 2.0),
+            start_xy=(min_x_canvas, env_size / 2.0),
+            end_xy=(max_x_canvas, env_size / 2.0),
             color=AtiumColorsBGR.BLACK,
+            thickness_px=2,
+            resolution=RESOLUTION,
+        )
+        # Draw vertical lines for the x bounds.
+        draw_line_on_canvas(
+            canvas=canvas,
+            start_xy=(min_x_canvas, 0.0),
+            end_xy=(min_x_canvas, env_size),
+            color=AtiumColorsBGR.LIGHT_GRAY,
+            thickness_px=2,
+            resolution=RESOLUTION,
+        )
+        draw_line_on_canvas(
+            canvas=canvas,
+            start_xy=(max_x_canvas, 0.0),
+            end_xy=(max_x_canvas, env_size),
+            color=AtiumColorsBGR.LIGHT_GRAY,
             thickness_px=2,
             resolution=RESOLUTION,
         )
@@ -78,8 +117,8 @@ class CartpoleSiliconEnv(SiliconSimulator[CartpoleDynamics]):
         # Draw cart.
         cart_length_m, cart_width_m = 1.0, 0.2
         # Reframing the cart's x coordinate so that the canvas has the min state x limit at 0.
-        cart_x = x - self.dynamics.state_limits.lower[0]
-        cart_center_xy = (cart_x, env_height / 2.0)
+        cart_x = _system_x_to_canvas_x(x=x)
+        cart_center_xy = (cart_x, env_size / 2.0)
         draw_rectangle_on_canvas(
             canvas=canvas,
             center_xy=cart_center_xy,
