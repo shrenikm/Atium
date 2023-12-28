@@ -6,13 +6,12 @@ References:
 2. https://people.seas.harvard.edu/~cs125/fall16/section-notes/05.pdf
 """
 import time
-from typing import List
 
 import cv2
 import numpy as np
 from ortools.linear_solver import pywraplp
 
-from common.custom_types import CoordinateXY, CostMatrix
+from common.custom_types import CostMatrix, Index2D, Indices2D
 
 NEIGHBOR_DELTA_I = [0, -1, -1, -1, 0, 1, 1, 1]
 NEIGHBOR_DELTA_J = [1, 1, 0, -1, -1, -1, 0, 1]
@@ -39,9 +38,9 @@ def _graph_cons_var_str(node: int) -> str:
 
 def find_shortest_path(
     cost_matrix: CostMatrix,
-    start_coord: CoordinateXY,
-    end_coord: CoordinateXY,
-) -> List[CoordinateXY]:
+    start_coord: Index2D,
+    end_coord: Index2D,
+) -> Indices2D:
 
     assert cost_matrix[start_coord] >= 0.0, "Start in collision"
     assert cost_matrix[end_coord] >= 0.0, "End in collision"

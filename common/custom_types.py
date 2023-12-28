@@ -1,5 +1,5 @@
 import attr
-from typing import Any, Callable, Tuple, Union
+from typing import Any, Callable, List, Tuple, Union
 
 import nptyping as npt
 
@@ -20,6 +20,10 @@ Arr = npt.NDArray
 Shape = npt.Shape
 f64 = npt.Float64
 ui8 = npt.UInt8
+Index2D = Tuple[int, int]
+Indices2D = List[Index2D]
+Index3D = Tuple[int, int, int]
+Indices3D = List[Index3D]
 
 # Calculus stuff
 Vector = Arr[Shape["N"], f64]  # Generic float vector
@@ -34,7 +38,7 @@ PointXYVector = Arr[Shape["2"], f64]
 PolygonXYArray = Arr[Shape["N, 2"], f64]
 PointXYArray = Arr[Shape["2"], f64]
 SizeXYVector = Arr[Shape["2"], f64]
-CoordinateXY = Tuple[int, int]
+CoordinateXY = Tuple[float, float]
 
 
 # Kinematics/dynamics/control
