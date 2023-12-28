@@ -8,7 +8,12 @@ import attr
 import numpy as np
 
 from common.control.interfaces import Controller
-from common.custom_types import ControlInputVector, StateVector
+from common.custom_types import (
+    ControlInputVector,
+    ControlInputVectorLimits,
+    StateVector,
+    StateVectorLimits,
+)
 from common.dynamics.interfaces import Dynamics
 from common.simulation.integrators.state_integrators import (
     STATE_INTEGRATORS_FN_MAP,
@@ -20,6 +25,8 @@ from common.simulation.integrators.state_integrators import (
 class SiliconSimulator(metaclass=ABCMeta):
     state: StateVector
     control_input: ControlInputVector
+    state_limits: StateVectorLimits
+    control_input_limits: ControlInputVectorLimits
     dynamics: Dynamics
     timestamp_s: float = 0.0
 

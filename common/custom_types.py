@@ -43,6 +43,9 @@ VelocityXYVector = Arr[Shape["2"], f64]
 # State derivative: dx/dt = f(x, u). We dont' explicitly include t.
 StateDerivativeFn = Callable[[StateVector, ControlInputVector], StateDerivativeVector]
 
+StateVectorLimits = Tuple[StateVector, StateVector]
+ControlInputVectorLimits = Tuple[ControlInputVector, ControlInputVector]
+
 
 VelocityXYArray = Arr[Shape["N, 2"], f64]
 StateTrajectoryArray = Arr[Shape["N, Nx"], f64]

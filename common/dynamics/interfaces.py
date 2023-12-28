@@ -4,7 +4,7 @@ import attr
 from common.custom_types import ControlInputVector, StateDerivativeVector, StateVector
 
 
-@attr.define
+@attr.frozen
 class Dynamics(Protocol):
     def compute_state_derivative(
         self,
