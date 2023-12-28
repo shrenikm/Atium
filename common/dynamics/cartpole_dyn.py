@@ -8,12 +8,16 @@ from common.geometry import normalize_angle
 
 
 @attr.frozen
-class CartpoleDynamics(IDynamics):
-
+class CartpoleParams:
     m_c: float
     m_p: float
     l: float
     g: float = ACC_GRAVITY
+
+
+@attr.frozen
+class CartpoleDynamics(IDynamics):
+    params: CartpoleParams
 
     def normalize_state(
         self,
@@ -49,15 +53,17 @@ class CartpoleDynamics(IDynamics):
             f_x = 0.0
         if np.isclose(x, self.state_limits.upper[0]) and f_x > 0.0:
             f_x = 0.0
-        
-        k1 = self.m_c + self.m_p * st**2
-        k2 = self.m_p * st * (self.l * theta_dot**2 + self.g * ct)
+
+        k1 = self.params.m_c + self.params.m_p * st**2
+        k2 = (
+            self.params.m_p * st * (self.params.l * theta_dot**2 + self.params.g * ct)
+        )
         k3 = (
-            -self.m_p * self.l * theta_dot**2 * ct * st
-            - (self.m_c + self.m_p) * self.g * st
+            -self.params.m_p * self.params.l * theta_dot**2 * ct * st
+            - (self.params.m_c + self.params.m_p) * self.params.g * st
         )
 
         x_ddot = (1.0 / k1) * (f_x + k2)
-        theta_ddot = (1.0 / (self.l * k1)) * (-f_x * ct + k3)
+        theta_ddot = (1.0 / (self.params.l * k1)) * (-f_x * ct + k3)
 
         return np.array([x_dot, theta_dot, x_ddot, theta_ddot])

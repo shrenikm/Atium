@@ -9,6 +9,7 @@ from common.control.basic_controllers import (
     UniformPDFController,
     ZeroController,
 )
+from common.dynamics.cartpole_dyn import CartpoleParams
 from common.dynamics.utils import ControlInputVectorLimits, StateVectorLimits
 from common.simulation.envs.cartpole_env import CartpoleSiliconEnv
 
@@ -33,15 +34,18 @@ if __name__ == "__main__":
         upper=control_input_upper,
     )
 
+    params = CartpoleParams(
+        m_c=1.0,
+        m_p=0.5,
+        l=1.0,
+        g=ACC_GRAVITY,
+    )
     cartpole_env = CartpoleSiliconEnv.from_params(
         initial_state=initial_state,
         initial_control_input=initial_control_input,
         state_limits=state_limits,
         control_input_limits=control_input_limits,
-        m_c=1.0,
-        m_p=0.5,
-        l=1.0,
-        g=ACC_GRAVITY,
+        params=params,
     )
 
     # Different controllers.

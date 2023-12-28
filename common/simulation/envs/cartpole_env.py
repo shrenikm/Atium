@@ -8,7 +8,7 @@ from typing_extensions import override
 from common.colors import AtiumColorsBGR
 from common.constants import ACC_GRAVITY
 from common.custom_types import ControlInputVector, StateVector
-from common.dynamics.cartpole_dyn import CartpoleDynamics
+from common.dynamics.cartpole_dyn import CartpoleDynamics, CartpoleParams
 from common.dynamics.interfaces import IDynamics
 from common.dynamics.utils import ControlInputVectorLimits, StateVectorLimits
 from common.img_utils import (
@@ -31,18 +31,12 @@ class CartpoleSiliconEnv(SiliconSimulator[CartpoleDynamics]):
         initial_control_input: ControlInputVector,
         state_limits: StateVectorLimits,
         control_input_limits: ControlInputVectorLimits,
-        m_c: float,
-        m_p: float,
-        l: float,
-        g: float = ACC_GRAVITY,
+        params: CartpoleParams,
     ) -> CartpoleSiliconEnv:
         dynamics = CartpoleDynamics(
             state_limits=state_limits,
             control_input_limits=control_input_limits,
-            m_c=m_c,
-            m_p=m_p,
-            l=l,
-            g=g,
+            params=params,
         )
         return cls(
             state=initial_state,
@@ -61,7 +55,7 @@ class CartpoleSiliconEnv(SiliconSimulator[CartpoleDynamics]):
         env_width = (
             self.dynamics.state_limits.upper[0] - self.dynamics.state_limits.lower[0]
         )
-        env_height = max(env_width, 2 * self.dynamics.l)
+        env_height = max(env_width, 2 * self.dynamics.params.l)
 
         img_width = int(env_width // RESOLUTION)
         img_height = int(env_height // RESOLUTION)
