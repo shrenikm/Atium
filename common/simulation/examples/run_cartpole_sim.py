@@ -4,7 +4,11 @@ Runs the cartpole simulation with a controller that outputs random values betwee
 import numpy as np
 
 from common.constants import ACC_GRAVITY
-from common.control.basic_controllers import UniformPDFController
+from common.control.basic_controllers import (
+    ConstantController,
+    UniformPDFController,
+    ZeroController,
+)
 from common.dynamics.utils import ControlInputVectorLimits, StateVectorLimits
 from common.simulation.envs.cartpole_env import CartpoleSiliconEnv
 
@@ -40,12 +44,25 @@ if __name__ == "__main__":
         g=ACC_GRAVITY,
     )
 
-    controller = UniformPDFController(
+    # Different controllers.
+
+    # Passive controller (Note: no friction)
+    zero_controller = ZeroController(size=1)
+    # Constant controller
+    constant_controller = ConstantController(control_input=np.array([0.5]))
+    # Random controller
+    uniform_controller = UniformPDFController(
         control_input_limits=ControlInputVectorLimits(
             lower=np.array([f_x_min]),
             upper=np.array([f_x_max]),
         ),
     )
+
+    controllers = [zero_controller, constant_controller, uniform_controller]
+
+    controller_id = 1
+    assert controller_id < len(controllers)
+    controller = controllers[controller_id]
 
     cartpole_env.step_simulate(
         controller=controller,

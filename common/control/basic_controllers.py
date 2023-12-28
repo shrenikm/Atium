@@ -21,6 +21,17 @@ class ZeroController(IController):
 
 
 @attr.define
+class ConstantController(IController):
+    control_input: ControlInputVector
+
+    def compute_control_input(
+        self,
+        state: StateVector,
+    ) -> ControlInputVector:
+        return self.control_input
+
+
+@attr.define
 class UniformPDFController(IController):
     control_input_limits: ControlInputVectorLimits
     seed: int = 0

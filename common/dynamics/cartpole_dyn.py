@@ -49,7 +49,7 @@ class CartpoleDynamics(IDynamics):
             f_x = 0.0
         if np.isclose(x, self.state_limits.upper[0]) and f_x > 0.0:
             f_x = 0.0
-
+        
         k1 = self.m_c + self.m_p * st**2
         k2 = self.m_p * st * (self.l * theta_dot**2 + self.g * ct)
         k3 = (
