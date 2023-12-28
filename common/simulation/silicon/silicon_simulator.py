@@ -45,17 +45,29 @@ class SiliconSimulator(metaclass=ABCMeta):
         Lots of ugly side-effects here but it keeps things simple.
         It isn't dirty if you avert your eyes.
         """
+        self.timestamp_s = 0.0  # TODO: Maybe option to not reset?
         state_integrator_fn = STATE_INTEGRATORS_FN_MAP[state_integrator_type]
 
         while self.timestamp_s <= max_time_s:
-            self.control_input = controller.compute_control_input(
+            control_input = controller.compute_control_input(
                 state=self.state,
             )
-            self.state = state_integrator_fn(
+            # Apply control limits
+            self.control_input = np.clip(
+                control_input,
+                self.control_input_limits.lower,
+                self.control_input_limits.upper,
+            )
+            state = state_integrator_fn(
                 state=self.state,
                 control_input=self.control_input,
                 state_derivative_fn=self.dynamics.compute_state_derivative,
                 dt=dt,
+            )
+            # Normalize and apply state limits.
+            state = self.dynamics.normalize_state(state=state)
+            self.state = np.clip(
+                state, self.state_limits.lower, self.state_limits.upper
             )
             self.timestamp_s += dt
 

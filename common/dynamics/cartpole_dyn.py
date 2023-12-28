@@ -1,8 +1,9 @@
 import attr
 import numpy as np
-from common.constants import ACC_GRAVITY
 
+from common.constants import ACC_GRAVITY
 from common.custom_types import ControlInputVector, StateDerivativeVector, StateVector
+from common.geometry import normalize_angle
 
 
 @attr.frozen
@@ -12,6 +13,14 @@ class CartpoleDynamics:
     m_p: float
     l: float
     g: float = ACC_GRAVITY
+
+    def normalize_state(
+        self,
+        state: StateVector,
+    ) -> StateVector:
+        normalized_state = np.copy(state)
+        normalized_state[0] = normalize_angle(angles=normalized_state[0])
+        return normalized_state
 
     def compute_state_derivative(
         self,

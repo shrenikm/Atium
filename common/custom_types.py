@@ -1,4 +1,5 @@
-from typing import Any, Callable, Tuple
+import attr
+from typing import Any, Callable, Tuple, Union
 
 import nptyping as npt
 
@@ -26,6 +27,8 @@ DerivativeVector = Arr[Shape["N"], f64]  # Generic float vector
 TimeDerivativeFn = Callable[[float, Vector], DerivativeVector]
 
 # Geometry
+AnglesRad = Arr[Shape["N"], f64]
+AngleOrAnglesRad = Union[float, AnglesRad]
 PointXYVector = Arr[Shape["2"], f64]
 PolygonXYArray = Arr[Shape["N, 2"], f64]
 PointXYArray = Arr[Shape["2"], f64]
@@ -43,8 +46,17 @@ VelocityXYVector = Arr[Shape["2"], f64]
 # State derivative: dx/dt = f(x, u). We dont' explicitly include t.
 StateDerivativeFn = Callable[[StateVector, ControlInputVector], StateDerivativeVector]
 
-StateVectorLimits = Tuple[StateVector, StateVector]
-ControlInputVectorLimits = Tuple[ControlInputVector, ControlInputVector]
+
+@attr.frozen
+class StateVectorLimits:
+    lower: StateVector
+    upper: StateVector
+
+
+@attr.frozen
+class ControlInputVectorLimits:
+    lower: ControlInputVector
+    upper: ControlInputVector
 
 
 VelocityXYArray = Arr[Shape["N, 2"], f64]
