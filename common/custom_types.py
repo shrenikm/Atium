@@ -19,6 +19,7 @@ AttrsConverterFunc = Callable[[Any], Any]
 Arr = npt.NDArray
 Shape = npt.Shape
 f64 = npt.Float64
+ui8 = npt.UInt8
 
 # Calculus stuff
 Vector = Arr[Shape["N"], f64]  # Generic float vector
@@ -66,3 +67,7 @@ ControlTrajectoryArray = Arr[Shape["N, Nu"], f64]
 # Optimization
 CostVector = Arr[Shape["N"], f64]
 CostMatrix = Arr[Shape["N,M"], f64]
+
+# Visualization
+BGRColor = Tuple[int, int, int]
+Img3Channel = Arr[Shape["M, N, 3"], ui8]

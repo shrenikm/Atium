@@ -1,4 +1,4 @@
-from typing import Protocol
+from abc import ABCMeta, abstractmethod
 
 import attr
 
@@ -6,7 +6,8 @@ from common.custom_types import ControlInputVector, StateDerivativeVector, State
 
 
 @attr.frozen
-class Dynamics(Protocol):
+class IDynamics(metaclass=ABCMeta):
+    @abstractmethod
     def normalize_state(
         self,
         state: StateVector,
@@ -16,6 +17,7 @@ class Dynamics(Protocol):
         """
         raise NotImplemented
 
+    @abstractmethod
     def compute_state_derivative(
         self,
         state: StateVector,

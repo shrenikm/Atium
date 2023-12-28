@@ -7,14 +7,14 @@ from abc import ABCMeta, abstractmethod
 import attr
 import numpy as np
 
-from common.control.interfaces import Controller
+from common.control.interfaces import IController
 from common.custom_types import (
     ControlInputVector,
     ControlInputVectorLimits,
     StateVector,
     StateVectorLimits,
 )
-from common.dynamics.interfaces import Dynamics
+from common.dynamics.interfaces import IDynamics
 from common.simulation.integrators.state_integrators import (
     STATE_INTEGRATORS_FN_MAP,
     StateIntegratorType,
@@ -27,8 +27,9 @@ class SiliconSimulator(metaclass=ABCMeta):
     control_input: ControlInputVector
     state_limits: StateVectorLimits
     control_input_limits: ControlInputVectorLimits
-    dynamics: Dynamics
+    dynamics: IDynamics
     timestamp_s: float = 0.0
+    _stop_sim: bool = False
 
     @abstractmethod
     def visualize(self) -> None:
@@ -36,7 +37,7 @@ class SiliconSimulator(metaclass=ABCMeta):
 
     def step_simulate(
         self,
-        controller: Controller,
+        controller: IController,
         dt: float,
         max_time_s: float = np.inf,
         state_integrator_type: StateIntegratorType = StateIntegratorType.EXPLICIT_EULER,
@@ -48,7 +49,7 @@ class SiliconSimulator(metaclass=ABCMeta):
         self.timestamp_s = 0.0  # TODO: Maybe option to not reset?
         state_integrator_fn = STATE_INTEGRATORS_FN_MAP[state_integrator_type]
 
-        while self.timestamp_s <= max_time_s:
+        while self.timestamp_s <= max_time_s and not self._stop_sim:
             control_input = controller.compute_control_input(
                 state=self.state,
             )
@@ -75,7 +76,7 @@ class SiliconSimulator(metaclass=ABCMeta):
 
     def realtime_simulate(
         self,
-        controller: Controller,
+        controller: IController,
         realtime_rate: float,
         max_time_s: float = np.inf,
         state_integrator_type: StateIntegratorType = StateIntegratorType.EXPLICIT_EULER,

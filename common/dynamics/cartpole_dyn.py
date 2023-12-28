@@ -3,11 +3,12 @@ import numpy as np
 
 from common.constants import ACC_GRAVITY
 from common.custom_types import ControlInputVector, StateDerivativeVector, StateVector
+from common.dynamics.interfaces import IDynamics
 from common.geometry import normalize_angle
 
 
 @attr.frozen
-class CartpoleDynamics:
+class CartpoleDynamics(IDynamics):
 
     m_c: float
     m_p: float

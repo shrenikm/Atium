@@ -8,7 +8,7 @@ from common.custom_types import ControlInputVector, StateVector
 
 
 @attr.define
-class Controller(Protocol):
+class IController(Protocol):
     def compute_control_input(
         self,
         state: StateVector,
