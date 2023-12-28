@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import attr
 import cv2
 import numpy as np
@@ -5,8 +7,10 @@ from typing_extensions import override
 
 from common.colors import AtiumColorsBGR
 from common.constants import ACC_GRAVITY
+from common.custom_types import ControlInputVector, StateVector
 from common.dynamics.cartpole_dyn import CartpoleDynamics
 from common.dynamics.interfaces import IDynamics
+from common.dynamics.utils import ControlInputVectorLimits, StateVectorLimits
 from common.img_utils import (
     create_canvas,
     draw_circle_on_canvas,
@@ -19,21 +23,31 @@ RESOLUTION = 0.01
 
 
 @attr.define
-class CartpoleSiliconEnv(SiliconSimulator):
-    m_c: float = 1.0
-    m_p: float = 0.5
-    l: float = 1.0
-    g: float = ACC_GRAVITY
-
-    dynamics: IDynamics = attr.ib(init=False)
-
-    @dynamics.default  # pyright: ignore (Doesn't play well with attr here.)
-    def _initialize_dynamics(self) -> IDynamics:
-        return CartpoleDynamics(
-            m_c=self.m_c,
-            m_p=self.m_p,
-            l=self.l,
-            g=self.g,
+class CartpoleSiliconEnv(SiliconSimulator[CartpoleDynamics]):
+    @classmethod
+    def from_params(
+        cls,
+        initial_state: StateVector,
+        initial_control_input: ControlInputVector,
+        state_limits: StateVectorLimits,
+        control_input_limits: ControlInputVectorLimits,
+        m_c: float,
+        m_p: float,
+        l: float,
+        g: float = ACC_GRAVITY,
+    ) -> CartpoleSiliconEnv:
+        dynamics = CartpoleDynamics(
+            state_limits=state_limits,
+            control_input_limits=control_input_limits,
+            m_c=m_c,
+            m_p=m_p,
+            l=l,
+            g=g,
+        )
+        return cls(
+            state=initial_state,
+            control_input=initial_control_input,
+            dynamics=dynamics,
         )
 
     @override
@@ -44,8 +58,10 @@ class CartpoleSiliconEnv(SiliconSimulator):
 
         cv2.namedWindow(window_name)
 
-        env_width = self.state_limits.upper[0] - self.state_limits.lower[0]
-        env_height = max(env_width, 2 * self.l)
+        env_width = (
+            self.dynamics.state_limits.upper[0] - self.dynamics.state_limits.lower[0]
+        )
+        env_height = max(env_width, 2 * self.dynamics.l)
 
         img_width = int(env_width // RESOLUTION)
         img_height = int(env_height // RESOLUTION)
@@ -68,7 +84,7 @@ class CartpoleSiliconEnv(SiliconSimulator):
         # Draw cart.
         cart_length_m, cart_width_m = 1.0, 0.2
         # Reframing the cart's x coordinate so that the canvas has the min state x limit at 0.
-        cart_x = x - self.state_limits.lower[0]
+        cart_x = x - self.dynamics.state_limits.lower[0]
         cart_center_xy = (cart_x, env_height / 2.0)
         draw_rectangle_on_canvas(
             canvas=canvas,

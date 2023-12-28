@@ -1,6 +1,6 @@
-import attr
 from typing import Any, Callable, List, Tuple, Union
 
+import attr
 import nptyping as npt
 
 # File/directory types
@@ -50,18 +50,6 @@ ControlInputVector = Arr[Shape["Nu"], f64]
 VelocityXYVector = Arr[Shape["2"], f64]
 # State derivative: dx/dt = f(x, u). We dont' explicitly include t.
 StateDerivativeFn = Callable[[StateVector, ControlInputVector], StateDerivativeVector]
-
-
-@attr.frozen
-class StateVectorLimits:
-    lower: StateVector
-    upper: StateVector
-
-
-@attr.frozen
-class ControlInputVectorLimits:
-    lower: ControlInputVector
-    upper: ControlInputVector
 
 
 VelocityXYArray = Arr[Shape["N, 2"], f64]

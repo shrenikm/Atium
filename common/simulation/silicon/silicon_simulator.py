@@ -3,31 +3,27 @@ Light-weight simulator for kinematic and simple dynamic systems.
 Useful for quick prototyping with custom visualization without having to set up a PyBullet/Drake env.
 """
 from abc import ABCMeta, abstractmethod
+from typing import Generic, TypeVar
 
 import attr
 import numpy as np
 
 from common.control.interfaces import IController
-from common.custom_types import (
-    ControlInputVector,
-    ControlInputVectorLimits,
-    StateVector,
-    StateVectorLimits,
-)
+from common.custom_types import ControlInputVector, StateVector
 from common.dynamics.interfaces import IDynamics
 from common.simulation.integrators.state_integrators import (
     STATE_INTEGRATORS_FN_MAP,
     StateIntegratorType,
 )
 
+TDynamics = TypeVar("TDynamics", bound=IDynamics)
+
 
 @attr.define
-class SiliconSimulator(metaclass=ABCMeta):
+class SiliconSimulator(Generic[TDynamics], metaclass=ABCMeta):
     state: StateVector
     control_input: ControlInputVector
-    state_limits: StateVectorLimits
-    control_input_limits: ControlInputVectorLimits
-    dynamics: IDynamics
+    dynamics: TDynamics
     timestamp_s: float = 0.0
     _stop_sim: bool = False
 
@@ -50,26 +46,16 @@ class SiliconSimulator(metaclass=ABCMeta):
         state_integrator_fn = STATE_INTEGRATORS_FN_MAP[state_integrator_type]
 
         while self.timestamp_s <= max_time_s and not self._stop_sim:
-            control_input = controller.compute_control_input(
+            self.control_input = controller.compute_control_input(
                 state=self.state,
             )
-            # Apply control limits
-            self.control_input = np.clip(
-                control_input,
-                self.control_input_limits.lower,
-                self.control_input_limits.upper,
-            )
-            state = state_integrator_fn(
+            self.state = state_integrator_fn(
                 state=self.state,
                 control_input=self.control_input,
                 state_derivative_fn=self.dynamics.compute_state_derivative,
                 dt=dt,
             )
-            # Normalize and apply state limits.
-            state = self.dynamics.normalize_state(state=state)
-            self.state = np.clip(
-                state, self.state_limits.lower, self.state_limits.upper
-            )
+
             self.timestamp_s += dt
 
             self.visualize()

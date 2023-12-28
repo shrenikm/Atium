@@ -19,8 +19,11 @@ class CartpoleDynamics(IDynamics):
         self,
         state: StateVector,
     ) -> StateVector:
+        """
+        Normalize the theta value.
+        """
         normalized_state = np.copy(state)
-        normalized_state[0] = normalize_angle(angles=normalized_state[0])
+        normalized_state[1] = normalize_angle(angles=normalized_state[1])
         return normalized_state
 
     def compute_state_derivative(
@@ -35,9 +38,28 @@ class CartpoleDynamics(IDynamics):
         assert state.size == 4
         assert control_input.size == 1
 
-        _, theta, x_dot, theta_dot = state
+        # Normalize the state before using it to compute anything.
+        state = self.normalize_state(state=state)
+
+        # Apply state and control limits
+        state = np.clip(state, self.state_limits.lower, self.state_limits.upper)
+        control_input = np.clip(
+            control_input,
+            self.control_input_limits.lower,
+            self.control_input_limits.upper,
+        )
+
+        x, theta, x_dot, theta_dot = state
         f_x = control_input[0]
         ct, st = np.cos(theta), np.sin(theta)
+
+        # If the cart is at either x limit, we don't allow a force in that direction.
+        # If we don't do this, the cart will remain stationary at the x limits due to clipping,
+        # but the pole will continue swinging as the force will induce a change of state.
+        if np.isclose(x, self.state_limits.lower[0]) and f_x < 0.0:
+            f_x = 0.0
+        if np.isclose(x, self.state_limits.upper[0]) and f_x > 0.0:
+            f_x = 0.0
 
         k1 = self.m_c + self.m_p * st**2
         k2 = self.m_p * st * (self.l * theta_dot**2 + self.g * ct)

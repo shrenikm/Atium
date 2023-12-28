@@ -1,13 +1,12 @@
-from typing import Optional
 import attr
 import numpy as np
 from common.control.interfaces import IController
 
 from common.custom_types import (
     ControlInputVector,
-    ControlInputVectorLimits,
     StateVector,
 )
+from common.dynamics.utils import ControlInputVectorLimits
 
 
 @attr.define

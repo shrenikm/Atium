@@ -2,20 +2,18 @@ from abc import ABCMeta, abstractmethod
 
 import attr
 
-from common.custom_types import ControlInputVector, StateDerivativeVector, StateVector
+from common.custom_types import (
+    ControlInputVector,
+    StateDerivativeVector,
+    StateVector,
+)
+from common.dynamics.utils import StateVectorLimits, ControlInputVectorLimits
 
 
 @attr.frozen
 class IDynamics(metaclass=ABCMeta):
-    @abstractmethod
-    def normalize_state(
-        self,
-        state: StateVector,
-    ) -> StateVector:
-        """
-        Perform any normalizations on the state (like wrapping angles) and return the normalized value.
-        """
-        raise NotImplemented
+    state_limits: StateVectorLimits
+    control_input_limits: ControlInputVectorLimits
 
     @abstractmethod
     def compute_state_derivative(
