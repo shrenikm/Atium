@@ -38,17 +38,6 @@ class CartpoleDynamics(IDynamics):
         assert state.size == 4
         assert control_input.size == 1
 
-        # Normalize the state before using it to compute anything.
-        state = self.normalize_state(state=state)
-
-        # Apply state and control limits
-        state = np.clip(state, self.state_limits.lower, self.state_limits.upper)
-        control_input = np.clip(
-            control_input,
-            self.control_input_limits.lower,
-            self.control_input_limits.upper,
-        )
-
         x, theta, x_dot, theta_dot = state
         f_x = control_input[0]
         ct, st = np.cos(theta), np.sin(theta)

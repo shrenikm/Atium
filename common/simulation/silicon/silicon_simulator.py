@@ -46,15 +46,23 @@ class SiliconSimulator(Generic[TDynamics], metaclass=ABCMeta):
         state_integrator_fn = STATE_INTEGRATORS_FN_MAP[state_integrator_type]
 
         while self.timestamp_s <= max_time_s and not self._stop_sim:
-            self.control_input = controller.compute_control_input(
+            control_input = controller.compute_control_input(
                 state=self.state,
             )
-            self.state = state_integrator_fn(
+            # Bound the control input.
+            self.control_input = self.dynamics.bound_control_input(
+                control_input=control_input
+            )
+
+            state = state_integrator_fn(
                 state=self.state,
                 control_input=self.control_input,
                 state_derivative_fn=self.dynamics.compute_state_derivative,
                 dt=dt,
             )
+            # Normalize and bound the state.
+            state = self.dynamics.normalize_state(state=state)
+            self.state = self.dynamics.bound_state(state=state)
 
             self.timestamp_s += dt
 
