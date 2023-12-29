@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "Atium"
 version = "0.0.1"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [
   {name = "Shrenik", email = "shrenik95@gmail.com"},
 ]

@@ -1,7 +1,9 @@
-from typing import Any, Callable, List, Tuple, TypeVar, Union
+from typing import Annotated, Any, Callable, List, Literal, Tuple, TypeVar, Union
 
-import nptyping as npt
 import numpy as np
+import numpy.typing as npt
+
+DType = TypeVar("DType", bound=npt.DTypeLike)
 
 # File/directory types
 FileName = str
@@ -14,72 +16,86 @@ OutputVideoPath = str
 # Attrs stuff
 AttrsConverterFunc = Callable[[Any], Any]
 
-
-# Array stuff
-Arr = npt.NDArray
-Shape = npt.Shape
-f64 = npt.Float64
-ui8 = npt.UInt8
+# Indices
 Index2D = Tuple[int, int]
 Indices2D = List[Index2D]
 Index3D = Tuple[int, int, int]
 Indices3D = List[Index3D]
 
-# Calculus stuff
-Scalar = Arr[Shape["1"], f64]  # TODO: Better type maybe?
-Vector = Arr[Shape["N"], f64]  # Generic float vector
-Matrix = Arr[Shape["M, N"], f64]  # Generic float matrix
-Tensor3D = Arr[Shape["L, M, N"], f64]  # Generic float 3d tensor
+# General Array stuff
+Arr = npt.NDArray
+Scalar = Annotated[Arr[DType], Literal["1"]]
 
-DerivativeVector = Arr[Shape["N"], f64]  # Generic float vector
+VectorN = Annotated[Arr[DType], Literal["N"]]
+Vector2 = Annotated[Arr[DType], Literal["2"]]
+
+MatrixMN = Annotated[Arr[DType], Literal["M, N"]]
+MatrixNN = Annotated[Arr[DType], Literal["N, N"]]
+MatrixN2 = Annotated[Arr[DType], Literal["N, 2"]]
+
+Tensor3D = Annotated[Arr[DType], Literal["L, M, N"]]
+TensorMN3 = Annotated[Arr[DType], Literal["M, N, 3"]]
+f64 = np.float64
+ui8 = np.uint8
+VectorNf64 = VectorN[f64]
+Vector2f64 = Vector2[f64]
+MatrixMNf64 = MatrixMN[f64]
+MatrixNNf64 = MatrixNN[f64]
+MatrixN2f64 = MatrixN2[f64]
+Tensor3Df64 = Tensor3D[f64]
+TensorMN3ui8 = TensorMN3[ui8]
+
+
+# Calculus stuff
+DerivativeVector = VectorNf64  # Generic float vector
 # Time derivative: dx/dt = f(t, x)
-TimeDerivativeFn = Callable[[float, Vector], DerivativeVector]
+TimeDerivativeFn = Callable[[float, VectorNf64], DerivativeVector]
 # Function that takes in a vector and returns a scalar.
-VectorInputScalarOutputFn = Callable[[Vector], Scalar]
+VectorInputScalarOutputFn = Callable[[VectorNf64], Scalar]
 # Function that takes in a vector and returns a vector.
-VectorInputVectorOutputFn = Callable[[Vector], Vector]
+VectorInputVectorOutputFn = Callable[[VectorNf64], VectorNf64]
 # Gradient for a function that takes a vector and returns the gradient vector.
 # This is for a vector input scalar output function.
-VectorInputVectorOutputGradFn = Callable[[Vector], Vector]
+VectorInputVectorOutputGradFn = Callable[[VectorNf64], VectorNf64]
 # Hessian for a function that takes a vector and returns the hessian matrix.
 # This is for a vector input scalar output function.
-VectorInputMatrixOutputHessFn = Callable[[Vector], Matrix]
+VectorInputMatrixOutputHessFn = Callable[[VectorNf64], MatrixMNf64]
 # Gradient for a function that takes a vector and returns the gradient matrix (jacobian).
 # This is for a vector input vector output function.
-VectorInputMatrixOutputGradFn = Callable[[Vector], Matrix]
+VectorInputMatrixOutputGradFn = Callable[[VectorNf64], MatrixMNf64]
 # Hessian for a function that takes a vector and returns the hessian tensor.
 # This is for a vector input vector output function.
-VectorInputTensorOutputHessFn = Callable[[Vector], Tensor3D]
+VectorInputTensorOutputHessFn = Callable[[VectorNf64], Tensor3Df64]
 
 # Geometry
-AnglesRad = Arr[Shape["N"], f64]
+AnglesRad = VectorNf64
 AngleOrAnglesRad = Union[float, AnglesRad]
-PointXYVector = Arr[Shape["2"], f64]
-PolygonXYArray = Arr[Shape["N, 2"], f64]
-PointXYArray = Arr[Shape["2"], f64]
-SizeXYVector = Arr[Shape["2"], f64]
+PointXYVector = Vector2f64
+PolygonXYArray = MatrixN2f64
+PointXYArray = MatrixN2f64
+SizeXYVector = Vector2f64
 CoordinateXY = Tuple[float, float]
 
 
 # Kinematics/dynamics/control
-AMatrix = Arr[Shape["Nx, Nx"], f64]
-BMatrix = Arr[Shape["Nx, Nu"], f64]
-StateVector = Arr[Shape["Nx"], f64]
-StateDerivativeVector = Arr[Shape["Nx"], f64]
-ControlInputVector = Arr[Shape["Nu"], f64]
-VelocityXYVector = Arr[Shape["2"], f64]
+AMatrix = MatrixNNf64
+BMatrix = MatrixMNf64
+StateVector = VectorNf64
+StateDerivativeVector = VectorNf64
+ControlInputVector = VectorNf64
+VelocityXYVector = Vector2f64
 # State derivative: dx/dt = f(x, u). We dont' explicitly include t.
 StateDerivativeFn = Callable[[StateVector, ControlInputVector], StateDerivativeVector]
 
 
-VelocityXYArray = Arr[Shape["N, 2"], f64]
-StateTrajectoryArray = Arr[Shape["N, Nx"], f64]
-ControlTrajectoryArray = Arr[Shape["N, Nu"], f64]
+VelocityXYArray = MatrixN2f64
+StateTrajectoryArray = MatrixMNf64
+ControlTrajectoryArray = MatrixMNf64
 
 # Optimization
-CostVector = Arr[Shape["N"], f64]
-CostMatrix = Arr[Shape["N,M"], f64]
+CostVector = VectorNf64
+CostMatrix = MatrixMNf64
 
 # Visualization
 BGRColor = Tuple[int, int, int]
-Img3Channel = Arr[Shape["M, N, 3"], ui8]
+Img3Channel = TensorMN3ui8

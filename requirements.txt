@@ -1,6 +1,6 @@
 attr==21.4.0
-numpy==1.22.3
+numpy==1.26.2
 nptyping=2.5.0
-matplotlib==3.5.1
+matplotlib==3.8.1
 opencv==4.6.0
-ortools==9.7
+ortools==9.8

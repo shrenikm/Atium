@@ -187,8 +187,8 @@ def _create_animation_elements(
             linestyle="dotted",
             color=animation_params.vehicle_trajectory_color,
         )
-        ax.add_patch(trajectory_line)
-        ax.add_patch(core_line)
+        ax.add_line(trajectory_line)
+        ax.add_line(core_line)
         ax.add_patch(clearance_rect)
         ax.add_patch(control_arrow)
 
@@ -296,7 +296,9 @@ def visualize_mvmip_result(
 
             animation_elements.vehicle_core_map[vehicle_id].set_xdata(x)
             animation_elements.vehicle_core_map[vehicle_id].set_ydata(y)
-            animation_elements.vehicle_clearance_map[vehicle_id].set_xy((x - c_m, y - c_m))
+            animation_elements.vehicle_clearance_map[vehicle_id].set_xy(
+                (x - c_m, y - c_m)
+            )
             animation_elements.vehicle_control_map[vehicle_id].set_data(
                 x=x,
                 y=y,
