@@ -1,7 +1,7 @@
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, List, Tuple, TypeVar, Union
 
-import attr
 import nptyping as npt
+import numpy as np
 
 # File/directory types
 FileName = str
@@ -26,10 +26,30 @@ Index3D = Tuple[int, int, int]
 Indices3D = List[Index3D]
 
 # Calculus stuff
+Scalar = Arr[Shape["1"], f64]  # TODO: Better type maybe?
 Vector = Arr[Shape["N"], f64]  # Generic float vector
+Matrix = Arr[Shape["M, N"], f64]  # Generic float matrix
+Tensor3D = Arr[Shape["L, M, N"], f64]  # Generic float 3d tensor
+
 DerivativeVector = Arr[Shape["N"], f64]  # Generic float vector
 # Time derivative: dx/dt = f(t, x)
 TimeDerivativeFn = Callable[[float, Vector], DerivativeVector]
+# Function that takes in a vector and returns a scalar.
+VectorInputScalarOutputFn = Callable[[Vector], Scalar]
+# Function that takes in a vector and returns a vector.
+VectorInputVectorOutputFn = Callable[[Vector], Vector]
+# Gradient for a function that takes a vector and returns the gradient vector.
+# This is for a vector input scalar output function.
+VectorInputVectorOutputGradFn = Callable[[Vector], Vector]
+# Hessian for a function that takes a vector and returns the hessian matrix.
+# This is for a vector input scalar output function.
+VectorInputMatrixOutputHessFn = Callable[[Vector], Matrix]
+# Gradient for a function that takes a vector and returns the gradient matrix (jacobian).
+# This is for a vector input vector output function.
+VectorInputMatrixOutputGradFn = Callable[[Vector], Matrix]
+# Hessian for a function that takes a vector and returns the hessian tensor.
+# This is for a vector input vector output function.
+VectorInputTensorOutputHessFn = Callable[[Vector], Tensor3D]
 
 # Geometry
 AnglesRad = Arr[Shape["N"], f64]
