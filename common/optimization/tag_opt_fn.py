@@ -1,5 +1,6 @@
 import functools
-from typing import Any, Callable, Optional, Protocol
+import inspect
+from typing import Any, Callable, Optional, Protocol, Union
 
 import jax.numpy as jnp
 import numpy as np
@@ -8,6 +9,7 @@ from jax import grad, hessian, jacfwd, jacrev, jit
 from common.custom_types import (
     OptimizationFn,
     OptimizationGradFn,
+    OptimizationGradOrHessFn,
     OptimizationHessFn,
     ScalarOrVectorNf64,
     VectorInputScalarOutputFn,
@@ -43,11 +45,32 @@ def is_tagged_opt_fn(
     return False
 
 
+def _probe_fn(fn: OptimizationFn) -> None:
+    sig = inspect.signature(fn)
+    num_fn_params = len(sig.parameters)
+
+    if num_fn_params < 1:
+        raise AtiumOptError("Function must have atleast one parameter.")
+
+
 def _tag_fn(
     fn: OptimizationFn,
     tag: str,
 ) -> None:
     setattr(fn, tag, True)
+
+
+def _get_jit_applied_fn(
+    fn: OptimizationGradOrHessFn,
+) -> OptimizationGradOrHessFn:
+    # TODO: Doing this inspect twice. Unnecessary but maybe cleaner.
+    sig = inspect.signature(fn)
+    num_fn_params = len(sig.parameters)
+
+    # Assuming the first argument is the scalar/vector of variables,
+    # We can make all the other arguments static.
+    static_argnums = tuple(range(1, num_fn_params))
+    return jit(fn, static_argnums=static_argnums)
 
 
 def _splice_grad(
@@ -66,7 +89,7 @@ def _splice_grad(
     if grad_fn is None:
         grad_fn = jacfwd(fn, argnums=0)
         if use_jit:
-            grad_fn = jit(grad_fn)
+            grad_fn = _get_jit_applied_fn(fn=grad_fn)
     setattr(fn, GRAD_ATTR_NAME, grad_fn)
 
 
@@ -85,7 +108,7 @@ def _splice_hess(
     if hess_fn is None:
         hess_fn = hessian(fn, argnums=0)
         if use_jit:
-            hess_fn = jit(hess_fn)
+            hess_fn = _get_jit_applied_fn(fn=hess_fn)
     setattr(fn, HESS_ATTR_NAME, hess_fn)
 
 
@@ -109,6 +132,9 @@ def tag_atium_opt_fn(
         @functools.wraps(_fn)
         def _tagged_fn_wrapper(*args, **kwargs):
             return _fn(*args, **kwargs)
+
+        # Checking if the function is a valid function to be tagged.
+        _probe_fn(fn=_tagged_fn_wrapper)
 
         # Tagging the function.
         _tag_fn(fn=_tagged_fn_wrapper, tag=TAG_ATIUM_OPT_FN)

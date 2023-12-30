@@ -1,17 +1,15 @@
-from numbers import Number
 from typing import (
     Annotated,
     Any,
     Callable,
     List,
     Literal,
-    Optional,
-    Protocol,
     Tuple,
     TypeVar,
     Union,
 )
 
+import jax.typing as jpt
 import numpy as np
 import numpy.typing as npt
 
@@ -45,9 +43,9 @@ VectorNf64 = Annotated[npt.NDArray[f64], Literal["N"]]
 Vector1f64 = Annotated[npt.NDArray[f64], Literal["1"]]
 Vector2f64 = Annotated[npt.NDArray[f64], Literal["2"]]
 
-Scalar = Union[Vector1f64, float]
+Scalarf64 = Union[Vector1f64, float, jpt.ArrayLike]
 
-ScalarOrVectorNf64 = Union[Scalar, VectorNf64]
+ScalarOrVectorNf64 = Union[Scalarf64, VectorNf64, jpt.ArrayLike]
 
 MatrixMNf64 = Annotated[npt.NDArray[f64], Literal["M, N"]]
 MatrixNNf64 = Annotated[npt.NDArray[f64], Literal["N, N"]]
@@ -63,22 +61,22 @@ DerivativeVector = VectorNf64  # Generic float vector
 TimeDerivativeFn = Callable[[float, VectorNf64], DerivativeVector]
 
 # Function that takes in a vector and returns a scalar.
-ScalarInputScalarOutputFnWithoutParams = Callable[[Scalar], Scalar]
-ScalarInputScalarOutputFnWithParams = Callable[[Scalar, Any], Scalar]
+ScalarInputScalarOutputFnWithoutParams = Callable[[Scalarf64], Scalarf64]
+ScalarInputScalarOutputFnWithParams = Callable[[Scalarf64, Any], Scalarf64]
 ScalarInputScalarOutputFn = Union[
     ScalarInputScalarOutputFnWithoutParams, ScalarInputScalarOutputFnWithParams
 ]
 
 # Function that takes in a vector and returns a vector.
-ScalarInputVectorOutputFnWithoutParams = Callable[[Scalar], VectorNf64]
-ScalarInputVectorOutputFnWithParams = Callable[[Scalar, Any], VectorNf64]
+ScalarInputVectorOutputFnWithoutParams = Callable[[Scalarf64], VectorNf64]
+ScalarInputVectorOutputFnWithParams = Callable[[Scalarf64, Any], VectorNf64]
 ScalarInputVectorOutputFn = Union[
     ScalarInputVectorOutputFnWithoutParams, ScalarInputVectorOutputFnWithParams
 ]
 
 # Function that takes in a vector and returns a scalar.
-VectorInputScalarOutputFnWithoutParams = Callable[[VectorNf64], Scalar]
-VectorInputScalarOutputFnWithParams = Callable[[VectorNf64, Any], Scalar]
+VectorInputScalarOutputFnWithoutParams = Callable[[VectorNf64], Scalarf64]
+VectorInputScalarOutputFnWithParams = Callable[[VectorNf64, Any], Scalarf64]
 VectorInputScalarOutputFn = Union[
     VectorInputScalarOutputFnWithoutParams, VectorInputScalarOutputFnWithParams
 ]
@@ -141,6 +139,8 @@ OptimizationHessFn = Union[
     VectorInputMatrixOutputFn,
     VectorInputTensorOutputFn,
 ]
+
+OptimizationGradOrHessFn = Union[OptimizationGradFn, OptimizationHessFn]
 
 
 # Geometry
