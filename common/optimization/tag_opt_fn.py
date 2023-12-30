@@ -1,5 +1,5 @@
 import functools
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Protocol
 
 import jax.numpy as jnp
 import numpy as np
@@ -9,19 +9,35 @@ from common.custom_types import (
     OptimizationFn,
     OptimizationGradFn,
     OptimizationHessFn,
+    ScalarOrVectorN,
     VectorInputScalarOutputFn,
     VectorN,
 )
 
 GRAD_ATTR_NAME = "grad"
 HESS_ATTR_NAME = "hess"
-ATIUM_OPT_FN_KERNEL_TAG = "opt_fn_k"
+TAG_ATIUM_OPT_FN = "tag_opt_fn"
+
+
+class TaggedAtiumOptFnKernel(Protocol):
+    opt_fn_k: bool
+    grad_fn: OptimizationGradFn
+    hess_fn: OptimizationHessFn
+
+    def __call__(
+        self,
+        x: ScalarOrVectorN,
+        /,
+        *args: Any,
+        **kwargs: Any,
+    ) -> ScalarOrVectorN:
+        raise NotImplementedError
 
 
 def is_tagged_opt_fn(
     fn: Callable[[Any], Any],
 ) -> bool:
-    if hasattr(fn, ATIUM_OPT_FN_KERNEL_TAG) and getattr(fn, ATIUM_OPT_FN_KERNEL_TAG):
+    if hasattr(fn, TAG_ATIUM_OPT_FN) and getattr(fn, TAG_ATIUM_OPT_FN):
         return True
     return False
 
@@ -72,7 +88,7 @@ def _splice_hess(
     setattr(fn, HESS_ATTR_NAME, hess_fn)
 
 
-def atium_opt_fn_kernel(
+def tag_atium_opt_fn(
     fn: Optional[VectorInputScalarOutputFn] = None,
     *,
     grad_fn: Optional[OptimizationGradFn] = None,
@@ -94,7 +110,7 @@ def atium_opt_fn_kernel(
             return _fn(*args, **kwargs)
 
         # Tagging the function.
-        _tag_fn(fn=_tagged_fn_wrapper, tag=ATIUM_OPT_FN_KERNEL_TAG)
+        _tag_fn(fn=_tagged_fn_wrapper, tag=TAG_ATIUM_OPT_FN)
 
         # Splicing the gradient function.
         _splice_grad(
@@ -121,8 +137,7 @@ def atium_opt_fn_kernel(
 
 if __name__ == "__main__":
 
-    @atium_opt_fn_kernel(use_jit=True)
-    # @atium_opt_viso_kernel
+    @tag_atium_opt_fn(use_jit=True)
     # def f(x: jpt.ArrayLike) -> float:
     def f(x: VectorN) -> float:
         A = 6 * np.eye(len(x))
@@ -130,7 +145,7 @@ if __name__ == "__main__":
 
     x = np.array([1.0, 2.0, 3.0])
     # print(f.__name__, f(x), f.a)
-    print(f.__name__, f(x), f.opt_fn_k)
+    print(f.__name__, f(x), f.tag_opt_fn)
     print(f.grad(x))
     print(f.hess(x))
 

@@ -48,7 +48,7 @@ if __name__ == "__main__":
         A = p.k * np.eye(len(x))
         return jnp.dot(x, jnp.dot(A, x))
 
-    print(grad(sq)(3.), jacfwd(sq)(3.), hessian(sq)(3.))
+    print(grad(sq)(3.0), jacfwd(sq)(3.0), hessian(sq)(3.0))
 
     ge = grad(e)
     print(ge(x, K(3)), jacfwd(e)(x, K(3)))
@@ -57,11 +57,11 @@ if __name__ == "__main__":
     print(gee(x))
     print(hessian(ee)(x))
 
-    #gf = jacfwd(grad(f))
-    #print(gf(x))
-    #print(hessian(f)(x))
+    # gf = jacfwd(grad(f))
+    # print(gf(x))
+    # print(hessian(f)(x))
 
-    #p = PK(1)
-    #print(type(p))
-    #gff = jacfwd(grad(ff))
-    #print(gff(x, p))
+    # p = PK(1)
+    # print(type(p))
+    # gff = jacfwd(grad(ff))
+    # print(gff(x, p))
