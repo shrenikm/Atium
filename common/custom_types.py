@@ -43,6 +43,7 @@ Arr = npt.NDArray
 NpVectorNf64 = Annotated[npt.NDArray[f64], Literal["N"]]
 NpVector1f64 = Annotated[npt.NDArray[f64], Literal["1"]]
 NpVector2f64 = Annotated[npt.NDArray[f64], Literal["2"]]
+NpVector3f64 = Annotated[npt.NDArray[f64], Literal["3"]]
 NpScalarf64 = Union[NpVector1f64, float]
 
 NpScalarOrVectorNf64 = Union[NpScalarf64, NpVectorNf64]
@@ -60,6 +61,7 @@ NpTensorMN3ui8 = Annotated[npt.NDArray[ui8], Literal["M, N, 3"]]
 JpVectorNf64 = Annotated[jpt.ArrayLike, Literal["N"]]
 JpVector1f64 = Annotated[jpt.ArrayLike, Literal["1"]]
 JpVector2f64 = Annotated[jpt.ArrayLike, Literal["2"]]
+JpVector3f64 = Annotated[jpt.ArrayLike, Literal["3"]]
 JpScalarf64 = JpVector1f64
 
 JpScalarOrVectorNf64 = Union[JpScalarf64, JpVectorNf64]
@@ -75,6 +77,7 @@ JpTensorMN3ui8 = Annotated[jpt.ArrayLike, Literal["M, N, 3"]]
 VectorNf64 = Union[NpVectorNf64, JpVectorNf64]
 Vector1f64 = Union[NpVector1f64, JpVector1f64]
 Vector2f64 = Union[NpVector2f64, JpVector2f64]
+Vector3f64 = Union[NpVector3f64, JpVector3f64]
 Scalarf64 = Union[NpScalarf64, JpScalarf64]
 
 ScalarOrVectorNf64 = Union[NpScalarOrVectorNf64, JpScalarOrVectorNf64]
