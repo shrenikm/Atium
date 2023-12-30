@@ -1,0 +1,6 @@
+class AtiumError(Exception):
+    ...
+
+
+class AtiumOptError(AtiumError):
+    ...

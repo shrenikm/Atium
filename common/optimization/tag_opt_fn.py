@@ -9,28 +9,29 @@ from common.custom_types import (
     OptimizationFn,
     OptimizationGradFn,
     OptimizationHessFn,
-    ScalarOrVectorN,
+    ScalarOrVectorNf64,
     VectorInputScalarOutputFn,
-    VectorN,
+    VectorNf64,
 )
+from common.exceptions import AtiumOptError
 
 GRAD_ATTR_NAME = "grad"
 HESS_ATTR_NAME = "hess"
 TAG_ATIUM_OPT_FN = "tag_opt_fn"
 
 
-class TaggedAtiumOptFnKernel(Protocol):
+class TaggedAtiumOptFn(Protocol):
     opt_fn_k: bool
     grad_fn: OptimizationGradFn
     hess_fn: OptimizationHessFn
 
     def __call__(
         self,
-        x: ScalarOrVectorN,
+        x: ScalarOrVectorNf64,
         /,
         *args: Any,
         **kwargs: Any,
-    ) -> ScalarOrVectorN:
+    ) -> ScalarOrVectorNf64:
         raise NotImplementedError
 
 
@@ -112,6 +113,11 @@ def tag_atium_opt_fn(
         # Tagging the function.
         _tag_fn(fn=_tagged_fn_wrapper, tag=TAG_ATIUM_OPT_FN)
 
+        if grad_fn is not None and hess_fn is not None and use_jit:
+            raise AtiumOptError(
+                "JIT cannot be used if the gradient and hessian functions are explicitly provided."
+            )
+
         # Splicing the gradient function.
         _splice_grad(
             fn=_tagged_fn_wrapper,
@@ -139,7 +145,7 @@ if __name__ == "__main__":
 
     @tag_atium_opt_fn(use_jit=True)
     # def f(x: jpt.ArrayLike) -> float:
-    def f(x: VectorN) -> float:
+    def f(x: VectorNf64) -> float:
         A = 6 * np.eye(len(x))
         return jnp.dot(x, jnp.dot(A, x))
 
