@@ -53,15 +53,15 @@ if __name__ == "__main__":
     ge = grad(e)
     print(ge(x, K(3)), jacfwd(e)(x, K(3)))
 
-    gee = jacfwd(ee)
-    print(gee(x))
-    print(hessian(ee)(x))
+    # gee = jacfwd(ee)
+    # print(gee(x))
+    # print(hessian(ee)(x))
 
     # gf = jacfwd(grad(f))
     # print(gf(x))
     # print(hessian(f)(x))
 
-    # p = PK(1)
-    # print(type(p))
-    # gff = jacfwd(grad(ff))
-    # print(gff(x, p))
+    p = PK(2)
+    print(type(p))
+    gff = jacfwd(grad(ff))
+    print(gff(x, p))

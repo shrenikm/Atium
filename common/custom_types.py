@@ -39,20 +39,52 @@ ui8 = np.uint8
 Arr = npt.NDArray
 
 
-VectorNf64 = Annotated[npt.NDArray[f64], Literal["N"]]
-Vector1f64 = Annotated[npt.NDArray[f64], Literal["1"]]
-Vector2f64 = Annotated[npt.NDArray[f64], Literal["2"]]
+# Numpy types.
+NpVectorNf64 = Annotated[npt.NDArray[f64], Literal["N"]]
+NpVector1f64 = Annotated[npt.NDArray[f64], Literal["1"]]
+NpVector2f64 = Annotated[npt.NDArray[f64], Literal["2"]]
+NpScalarf64 = Union[NpVector1f64, float]
 
-Scalarf64 = Union[Vector1f64, float, jpt.ArrayLike]
+NpScalarOrVectorNf64 = Union[NpScalarf64, NpVectorNf64]
 
-ScalarOrVectorNf64 = Union[Scalarf64, VectorNf64, jpt.ArrayLike]
+NpMatrixMNf64 = Annotated[npt.NDArray[f64], Literal["M, N"]]
+NpMatrixNNf64 = Annotated[npt.NDArray[f64], Literal["N, N"]]
+NpMatrixN2f64 = Annotated[npt.NDArray[f64], Literal["N, 2"]]
 
-MatrixMNf64 = Annotated[npt.NDArray[f64], Literal["M, N"]]
-MatrixNNf64 = Annotated[npt.NDArray[f64], Literal["N, N"]]
-MatrixN2f64 = Annotated[npt.NDArray[f64], Literal["N, 2"]]
+NpTensorLMNf64 = Annotated[npt.NDArray[f64], Literal["L, M, N"]]
+NpTensorMN3ui8 = Annotated[npt.NDArray[ui8], Literal["M, N, 3"]]
 
-TensorLMNf64 = Annotated[npt.NDArray[f64], Literal["L, M, N"]]
-TensorMN3ui8 = Annotated[npt.NDArray[ui8], Literal["M, N, 3"]]
+# JAX types.
+# TODO: Use jpt.Array here after updating to newer JAX
+# jpt.ArrayLike includes np arrays as well so there is a bit of an overlap
+JpVectorNf64 = Annotated[jpt.ArrayLike, Literal["N"]]
+JpVector1f64 = Annotated[jpt.ArrayLike, Literal["1"]]
+JpVector2f64 = Annotated[jpt.ArrayLike, Literal["2"]]
+JpScalarf64 = JpVector1f64
+
+JpScalarOrVectorNf64 = Union[JpScalarf64, JpVectorNf64]
+
+JpMatrixMNf64 = Annotated[jpt.ArrayLike, Literal["M, N"]]
+JpMatrixNNf64 = Annotated[jpt.ArrayLike, Literal["N, N"]]
+JpMatrixN2f64 = Annotated[jpt.ArrayLike, Literal["N, 2"]]
+
+JpTensorLMNf64 = Annotated[jpt.ArrayLike, Literal["L, M, N"]]
+JpTensorMN3ui8 = Annotated[jpt.ArrayLike, Literal["M, N, 3"]]
+
+# Combined types.
+VectorNf64 = Union[NpVectorNf64, JpVectorNf64]
+Vector1f64 = Union[NpVector1f64, JpVector1f64]
+Vector2f64 = Union[NpVector2f64, JpVector2f64]
+Scalarf64 = Union[NpScalarf64, JpScalarf64]
+
+ScalarOrVectorNf64 = Union[NpScalarOrVectorNf64, JpScalarOrVectorNf64]
+
+MatrixMNf64 = Union[NpMatrixMNf64, JpMatrixMNf64]
+MatrixNNf64 = Union[NpMatrixNNf64, JpMatrixNNf64]
+MatrixN2f64 = Union[NpMatrixN2f64, JpMatrixN2f64]
+
+TensorLMNf64 = Union[NpTensorLMNf64, JpTensorLMNf64]
+TensorMN3ui8 = Union[NpTensorMN3ui8, JpTensorMN3ui8]
 
 
 # Calculus stuff

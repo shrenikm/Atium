@@ -75,7 +75,7 @@ def test_custom_grad_hess_tagging():
 
     grad_vector = f.grad(x, params=params)
     hess_matrix = f.hess(x, params=params)
-    np.testing.assert_equal(grad_vector, [2.0, 2.0, 2.0])
+    np.testing.assert_equal(grad_vector, np.array([2.0, 2.0, 2.0]))
     np.testing.assert_equal(hess_matrix, np.full((3, 3), 7.0))
 
 
@@ -90,7 +90,8 @@ def test_tagged_jit_static_argnums():
         return y
 
     params = _Params(a=2, b=0.0)
-    np.testing.assert_equal(f.grad(1.0, params=params), np.array(4.0))
+    grad_value = f.grad(1.0, params=params).item()
+    np.testing.assert_equal(grad_value, 4.0)
 
 
 @pytest.mark.parametrize("use_jit", [True, False])
@@ -99,10 +100,10 @@ def test_scalar_input_scalar_output_tag(use_jit: bool):
     def f(x: float) -> float:
         return x**3
 
-    grad_value = f.grad(2.)
-    hess_value = f.hess(-2.)
-    np.testing.assert_equal(grad_value, np.array(12.0))
-    np.testing.assert_equal(hess_value, np.array(-12.0))
+    grad_value = f.grad(2.0).item()
+    hess_value = f.hess(-2.0).item()
+    np.testing.assert_equal(grad_value, 12.0)
+    np.testing.assert_equal(hess_value, -12.0)
 
 
 @pytest.mark.parametrize("use_jit", [True, False])
@@ -112,14 +113,41 @@ def test_scalar_input_vector_output_tag(use_jit: bool):
         return x * jnp.ones(param.a)
 
     param = _Params(a=3, b=-3.0)
-    grad_value = f.grad(2., param=param)
-    hess_value = f.hess(2., param=param)
-    np.testing.assert_equal(grad_value, np.array([1., 1., 1.]))
-    np.testing.assert_equal(hess_value, np.array([0., 0., 0.]))
+    grad_value = f.grad(2.0, param=param)
+    hess_value = f.hess(2.0, param=param)
+    np.testing.assert_equal(grad_value, np.array([1.0, 1.0, 1.0]))
+    np.testing.assert_equal(hess_value, np.array([0.0, 0.0, 0.0]))
 
 
-def test_opt_fn_tag_scalar_input_scalar_output():
-    ...
+@pytest.mark.parametrize("use_jit", [True, False])
+def test_vector_input_scalar_output_tag(use_jit: bool):
+    @tag_atium_opt_fn(use_jit=use_jit)
+    def f(x: VectorNf64, param: _Params) -> Scalarf64:
+        n = len(x)
+        Q = param.a * np.eye(n)
+        return param.b + jnp.dot(x, jnp.dot(Q, x))
+
+    param = _Params(a=7, b=1.0)
+    x = np.array([1.0, 2.0, 3.0])
+    grad_value = f.grad(x, param=param)
+    hess_value = f.hess(x, param=param)
+    np.testing.assert_equal(grad_value, np.array([14.0, 28.0, 42.0]))
+    np.testing.assert_equal(hess_value, 14.0 * np.eye(3))
+
+
+@pytest.mark.parametrize("use_jit", [True, False])
+def test_vector_input_vector_output_tag(use_jit: bool):
+    @tag_atium_opt_fn(use_jit=use_jit)
+    def f(x: VectorNf64, param: _Params) -> VectorNf64:
+        Q = param.a * np.eye(x.shape[0])
+        return Q @ x + param.b
+
+    param = _Params(a=2, b=-2.0)
+    x = np.array([1.0, 2.0, 3.0])
+    grad_value = f.grad(x, param=param)
+    hess_value = f.hess(x, param=param)
+    np.testing.assert_equal(grad_value, 2.0 * np.eye(3))
+    np.testing.assert_equal(hess_value, np.zeros((3, 3, 3)))
 
 
 if __name__ == "__main__":
