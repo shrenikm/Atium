@@ -2,7 +2,7 @@ import attr
 import jax
 import jax.numpy as jnp
 import numpy as np
-from jax import grad, jacfwd, jacrev, jit, random
+from jax import grad, jacfwd, jacrev, jit, random, hessian
 
 if __name__ == "__main__":
     key = random.PRNGKey(7)
@@ -27,6 +27,10 @@ if __name__ == "__main__":
             sum = sum + x[i]
         return sum
 
+    def ee(x) -> float:
+        A = 2 * np.eye(len(x))
+        return A @ x
+
     def f(x) -> float:
         A = 7 * np.eye(len(x))
         return jnp.dot(x, jnp.dot(A, x))
@@ -44,11 +48,18 @@ if __name__ == "__main__":
         A = p.k * np.eye(len(x))
         return jnp.dot(x, jnp.dot(A, x))
 
-    ge = grad(e)
-    print(ge(x, K(3)))
+    print(grad(sq)(3.), jacfwd(sq)(3.), hessian(sq)(3.))
 
-    # gf = jacfwd(grad(f))
-    # print(gf(x))
+    ge = grad(e)
+    print(ge(x, K(3)), jacfwd(e)(x, K(3)))
+
+    gee = jacfwd(ee)
+    print(gee(x))
+    print(hessian(ee)(x))
+
+    #gf = jacfwd(grad(f))
+    #print(gf(x))
+    #print(hessian(f)(x))
 
     #p = PK(1)
     #print(type(p))
