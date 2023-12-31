@@ -1,13 +1,4 @@
-from typing import (
-    Annotated,
-    Any,
-    Callable,
-    List,
-    Literal,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Annotated, Any, Callable, List, Literal, Tuple, TypeVar, Union
 
 import jax.typing as jpt
 import numpy as np
@@ -36,8 +27,11 @@ Indices3D = List[Index3D]
 f64 = np.float64
 i64 = np.int64
 ui8 = np.uint8
-Arr = npt.NDArray
-
+NpArr = npt.NDArray
+JpArr = jpt.ArrayLike
+NpArrf64 = npt.NDArray[f64]
+JpArrf64 = npt.NDArray[f64]
+Arrf64 = Union[NpArrf64, JpArrf64]
 
 # Numpy types.
 NpVectorNf64 = Annotated[npt.NDArray[f64], Literal["N"]]
@@ -95,86 +89,27 @@ DerivativeVector = VectorNf64  # Generic float vector
 # Time derivative: dx/dt = f(t, x)
 TimeDerivativeFn = Callable[[float, VectorNf64], DerivativeVector]
 
-# Function that takes in a vector and returns a scalar.
-ScalarInputScalarOutputFnWithoutParams = Callable[[Scalarf64], Scalarf64]
-ScalarInputScalarOutputFnWithParams = Callable[[Scalarf64, Any], Scalarf64]
-ScalarInputScalarOutputFn = Union[
-    ScalarInputScalarOutputFnWithoutParams, ScalarInputScalarOutputFnWithParams
-]
-
-# Function that takes in a vector and returns a vector.
-ScalarInputVectorOutputFnWithoutParams = Callable[[Scalarf64], VectorNf64]
-ScalarInputVectorOutputFnWithParams = Callable[[Scalarf64, Any], VectorNf64]
-ScalarInputVectorOutputFn = Union[
-    ScalarInputVectorOutputFnWithoutParams, ScalarInputVectorOutputFnWithParams
-]
-
-# Function that takes in a vector and returns a scalar.
-VectorInputScalarOutputFnWithoutParams = Callable[[VectorNf64], Scalarf64]
-VectorInputScalarOutputFnWithParams = Callable[[VectorNf64, Any], Scalarf64]
-VectorInputScalarOutputFn = Union[
-    VectorInputScalarOutputFnWithoutParams, VectorInputScalarOutputFnWithParams
-]
-
-# Function that takes in a vector and returns a vector.
-VectorInputVectorOutputFnWithoutParams = Callable[[VectorNf64], VectorNf64]
-VectorInputVectorOutputFnWithParams = Callable[[VectorNf64, Any], VectorNf64]
-VectorInputVectorOutputFn = Union[
-    VectorInputVectorOutputFnWithoutParams, VectorInputVectorOutputFnWithParams
-]
-
-# Function that takes in a vector and returns a matrix.
-VectorInputMatrixOutputFnWithoutParams = Callable[[VectorNf64], TensorLMNf64]
-VectorInputMatrixOutputFnWithParams = Callable[[VectorNf64, Any], TensorLMNf64]
-VectorInputMatrixOutputFn = Union[
-    VectorInputMatrixOutputFnWithoutParams, VectorInputMatrixOutputFnWithParams
-]
-
-# Function that takes in a vector and returns a tensor.
-VectorInputTensorOutputFnWithoutParams = Callable[[VectorNf64], MatrixMNf64]
-VectorInputTensorOutputFnWithParams = Callable[[VectorNf64, Any], MatrixMNf64]
-VectorInputTensorOutputFn = Union[
-    VectorInputTensorOutputFnWithoutParams, VectorInputTensorOutputFnWithParams
-]
-
-# Function used in an optimization cost function. Only scalar outputs.
-OptimizationCostFn = Union[
-    ScalarInputScalarOutputFn,
-    VectorInputScalarOutputFn,
-]
-
-# Function used in an optimization constraint.
-OptimizationConstraintFn = Union[
-    ScalarInputScalarOutputFn,
-    ScalarInputVectorOutputFn,
-    VectorInputScalarOutputFn,
-    VectorInputVectorOutputFn,
-]
 
 # Function used in an optimization program -- cost or constraint.
-OptimizationFn = Union[
-    OptimizationCostFn,
-    OptimizationConstraintFn,
-]
+TOptInput = TypeVar("TOptInput", bound=Arrf64)
+TOptOutput = TypeVar("TOptOutput", bound=Arrf64)
+OptimizationFnWithoutParams = Callable[[TOptInput], TOptOutput]
+OptimizationFnWithParams = Callable[[TOptInput, Any], TOptOutput]
+OptimizationFn = Union[OptimizationFnWithoutParams, OptimizationFnWithParams]
+
+# Function used in an optimization cost function. Only scalar outputs.
+OptimizationCostFn = OptimizationFn[ScalarOrVectorNf64, Scalarf64]
+# Function used in an optimization constraint.
+OptimizationConstraintsFn = OptimizationFn[ScalarOrVectorNf64, ScalarOrVectorNf64]
+
 
 # Gradient for a cost/constraint function that takes in a scalar/vector.
 # Depending on the type, the output gradient can be a scalar, vector or a matrix (Jacobian).
-OptimizationGradFn = Union[
-    ScalarInputScalarOutputFn,
-    ScalarInputVectorOutputFn,
-    VectorInputVectorOutputFn,
-    VectorInputMatrixOutputFn,
-]
+OptimizationGradFn = OptimizationFn[ScalarOrVectorNf64, Arrf64]
 
 # Hessian for a cost/constraint function that takes in a scalar/Vector.
 # Depending on the type, the output gradient can be a scalar, vector, matrix or a tensor.
-OptimizationHessFn = Union[
-    ScalarInputScalarOutputFn,
-    ScalarInputVectorOutputFn,
-    VectorInputMatrixOutputFn,
-    VectorInputTensorOutputFn,
-]
-
+OptimizationHessFn = OptimizationFn[ScalarOrVectorNf64, Arrf64]
 OptimizationGradOrHessFn = Union[OptimizationGradFn, OptimizationHessFn]
 
 

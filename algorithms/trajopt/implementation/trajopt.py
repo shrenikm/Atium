@@ -3,16 +3,16 @@ Implementation of the TrajOpt algorithm.
 
 See: https://rll.berkeley.edu/~sachin/papers/Schulman-IJRR2014.pdf
 """
+from itertools import count
+from typing import Any, Optional, Protocol
+
+import attr
 import numpy as np
 
-from typing import Any, Optional, Protocol
-import attr
-from itertools import count
 from algorithms.trajopt.implementation.trajopt_utils import (
     DefaultTrajOptFnParamsConstructor,
     TrajOptOptFnParamsConstructor,
 )
-
 from common.custom_types import VectorNf64
 from common.optimization.tag_opt_fn import TaggedOptConstraintsFn, TaggedOptCostFn
 
@@ -143,4 +143,5 @@ class TrajOpt:
         for penalty_iter in count():
             for convexify_iter in count():
                 ...
+            ...
             ...

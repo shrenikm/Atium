@@ -2,7 +2,7 @@ from typing import Optional
 
 import numpy as np
 
-from common.custom_types import Arr, AttrsConverterFunc
+from common.custom_types import NpArrf64, AttrsConverterFunc
 
 
 class AttrsConverters:
@@ -11,7 +11,7 @@ class AttrsConverters:
         cls,
         precision: Optional[int] = None,
     ) -> AttrsConverterFunc:
-        def _np_array_converter(value) -> Arr:
+        def _np_array_converter(value) -> NpArrf64:
             np_value = np.array(value, dtype=np.float64)
             if precision is not None:
                 np_value = np_value.round(precision)
