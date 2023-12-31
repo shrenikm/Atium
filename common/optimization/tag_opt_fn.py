@@ -19,10 +19,10 @@ from common.exceptions import AtiumOptError
 
 GRAD_ATTR_NAME = "grad"
 HESS_ATTR_NAME = "hess"
-TAG_ATIUM_OPT_FN = "tag_opt_fn"
+TAG_OPT_FN = "tag_opt_fn"
 
 
-class TaggedAtiumOptFn(Protocol):
+class TaggedOptFn(Protocol):
     opt_fn_k: bool
     grad_fn: OptimizationGradFn
     hess_fn: OptimizationHessFn
@@ -40,7 +40,7 @@ class TaggedAtiumOptFn(Protocol):
 def is_tagged_opt_fn(
     fn: Callable[[Any], Any],
 ) -> bool:
-    if hasattr(fn, TAG_ATIUM_OPT_FN) and getattr(fn, TAG_ATIUM_OPT_FN):
+    if hasattr(fn, TAG_OPT_FN) and getattr(fn, TAG_OPT_FN):
         return True
     return False
 
@@ -112,7 +112,7 @@ def _splice_hess(
     setattr(fn, HESS_ATTR_NAME, hess_fn)
 
 
-def tag_atium_opt_fn(
+def tag_opt_fn(
     fn: Optional[VectorInputScalarOutputFn] = None,
     *,
     grad_fn: Optional[OptimizationGradFn] = None,
@@ -120,7 +120,7 @@ def tag_atium_opt_fn(
     use_jit: bool = False,
 ):
     """
-    Decorator to tag the function as an Atium optimization function.
+    Decorator to tag the function as an Optimization function.
     Splices it with gradient and hessian computation capabilities.
     Can be used for scalar and vector valued functions.
     Restrictions:
@@ -137,7 +137,7 @@ def tag_atium_opt_fn(
         _probe_fn(fn=_tagged_fn_wrapper)
 
         # Tagging the function.
-        _tag_fn(fn=_tagged_fn_wrapper, tag=TAG_ATIUM_OPT_FN)
+        _tag_fn(fn=_tagged_fn_wrapper, tag=TAG_OPT_FN)
 
         if grad_fn is not None and hess_fn is not None and use_jit:
             raise AtiumOptError(
@@ -169,7 +169,7 @@ def tag_atium_opt_fn(
 
 if __name__ == "__main__":
 
-    @tag_atium_opt_fn(use_jit=True)
+    @tag_opt_fn(use_jit=True)
     # def f(x: jpt.ArrayLike) -> float:
     def f(x: VectorNf64) -> float:
         A = 6 * np.eye(len(x))

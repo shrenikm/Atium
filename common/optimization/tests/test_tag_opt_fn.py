@@ -4,7 +4,6 @@ import numpy as np
 from common.custom_types import (
     MatrixNNf64,
     Scalarf64,
-    Vector2f64,
     Vector3f64,
     VectorNf64,
 )
@@ -12,9 +11,8 @@ from common.exceptions import AtiumOptError
 import jax.numpy as jnp
 
 from common.optimization.tag_opt_fn import (
-    TaggedAtiumOptFn,
     is_tagged_opt_fn,
-    tag_atium_opt_fn,
+    tag_opt_fn,
 )
 
 
@@ -30,13 +28,13 @@ def test_opt_fn_tagging():
 
     assert not is_tagged_opt_fn(fn=f1)
 
-    @tag_atium_opt_fn
+    @tag_opt_fn
     def f2(x: float) -> float:
         return x
 
     assert is_tagged_opt_fn(fn=f2)
 
-    @tag_atium_opt_fn(use_jit=False)
+    @tag_opt_fn(use_jit=False)
     def f3(x: float) -> float:
         return x
 
@@ -46,7 +44,7 @@ def test_opt_fn_tagging():
 def test_no_arg_fn_tagging():
     with pytest.raises(AtiumOptError):
 
-        @tag_atium_opt_fn
+        @tag_opt_fn
         def f() -> float:
             return 3.0
 
@@ -61,7 +59,7 @@ def test_custom_grad_hess_tagging():
 
     with pytest.raises(AtiumOptError):
         # Exception check.
-        @tag_atium_opt_fn(
+        @tag_opt_fn(
             grad_fn=_grad_fn,
             hess_fn=_hess_fn,
             use_jit=True,
@@ -69,7 +67,7 @@ def test_custom_grad_hess_tagging():
         def f(x: VectorNf64, params: _Params) -> float:
             return params.b * np.dot(x, x)
 
-    @tag_atium_opt_fn(
+    @tag_opt_fn(
         grad_fn=_grad_fn,
         hess_fn=_hess_fn,
     )
@@ -88,7 +86,7 @@ def test_custom_grad_hess_tagging():
 def test_tagged_jit_static_argnums():
     # Behind the scenes jits tatic_argnums should set the correct function arguments so that
     # JIT is too restrictive and we have more freedom to use loops, etc.
-    @tag_atium_opt_fn(use_jit=True)
+    @tag_opt_fn(use_jit=True)
     def f(x: float, params: _Params) -> Scalarf64:
         y = jnp.array(0.0)
         for _ in range(params.a):
@@ -102,7 +100,7 @@ def test_tagged_jit_static_argnums():
 
 @pytest.mark.parametrize("use_jit", [True, False])
 def test_scalar_input_scalar_output_tag(use_jit: bool):
-    @tag_atium_opt_fn(use_jit=use_jit)
+    @tag_opt_fn(use_jit=use_jit)
     def f(x: float) -> float:
         return x**3
 
@@ -114,7 +112,7 @@ def test_scalar_input_scalar_output_tag(use_jit: bool):
 
 @pytest.mark.parametrize("use_jit", [True, False])
 def test_scalar_input_vector_output_tag(use_jit: bool):
-    @tag_atium_opt_fn(use_jit=use_jit)
+    @tag_opt_fn(use_jit=use_jit)
     def f(x: float, params: _Params) -> Scalarf64:
         return x * jnp.ones(params.a)
 
@@ -127,7 +125,7 @@ def test_scalar_input_vector_output_tag(use_jit: bool):
 
 @pytest.mark.parametrize("use_jit", [True, False])
 def test_vector_input_scalar_output_tag(use_jit: bool):
-    @tag_atium_opt_fn(use_jit=use_jit)
+    @tag_opt_fn(use_jit=use_jit)
     def f(x: VectorNf64, params: _Params) -> Scalarf64:
         n = len(x)
         Q = params.a * np.eye(n)
@@ -143,7 +141,7 @@ def test_vector_input_scalar_output_tag(use_jit: bool):
 
 @pytest.mark.parametrize("use_jit", [True, False])
 def test_vector_input_vector_output_tag(use_jit: bool):
-    @tag_atium_opt_fn(use_jit=use_jit)
+    @tag_opt_fn(use_jit=use_jit)
     def f(x: VectorNf64, params: _Params) -> VectorNf64:
         Q = params.a * np.eye(x.shape[0])
         return Q @ x + params.b
@@ -162,7 +160,7 @@ def test_realistic_constraint_fn_tag(use_jit: bool):
     Test the gradient and hessian computations on a more realistic constraint function.
     """
 
-    @tag_atium_opt_fn(use_jit=use_jit)
+    @tag_opt_fn(use_jit=use_jit)
     def f(z: VectorNf64, params: _Params) -> Vector3f64:
         """
         g = [xcos(theta) + ysin(theta); ax^3 + v^2 + bw; theta]
