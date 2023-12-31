@@ -16,6 +16,7 @@ OutputVideoPath = str
 
 # Attrs stuff
 AttrsConverterFunc = Callable[[Any], Any]
+AttrsValidatorFunc = Callable
 
 # Indices
 Index2D = Tuple[int, int]

@@ -1,13 +1,11 @@
-import functools
 import inspect
 from re import T
-from typing import Any, Callable, Generic, Optional, Protocol, TypeVar, Union
+from typing import Any, Callable, Generic, Optional, TypeVar
 
 import attr
-import jax.numpy as jnp
-import numpy as np
-from jax import grad, hessian, jacfwd, jacrev, jit, tree_map
+from jax import hessian, jacfwd, jit
 
+from common.attrs_utils import AttrsValidators
 from common.custom_types import (
     OptimizationFn,
     OptimizationGradFn,
@@ -17,19 +15,6 @@ from common.custom_types import (
     ScalarOrVectorNf64,
 )
 from common.exceptions import AtiumOptError
-
-
-def _probe_fn(fn: OptimizationFn) -> None:
-    sig = inspect.signature(fn)
-    num_fn_params = len(sig.parameters)
-
-    if num_fn_params < 1 or num_fn_params > 2:
-        raise AtiumOptError(
-            """
-            Function must have atleast one parameter and not more than two.
-            Must be of the form f(x) or f(x, params)
-            """
-        )
 
 
 def _get_jit_applied_fn(
@@ -50,7 +35,7 @@ TOptOutput = TypeVar("TOptOutput", bound=ScalarOrVectorNf64)
 
 
 @attr.frozen
-class DerivativeInitializedOptFn(Generic[TOptInput, TOptOutput]):
+class DerivativeSplicedOptFn(Generic[TOptInput, TOptOutput]):
     """
     Container that holds a core optimization function, their gradient and hessian functions
     (Which can are auto-computed by JAX if not provided) and a params generation function
@@ -62,10 +47,22 @@ class DerivativeInitializedOptFn(Generic[TOptInput, TOptOutput]):
     function/derivative outputs.
     """
 
-    core_fn: OptimizationFn[TOptInput, TOptOutput] = attr.ib()
-    _grad_fn: OptimizationGradFn = attr.ib()
-    _hess_fn: OptimizationHessFn = attr.ib()
+    core_fn: OptimizationFn[TOptInput, TOptOutput] = attr.ib(
+        validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2)
+    )
+    _grad_fn: OptimizationGradFn = attr.ib(
+        validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2)
+    )
+    _hess_fn: OptimizationHessFn = attr.ib(
+        validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2)
+    )
     use_jit: bool = False
+    _construct_params_fn: Optional[Callable[[ScalarOrVectorNf64], Any]] = attr.ib(
+        default=None,
+        validator=attr.validators.optional(
+            AttrsValidators.num_args_validator(num_min_args=1, num_max_args=1)
+        ),
+    )
 
     @_grad_fn.default
     def _initialize_grad_fn(self) -> OptimizationGradFn:
@@ -91,27 +88,6 @@ class DerivativeInitializedOptFn(Generic[TOptInput, TOptOutput]):
         if self.use_jit:
             hess_fn = _get_jit_applied_fn(fn=hess_fn)
         return hess_fn
-
-    @core_fn.validator
-    def _validate_core_fn(self, _, value) -> None:
-        """
-        Making sure that the arguments to the core function are valid.
-        """
-        _probe_fn(fn=value)
-
-    @_grad_fn.validator
-    def _validate_grad_fn(self, _, value) -> None:
-        """
-        Making sure that the arguments to the grad function are valid.
-        """
-        _probe_fn(fn=value)
-
-    @_hess_fn.validator
-    def _validate_hess_fn(self, _, value) -> None:
-        """
-        Making sure that the arguments to the hess function are valid.
-        """
-        _probe_fn(fn=value)
 
     def construct_params(self, x: ScalarOrVectorNf64) -> Any:
         raise NotImplementedError
@@ -139,8 +115,8 @@ class DerivativeInitializedOptFn(Generic[TOptInput, TOptOutput]):
             return self._hess_fn(x, params)
 
 
-DerivativeInitializedCostFn = DerivativeInitializedOptFn[ScalarOrVectorNf64, Scalarf64]
-DerivativeInitializedConstraintsFn = DerivativeInitializedOptFn[
+DerivativeSplicedCostFn = DerivativeSplicedOptFn[ScalarOrVectorNf64, Scalarf64]
+DerivativeSplicedConstraintsFn = DerivativeSplicedOptFn[
     ScalarOrVectorNf64, ScalarOrVectorNf64
 ]
 
