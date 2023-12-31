@@ -12,6 +12,7 @@ from common.custom_types import (
     OptimizationGradOrHessFn,
     OptimizationHessFn,
     ScalarOrVectorNf64,
+    Scalarf64,
     VectorInputScalarOutputFn,
     VectorNf64,
 )
@@ -22,18 +23,33 @@ HESS_ATTR_NAME = "hess"
 TAG_OPT_FN = "tag_opt_fn"
 
 
-class TaggedOptFn(Protocol):
+class TaggedOptCostFn(Protocol):
     opt_fn_k: bool
     grad_fn: OptimizationGradFn
     hess_fn: OptimizationHessFn
 
     def __call__(
         self,
-        x: ScalarOrVectorNf64,
+        x: VectorNf64,
         /,
         *args: Any,
         **kwargs: Any,
-    ) -> ScalarOrVectorNf64:
+    ) -> Scalarf64:
+        raise NotImplementedError
+
+
+class TaggedOptConstraintsFn(Protocol):
+    opt_fn_k: bool
+    grad_fn: OptimizationGradFn
+    hess_fn: OptimizationHessFn
+
+    def __call__(
+        self,
+        x: VectorNf64,
+        /,
+        *args: Any,
+        **kwargs: Any,
+    ) -> VectorNf64:
         raise NotImplementedError
 
 
