@@ -4,6 +4,9 @@ from typing import Optional
 import numpy as np
 
 from common.custom_types import AttrsConverterFunc, AttrsValidatorFunc, NpArrf64
+from common.exceptions import AtiumAttributeError
+
+# TODO: Tests for these.
 
 
 class AttrsConverters:
@@ -28,11 +31,15 @@ class AttrsValidators:
         num_min_args: int,
         num_max_args: int,
     ) -> AttrsValidatorFunc:
-        def _num_args_validator(value) -> None:
-            assert inspect.isfunction(value)
+        def _num_args_validator(instance, attribute, value) -> None:
+            del instance  # Cleaner to do this for type checking.
             sig = inspect.signature(value)
             num_args = len(sig.parameters)
 
-            assert num_min_args <= num_args <= num_max_args
+            valid_num_args = num_min_args <= num_args <= num_max_args
+            if not valid_num_args:
+                raise AtiumAttributeError(
+                    f"Number of arguments to {attribute} needs to be between {num_min_args} and {num_max_args}"
+                )
 
         return _num_args_validator

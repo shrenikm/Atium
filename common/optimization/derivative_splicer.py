@@ -50,13 +50,13 @@ class DerivativeSplicedOptFn(Generic[TOptInput, TOptOutput]):
     core_fn: OptimizationFn[TOptInput, TOptOutput] = attr.ib(
         validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2)
     )
+    use_jit: bool
     _grad_fn: OptimizationGradFn = attr.ib(
         validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2)
     )
     _hess_fn: OptimizationHessFn = attr.ib(
         validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2)
     )
-    use_jit: bool = False
     _construct_params_fn: Optional[Callable[[ScalarOrVectorNf64], Any]] = attr.ib(
         default=None,
         validator=attr.validators.optional(
@@ -90,7 +90,10 @@ class DerivativeSplicedOptFn(Generic[TOptInput, TOptOutput]):
         return hess_fn
 
     def construct_params(self, x: ScalarOrVectorNf64) -> Any:
-        raise NotImplementedError
+        if self._construct_params_fn is None:
+            return None
+        else:
+            return self._construct_params_fn(x)
 
     def __call__(self, x: ScalarOrVectorNf64) -> Any:
         # Params construction is done internally, so we only need to pass in x.

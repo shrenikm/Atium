@@ -1,10 +1,18 @@
+from typing import Any
+
 import attr
 import jax.numpy as jnp
 import numpy as np
 import pytest
 
-from common.custom_types import MatrixNNf64, Scalarf64, Vector3f64, VectorNf64
-from common.exceptions import AtiumOptError
+from common.custom_types import (
+    MatrixNNf64,
+    OptimizationFn,
+    Scalarf64,
+    Vector3f64,
+    VectorNf64,
+)
+from common.exceptions import AtiumAttributeError, AtiumOptError
 from common.optimization.derivative_splicer import DerivativeSplicedOptFn
 
 
@@ -14,91 +22,143 @@ class _Params:
     b: float
 
 
-def test_opt_fn_tagging():
-    def f1(x: float) -> float:
+@pytest.fixture
+def trivial_core_fn() -> OptimizationFn:
+    def f(x: float) -> float:
         return x
 
-    assert not is_tagged_opt_fn(fn=f1)
-
-    @tag_opt_fn
-    def f2(x: float) -> float:
-        return x
-
-    assert is_tagged_opt_fn(fn=f2)
-
-    @tag_opt_fn(use_jit=False)
-    def f3(x: float) -> float:
-        return x
-
-    assert is_tagged_opt_fn(fn=f3)
+    return f
 
 
-def test_core_fn_validity():
-    def f1(x: float) -> float:
-        return x
+@pytest.mark.parametrize("use_jit", [True, False])
+def test_core_fn_validity(trivial_core_fn, use_jit: bool) -> None:
+    def f1() -> float:
+        return 1.0
 
-    f1_ds = DerivativeSplicedOptFn(
-        core_fn=f1,
+    def f2(a, b, c) -> float:
+        del a, b, c
+        return 2.0
+
+    with pytest.raises(AtiumAttributeError):
+        DerivativeSplicedOptFn(
+            core_fn=f1,
+            use_jit=use_jit,
+        )
+
+    with pytest.raises(AtiumAttributeError):
+        DerivativeSplicedOptFn(
+            core_fn=f2,
+            use_jit=use_jit,
+        )
+
+    # Valid.
+    DerivativeSplicedOptFn(
+        core_fn=trivial_core_fn,
+        use_jit=use_jit,
     )
 
 
-# def test_no_arg_fn_tagging():
-#    with pytest.raises(AtiumOptError):
-#
-#        @tag_opt_fn
-#        def f() -> float:
-#            return 3.0
-#
-#
-# def test_custom_grad_hess_tagging():
-#    def _grad_fn(x: VectorNf64, params: _Params) -> VectorNf64:
-#        return params.a + x
-#
-#    def _hess_fn(x: VectorNf64, params: _Params) -> MatrixNNf64:
-#        y = x.reshape(len(x), 1)
-#        return params.b * np.dot(y, y.T)
-#
-#    with pytest.raises(AtiumOptError):
-#        # Exception check.
-#        @tag_opt_fn(
-#            grad_fn=_grad_fn,
-#            hess_fn=_hess_fn,
-#            use_jit=True,
-#        )
-#        def f(x: VectorNf64, params: _Params) -> float:
-#            return params.b * np.dot(x, x)
-#
-#    @tag_opt_fn(
-#        grad_fn=_grad_fn,
-#        hess_fn=_hess_fn,
-#    )
-#    def f(x: VectorNf64, params: _Params) -> float:
-#        return params.b * np.dot(x, x)
-#
-#    x = np.ones(3)
-#    params = _Params(1, 7.0)
-#
-#    grad_vector = f.grad(x, params=params)
-#    hess_matrix = f.hess(x, params=params)
-#    np.testing.assert_equal(grad_vector, np.array([2.0, 2.0, 2.0]))
-#    np.testing.assert_equal(hess_matrix, np.full((3, 3), 7.0))
-#
-#
-# def test_tagged_jit_static_argnums():
-#    # Behind the scenes jits tatic_argnums should set the correct function arguments so that
-#    # JIT is too restrictive and we have more freedom to use loops, etc.
-#    @tag_opt_fn(use_jit=True)
-#    def f(x: float, params: _Params) -> Scalarf64:
-#        y = jnp.array(0.0)
-#        for _ in range(params.a):
-#            y += x**2.0
-#        return y
-#
-#    params = _Params(a=2, b=0.0)
-#    grad_value = f.grad(1.0, params=params).item()
-#    np.testing.assert_equal(grad_value, 4.0)
-#
-#
+@pytest.mark.parametrize("use_jit", [True, False])
+def test_invalid_custom_derivative_functions(trivial_core_fn, use_jit: bool) -> None:
+    def _grad_fn() -> VectorNf64:
+        return params.a + x
+
+    def _hess_fn(x: VectorNf64, params: _Params, aux: Any) -> MatrixNNf64:
+        y = x.reshape(len(x), 1)
+        return params.b * np.dot(y, y.T)
+
+    with pytest.raises(AtiumAttributeError):
+        DerivativeSplicedOptFn(
+            core_fn=trivial_core_fn,
+            use_jit=use_jit,
+            grad_fn=_grad_fn,
+        )
+
+    with pytest.raises(AtiumAttributeError):
+        DerivativeSplicedOptFn(
+            core_fn=trivial_core_fn,
+            use_jit=use_jit,
+            hess_fn=_hess_fn,
+        )
+
+    with pytest.raises(AtiumAttributeError):
+        DerivativeSplicedOptFn(
+            core_fn=trivial_core_fn,
+            use_jit=use_jit,
+            grad_fn=_grad_fn,
+            hess_fn=_hess_fn,
+        )
+
+
+@pytest.mark.parametrize("use_jit", [True, False])
+def test_no_construct_params(trivial_core_fn, use_jit: bool) -> None:
+    f_ds = DerivativeSplicedOptFn(
+        core_fn=trivial_core_fn,
+        use_jit=use_jit,
+    )
+    assert f_ds.construct_params(x=3.0) is None
+
+    # We should still be able to compute the gradients and hessians
+    # All these functions work without params now.
+    x = 3.0
+    f_value = f_ds(x=x)
+    grad_value = f_ds.grad(x=x).item()
+    hess_value = f_ds.hess(x=x).item()
+    np.testing.assert_equal(f_value, 3.0)
+    np.testing.assert_equal(grad_value, 1.0)
+    np.testing.assert_equal(hess_value, 0.0)
+
+
+@pytest.mark.parametrize("use_jit", [True, False])
+def test_custom_derivative_functions(use_jit: bool) -> None:
+    def _grad_fn(x: VectorNf64, params: _Params) -> VectorNf64:
+        return params.a + x
+
+    def _hess_fn(x: VectorNf64, params: _Params) -> MatrixNNf64:
+        y = x.reshape(len(x), 1)
+        return params.b * np.dot(y, y.T)
+
+    def f(x: VectorNf64, params: _Params) -> float:
+        return params.b * np.dot(x, x)
+
+    def _construct_params(x: VectorNf64) -> _Params:
+        return _Params(1, 7.0)
+
+    f_ds = DerivativeSplicedOptFn(
+        core_fn=f,
+        use_jit=use_jit,
+        grad_fn=_grad_fn,
+        hess_fn=_hess_fn,
+        construct_params_fn=_construct_params,
+    )
+
+    x = np.ones(3)
+
+    grad_vector = f_ds.grad(x)
+    hess_matrix = f_ds.hess(x)
+    np.testing.assert_equal(grad_vector, np.array([2.0, 2.0, 2.0]))
+    np.testing.assert_equal(hess_matrix, np.full((3, 3), 7.0))
+
+
+def test_use_jit_static_argnums():
+    # Behind the scenes jit's static_argnums should set the correct function arguments so that
+    # JIT isn't too restrictive and we have more freedom to use loops, etc.
+    def f(x: float, params: _Params) -> Scalarf64:
+        y = jnp.array(0.0)
+        for _ in range(params.a):
+            y += x**2.0
+        return y
+
+    f_ds = DerivativeSplicedOptFn(
+        core_fn=f,
+        use_jit=True,
+        construct_params_fn=lambda _: _Params(a=2, b=0.0),
+    )
+
+    grad_value = f_ds.grad(1.0).item()
+    np.testing.assert_equal(grad_value, 4.0)
+
+
 # @pytest.mark.parametrize("use_jit", [True, False])
 # def test_scalar_input_scalar_output_tag(use_jit: bool):
 #    @tag_opt_fn(use_jit=use_jit)
