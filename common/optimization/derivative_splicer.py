@@ -1,5 +1,4 @@
 import inspect
-from re import T
 from typing import Any, Callable, Generic, Optional, TypeVar
 
 import attr
@@ -14,7 +13,6 @@ from common.custom_types import (
     Scalarf64,
     ScalarOrVectorNf64,
 )
-from common.exceptions import AtiumOptError
 
 
 def _get_jit_applied_fn(
@@ -122,20 +120,3 @@ DerivativeSplicedCostFn = DerivativeSplicedOptFn[ScalarOrVectorNf64, Scalarf64]
 DerivativeSplicedConstraintsFn = DerivativeSplicedOptFn[
     ScalarOrVectorNf64, ScalarOrVectorNf64
 ]
-
-
-if __name__ == "__main__":
-
-    T = TypeVar("T")
-
-    class A(Generic[T]):
-        def f(self, t: T) -> T:
-            print("A: ", t)
-            return t
-
-    AA = A[str]
-    a = A[int]()
-    a.f(3)
-
-    aa = AA()
-    aa.f("hi")
