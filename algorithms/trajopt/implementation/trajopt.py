@@ -20,6 +20,8 @@ from common.optimization.derivative_splicer import (
 from common.optimization.qp_solver import solve_qp
 
 
+# TODO: Validators.
+# x_tol <= s_0, tau_plus > 1, etc.
 @attr.frozen
 class TrajOptParams:
     # Optimization params.
@@ -365,13 +367,28 @@ class TrajOpt:
         size_x = len(initial_guess_x)
         new_x = np.copy(x)
         updated_s = s
+        improvement = True
 
         result = TrajOptResult()
+        # Add initial entry for the initial state and x
+        result.record_entry(
+            entry=TrajOptEntry(
+                penalty_iter=0,
+                convexify_iter=0,
+                trust_region_iter=0,
+                min_x=initial_guess_x,
+                cost=self.cost_fn(initial_guess_x),
+                trust_region_size=s,
+                updated_trust_region_size=s,
+                improvement=improvement,
+                trust_region_size_below_threshold=False,
+                penalty_factor=mu,
+            )
+        )
 
         for penalty_iter in range(self.params.max_iter):
             for convexify_iter in count():
                 trust_region_size_below_threshold = False
-                improvement = True
                 for trust_region_iter in count():
                     print(penalty_iter, convexify_iter, trust_region_iter)
                     if improvement:

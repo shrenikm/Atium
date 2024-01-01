@@ -19,7 +19,6 @@ from common.optimization.standard_functions.rosenbrock import (
 # TODO: Move elsewhere.
 def _visualize_trajopt_rosenbrock_result(
     params: RosenbrockParams,
-    initial_guess_x: VectorNf64,
     result: TrajOptResult,
 ) -> None:
 
@@ -31,7 +30,9 @@ def _visualize_trajopt_rosenbrock_result(
     X, Y = np.meshgrid(X, Y)
     Z = rosenbrock_fn(x=X, y=Y, a=params.a, b=params.b)
     min_z, max_z = np.min(Z), np.max(Z)
-    surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    surf = ax.plot_surface(
+        X, Y, Z, cmap=cm.coolwarm, linewidth=0, antialiased=False, alpha=0.5
+    )
 
     ax.set_xlim(-5.0, 5.0)
     ax.set_ylim(-5.0, 5.0)
@@ -41,6 +42,7 @@ def _visualize_trajopt_rosenbrock_result(
     ax.set_zlabel("z")
 
     trust_region_steps = len(result)
+    initial_guess_x = result[0].min_x
 
     xy_point = ma3.Line3D(
         xs=[initial_guess_x[0]],
@@ -70,23 +72,27 @@ def _visualize_trajopt_rosenbrock_result(
     ax.add_line(xyz_line)
 
     def anim_update(trust_region_iter):
-        ax.set_title(
-            f"Rosenbrock TrajOpt trust region step: {trust_region_iter + 1}/{trust_region_steps}"
-        )
         entry = result[trust_region_iter]
         x, y = entry.min_x
-        print(trust_region_iter, f"[{x}, {y}]", entry.cost)
-        print(entry.cost, rosenbrock_cost_fn([x, y], params))
+        cost = entry.cost
+        ax.set_title(
+            f"""
+            Rosenbrock TrajOpt trust region step: {trust_region_iter + 1}/{trust_region_steps}
+            x: [{x:.3f}, {y:.3f}]
+            """
+        )
+        print(trust_region_iter, f"[{x}, {y}]", cost)
+        print(cost, rosenbrock_cost_fn([x, y], params))
         print("============")
         xy_point.set_data_3d([x], [y], [0.0])
-        xyz_point.set_data_3d([x], [y], [entry.cost])
-        xyz_line.set_data_3d([x, x], [y, y], [0.0, entry.cost])
+        xyz_point.set_data_3d([x], [y], [cost])
+        xyz_line.set_data_3d([x, x], [y, y], [0.0, cost])
 
     animation = anim.FuncAnimation(
         fig=fig,
         func=anim_update,
         frames=trust_region_steps,
-        interval=500,
+        interval=200,
         repeat=True,
     )
 
@@ -101,13 +107,12 @@ def run() -> None:
 
     # _visualze(params=rosenbrock_params)
 
-    initial_guess_x = np.array([5.0, 5.0])
+    initial_guess_x = np.array([5.0, -5.0])
     result = trajopt.solve(initial_guess_x=initial_guess_x)
     print(result.solution_x())
 
     _visualize_trajopt_rosenbrock_result(
         params=rosenbrock_params,
-        initial_guess_x=initial_guess_x,
         result=result,
     )
 
