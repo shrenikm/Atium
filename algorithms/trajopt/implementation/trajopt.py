@@ -5,10 +5,12 @@ See: https://rll.berkeley.edu/~sachin/papers/Schulman-IJRR2014.pdf
 """
 from functools import cached_property
 from itertools import count
-from typing import Any, Optional, Protocol
+from typing import Any, List, Optional, Protocol, Sequence
 
 import attr
 import numpy as np
+import osqp
+from osqp import OSQP_results
 
 from algorithms.trajopt.implementation.trajopt_utils import (
     DefaultTrajOptFnParamsConstructor,
@@ -41,6 +43,35 @@ class TrajOptParams:
     x_tol: float
     # Constraint satisfaction threshold
     c_tol: float
+
+
+@attr.frozen
+class TrajOptEntry:
+    penalty_iter: int
+    convexify_iter: int
+    trust_region_iter: int
+    min_x: VectorNf64
+    trust_region_size: float
+    updated_trust_region_size: float
+    improvement: bool
+    trust_region_size_below_threshold: bool
+    penalty_factor: float
+    updated_penalty_factor: Optional[float] = None
+
+
+@attr.define
+class TrajOptRecord:
+    entries: List[TrajOptEntry] = attr.ib(factory=list)
+
+    def __getitem__(self, key: int) -> TrajOptEntry:
+        return self.entries[key]
+
+    def __setitem__(self, key: int, value: TrajOptEntry):
+        assert isinstance(value, TrajOptEntry)
+        self.entries[key] = value
+
+    def register_entry(self, entry: TrajOptEntry) -> None:
+        self.entries.append(entry)
 
 
 @attr.define
@@ -246,7 +277,7 @@ class TrajOpt:
             ub=ub,
         )
 
-    def compute_convexified_x(self, qp_inputs: QPInputs, size_x: int) -> None:
+    def compute_convexified_x(self, qp_inputs: QPInputs, size_x: int) -> VectorNf64:
         osqp_res = solve_qp(qp_inputs=qp_inputs)
         return osqp_res.x[:, size_x]
 
@@ -316,7 +347,7 @@ class TrajOpt:
     def solve(
         self,
         initial_guess_x: VectorNf64,
-    ) -> None:
+    ) -> TrajOptRecord:
         # Initial values of variables and optimization params.
         x = initial_guess_x
         s = self.params.s_0
@@ -324,11 +355,16 @@ class TrajOpt:
 
         size_x = len(initial_guess_x)
         new_x = np.copy(x)
+        updated_s = s
+
+        record = TrajOptRecord()
 
         for penalty_iter in count():
             for convexify_iter in count():
-                skip_convergence_check = False
+                trust_region_size_below_threshold = False
                 for trust_region_iter in count():
+                    x = new_x
+                    s = updated_s
                     qp_inputs = self.convexify_problem(
                         x=x,
                         s=s,
@@ -339,18 +375,44 @@ class TrajOpt:
                         qp_inputs=qp_inputs,
                         size_x=size_x,
                     )
-                    if self.is_improvement(x=x, new_x=new_x):
-                        s = self.params.tau_plus * s
+                    improvement = self.is_improvement(x=x, new_x=new_x)
+
+                    if improvement:
+                        updated_s = self.params.tau_plus * s
                         break
                     else:
-                        s = self.params.tau_minus * s
-                    if s < self.params.x_tol:
-                        skip_convergence_check = True
+                        updated_s = self.params.tau_minus * s
+                    if updated_s < self.params.x_tol:
+                        trust_region_size_below_threshold = True
                         break
-                    x = new_x
-                if skip_convergence_check or self.is_converged(x=x, new_x=new_x):
+
+                    record.register_entry(
+                        entry=TrajOptEntry(
+                            penalty_iter=penalty_iter,
+                            convexify_iter=convexify_iter,
+                            trust_region_iter=trust_region_iter,
+                            min_x=new_x,
+                            trust_region_size=s,
+                            updated_trust_region_size=updated_s,
+                            improvement=improvement,
+                            trust_region_size_below_threshold=trust_region_size_below_threshold,
+                            penalty_factor=mu,
+                        ),
+                    )
+
+                if trust_region_size_below_threshold or self.is_converged(x=x, new_x=new_x):
                     break
-            if self.are_constraints_satisfied(x=x):
+            if self.are_constraints_satisfied(x=new_x):
+                # TODO: Log
+                print("TrajOpt found a solution!")
                 break
             else:
                 mu = self.params.k * mu
+                # Adding the updated penalty in the record.
+                record[-1] = attr.evolve(
+                    record[-1],
+                    updated_penalty_factor=mu,
+                )
+        else:
+            # TODO: Log
+            print("TrajOpt failed to find a solution!")
