@@ -53,7 +53,7 @@ class DerivativeSplicedOptFn(Generic[TOptInput, TOptOutput]):
         validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2)
     )
     _hess_fn: OptimizationHessFn = attr.ib(
-        validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2)
+        validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2),
     )
     _construct_params_fn: Optional[Callable[[ScalarOrVectorNf64], Any]] = attr.ib(
         default=None,
