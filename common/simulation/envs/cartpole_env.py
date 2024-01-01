@@ -6,14 +6,11 @@ import numpy as np
 from typing_extensions import override
 
 from common.colors import AtiumColorsBGR
-from common.constants import ACC_GRAVITY
 from common.custom_types import ControlInputVector, StateVector
 from common.dynamics.cartpole_dyn import CartpoleDynamics, CartpoleParams
-from common.dynamics.interfaces import IDynamics
 from common.dynamics.utils import ControlInputVectorLimits, StateVectorLimits
 from common.img_utils import (
     create_canvas,
-    draw_circle_on_canvas,
     draw_line_on_canvas,
     draw_rectangle_on_canvas,
 )

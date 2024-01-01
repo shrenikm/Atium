@@ -1,6 +1,6 @@
 import attr
 import numpy as np
-from common.control.interfaces import IController
+from common.control.constructs import IController
 
 from common.custom_types import (
     ControlInputVector,

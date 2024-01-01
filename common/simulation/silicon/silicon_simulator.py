@@ -8,9 +8,9 @@ from typing import Generic, TypeVar
 import attr
 import numpy as np
 
-from common.control.interfaces import IController
+from common.control.constructs import IController
 from common.custom_types import ControlInputVector, StateVector
-from common.dynamics.interfaces import IDynamics
+from common.dynamics.constructs import IDynamics
 from common.simulation.integrators.state_integrators import (
     STATE_INTEGRATORS_FN_MAP,
     StateIntegratorType,
