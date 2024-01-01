@@ -38,6 +38,7 @@ def run() -> None:
 
     initial_guess_x = np.array([100.0, 100.0])
     result = trajopt.solve(initial_guess_x=initial_guess_x)
+    print(result.solution_x())
 
 
 if __name__ == "__main__":

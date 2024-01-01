@@ -37,6 +37,7 @@ def setup_trajopt_for_rosenbrock(
             f_tol=1e-4,
             x_tol=1e-4,
             c_tol=1e-4,
+            max_iter=1000,
         )
 
     rosenbrock_params = RosenbrockParams(a=1.0, b=100.0)

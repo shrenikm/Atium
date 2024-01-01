@@ -69,8 +69,11 @@ class TrajOptResult:
         assert isinstance(value, TrajOptEntry)
         self.entries[key] = value
 
-    def register_entry(self, entry: TrajOptEntry) -> None:
+    def record_entry(self, entry: TrajOptEntry) -> None:
         self.entries.append(entry)
+
+    def solution_x(self) -> VectorNf64:
+        return self[-1].min_x
 
 
 @attr.define
@@ -291,9 +294,12 @@ class TrajOpt:
         # and the convexified cost at new_x. The convexified cost at x is basically just
         # the full cost at x as delta_x is zero
         model_improve = self.cost_fn(x) - self.convexified_cost_fn(x=x, new_x=new_x)
+        print(true_improve, model_improve, true_improve / model_improve)
+        if true_improve < 0.0 or model_improve < 0.0:
+            return False
 
-        assert true_improve >= 0.0
-        assert model_improve >= 0.0
+        # assert true_improve >= 0.0
+        # assert model_improve >= 0.0
 
         if np.isclose(model_improve, 0.0):
             return False
@@ -362,6 +368,7 @@ class TrajOpt:
             for convexify_iter in count():
                 trust_region_size_below_threshold = False
                 for trust_region_iter in count():
+                    print(penalty_iter, convexify_iter, trust_region_iter)
                     x = new_x
                     s = updated_s
                     qp_inputs = self.convexify_problem(
@@ -377,15 +384,18 @@ class TrajOpt:
                     improvement = self.is_improvement(x=x, new_x=new_x)
 
                     if improvement:
+                        print("Improve!")
                         updated_s = self.params.tau_plus * s
                         break
                     else:
+                        print("Not improve :(")
                         updated_s = self.params.tau_minus * s
                     if updated_s < self.params.x_tol:
+                        print("sub")
                         trust_region_size_below_threshold = True
                         break
 
-                    result.register_entry(
+                    result.record_entry(
                         entry=TrajOptEntry(
                             penalty_iter=penalty_iter,
                             convexify_iter=convexify_iter,
@@ -416,4 +426,8 @@ class TrajOpt:
                 )
         else:
             # TODO: Log
-            print("TrajOpt failed to find a solution!")
+            print(
+                f"TrajOpt failed to find a solution within {self.params.max_iter} iterations!"
+            )
+
+        return result
