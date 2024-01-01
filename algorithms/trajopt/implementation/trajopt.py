@@ -50,6 +50,7 @@ class TrajOptEntry:
     convexify_iter: int
     trust_region_iter: int
     min_x: VectorNf64
+    cost: float
     trust_region_size: float
     updated_trust_region_size: float
     improvement: bool
@@ -68,6 +69,9 @@ class TrajOptResult:
     def __setitem__(self, key: int, value: TrajOptEntry):
         assert isinstance(value, TrajOptEntry)
         self.entries[key] = value
+
+    def __len__(self) -> int:
+        return len(self.entries)
 
     def record_entry(self, entry: TrajOptEntry) -> None:
         self.entries.append(entry)
@@ -367,9 +371,11 @@ class TrajOpt:
         for penalty_iter in range(self.params.max_iter):
             for convexify_iter in count():
                 trust_region_size_below_threshold = False
+                improvement = True
                 for trust_region_iter in count():
                     print(penalty_iter, convexify_iter, trust_region_iter)
-                    x = new_x
+                    if improvement:
+                        x = new_x
                     s = updated_s
                     qp_inputs = self.convexify_problem(
                         x=x,
@@ -381,6 +387,7 @@ class TrajOpt:
                         qp_inputs=qp_inputs,
                         size_x=size_x,
                     )
+                    cost = self.cost_fn(new_x)
                     improvement = self.is_improvement(x=x, new_x=new_x)
 
                     if improvement:
@@ -401,6 +408,7 @@ class TrajOpt:
                             convexify_iter=convexify_iter,
                             trust_region_iter=trust_region_iter,
                             min_x=new_x,
+                            cost=cost,
                             trust_region_size=s,
                             updated_trust_region_size=updated_s,
                             improvement=improvement,

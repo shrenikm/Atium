@@ -29,7 +29,7 @@ def setup_trajopt_for_rosenbrock(
         # TODO: Setup somewhere if not too problem specific.
         trajopt_params = TrajOptParams(
             mu_0=0.01,
-            s_0=0.01,
+            s_0=0.1,
             c=1e-4,
             tau_plus=10.0,
             tau_minus=0.1,
