@@ -1,6 +1,6 @@
 from typing import Annotated, Any, Callable, List, Literal, Tuple, TypeVar, Union
 
-import jax.typing as jpt
+import jax
 import numpy as np
 import numpy.typing as npt
 
@@ -29,7 +29,7 @@ f64 = np.float64
 i64 = np.int64
 ui8 = np.uint8
 NpArr = npt.NDArray
-JpArr = jpt.ArrayLike
+JpArr = jax.Array
 NpArrf64 = npt.NDArray[f64]
 JpArrf64 = npt.NDArray[f64]
 Arrf64 = Union[NpArrf64, JpArrf64]
@@ -51,22 +51,20 @@ NpTensorLMNf64 = Annotated[npt.NDArray[f64], Literal["L, M, N"]]
 NpTensorMN3ui8 = Annotated[npt.NDArray[ui8], Literal["M, N, 3"]]
 
 # JAX types.
-# TODO: Use jpt.Array here after updating to newer JAX
-# jpt.ArrayLike includes np arrays as well so there is a bit of an overlap
-JpVectorNf64 = Annotated[jpt.ArrayLike, Literal["N"]]
-JpVector1f64 = Annotated[jpt.ArrayLike, Literal["1"]]
-JpVector2f64 = Annotated[jpt.ArrayLike, Literal["2"]]
-JpVector3f64 = Annotated[jpt.ArrayLike, Literal["3"]]
+JpVectorNf64 = Annotated[jax.Array, Literal["N"]]
+JpVector1f64 = Annotated[jax.Array, Literal["1"]]
+JpVector2f64 = Annotated[jax.Array, Literal["2"]]
+JpVector3f64 = Annotated[jax.Array, Literal["3"]]
 JpScalarf64 = JpVector1f64
 
 JpScalarOrVectorNf64 = Union[JpScalarf64, JpVectorNf64]
 
-JpMatrixMNf64 = Annotated[jpt.ArrayLike, Literal["M, N"]]
-JpMatrixNNf64 = Annotated[jpt.ArrayLike, Literal["N, N"]]
-JpMatrixN2f64 = Annotated[jpt.ArrayLike, Literal["N, 2"]]
+JpMatrixMNf64 = Annotated[jax.Array, Literal["M, N"]]
+JpMatrixNNf64 = Annotated[jax.Array, Literal["N, N"]]
+JpMatrixN2f64 = Annotated[jax.Array, Literal["N, 2"]]
 
-JpTensorLMNf64 = Annotated[jpt.ArrayLike, Literal["L, M, N"]]
-JpTensorMN3ui8 = Annotated[jpt.ArrayLike, Literal["M, N, 3"]]
+JpTensorLMNf64 = Annotated[jax.Array, Literal["L, M, N"]]
+JpTensorMN3ui8 = Annotated[jax.Array, Literal["M, N, 3"]]
 
 # Combined types.
 VectorNf64 = Union[NpVectorNf64, JpVectorNf64]

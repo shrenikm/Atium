@@ -3,6 +3,7 @@ Implementation of the TrajOpt algorithm.
 
 See: https://rll.berkeley.edu/~sachin/papers/Schulman-IJRR2014.pdf
 """
+from functools import cached_property
 from itertools import count
 from typing import Any, Optional, Protocol
 
@@ -19,6 +20,7 @@ from common.optimization.derivative_splicer import (
     DerivativeSplicedConstraintsFn,
     DerivativeSplicedCostFn,
 )
+from common.optimization.qp_solver import solve_qp
 
 
 @attr.frozen
@@ -53,6 +55,17 @@ class TrajOpt:
         DerivativeSplicedConstraintsFn
     ] = None
     non_linear_equality_constraints_fn: Optional[DerivativeSplicedConstraintsFn] = None
+
+    # TODO: Maybe add to DerivativeSplicedCostFn?
+    def convexified_cost_fn(self, x: VectorNf64, new_x: VectorNf64) -> float:
+        """
+        Convextified cost function value at new_x around x.
+        """
+        f0 = self.cost_fn(x)
+        omega = self.cost_fn.grad(x)
+        W = self.cost_fn.hess(x)
+        delta_x = new_x - x
+        return f0 + omega @ delta_x + 0.5 * delta_x @ W @ delta_x
 
     def convexify_problem(
         self,
@@ -233,12 +246,111 @@ class TrajOpt:
             ub=ub,
         )
 
+    def compute_convexified_x(self, qp_inputs: QPInputs, size_x: int) -> None:
+        osqp_res = solve_qp(qp_inputs=qp_inputs)
+        return osqp_res.x[:, size_x]
+
+    def is_improvement(
+        self,
+        x: VectorNf64,
+        new_x: VectorNf64,
+    ) -> bool:
+        # new_x should have a lower cost, so improvement is f(old_x) - f(new_x)
+        true_improve = self.cost_fn(x) - self.cost_fn(new_x)
+        # For the model improvement, we measure the difference between the cost at x (previous)
+        # and the convexified cost at new_x. The convexified cost at x is basically just
+        # the full cost at x as delta_x is zero
+        model_improve = self.cost_fn(x) - self.convexified_cost_fn(x=x, new_x=new_x)
+
+        assert true_improve >= 0.0
+        assert model_improve >= 0.0
+
+        if np.isclose(model_improve, 0.0):
+            return False
+
+        return true_improve / model_improve > self.params.c
+
+    def is_converged(
+        self,
+        x: VectorNf64,
+        new_x: VectorNf64,
+    ) -> bool:
+        x_converged = np.linalg.norm(new_x - x) < self.params.x_tol
+        f_converged = (
+            np.linalg.norm(self.cost_fn(new_x) - self.cost_fn(x)) < self.params.f_tol
+        )
+
+        return x_converged or f_converged
+
+    def are_constraints_satisfied(
+        self,
+        x: VectorNf64,
+    ) -> bool:
+        constraints_satisfied = True
+        if self.linear_inequality_constraints_fn is not None:
+            lg_satisfied = np.all(
+                self.linear_inequality_constraints_fn(x) <= self.params.c_tol
+            )
+            constraints_satisfied = constraints_satisfied and lg_satisfied
+        if self.linear_equality_constraints_fn is not None:
+            lh_satisfied = np.allclose(
+                self.linear_equality_constraints_fn(x),
+                0.0,
+                atol=self.params.c_tol,
+            )
+            constraints_satisfied = constraints_satisfied and lh_satisfied
+        if self.non_linear_inequality_constraints_fn is not None:
+            nlg_satisfied = np.all(
+                self.non_linear_inequality_constraints_fn(x) <= self.params.c_tol
+            )
+            constraints_satisfied = constraints_satisfied and nlg_satisfied
+        if self.non_linear_equality_constraints_fn is not None:
+            nlh_satisfied = np.allclose(
+                self.non_linear_equality_constraints_fn(x),
+                0.0,
+                atol=self.params.c_tol,
+            )
+            constraints_satisfied = constraints_satisfied and nlh_satisfied
+        return constraints_satisfied
+
     def solve(
         self,
         initial_guess_x: VectorNf64,
     ) -> None:
+        # Initial values of variables and optimization params.
+        x = initial_guess_x
+        s = self.params.s_0
+        mu = self.params.mu_0
+
+        size_x = len(initial_guess_x)
+        new_x = np.copy(x)
+
         for penalty_iter in count():
             for convexify_iter in count():
-                ...
-            ...
-            ...
+                skip_convergence_check = False
+                for trust_region_iter in count():
+                    qp_inputs = self.convexify_problem(
+                        x=x,
+                        s=s,
+                        mu=mu,
+                    )
+                    # Solving the QP
+                    new_x = self.compute_convexified_x(
+                        qp_inputs=qp_inputs,
+                        size_x=size_x,
+                    )
+                    if self.is_improvement(x=x, new_x=new_x):
+                        s = self.params.tau_plus * s
+                        break
+                    else:
+                        s = self.params.tau_minus * s
+                    if s < self.params.x_tol:
+                        skip_convergence_check = True
+                        break
+                    x = new_x
+                if skip_convergence_check or self.is_converged(x=x, new_x=new_x):
+                    break
+            if self.are_constraints_satisfied(x=x):
+                break
+            else:
+                mu = self.params.k * mu
