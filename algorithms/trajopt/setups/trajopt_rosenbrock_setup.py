@@ -26,11 +26,11 @@ class RosenbrockOptParamsConstructor:
 def lg_fn1(z: VectorNf64, params: RosenbrockParams) -> VectorNf64:
     """
     Constraints of the form:
-    x >= 2, y >= 3
-    (x, y) >= (2, 3) => (x-2, y-3) >= 0 => (2-x, 3-y) <= 0
+    x >= c, y >= d
+    (x, y) >= (c, d) => (x-c, y-d) >= 0 => (c-x, d-y) <= 0
     """
     x, y = z
-    return jnp.array([2.0 - x, 3.0 - y])
+    return jnp.array([2.0 - x, 2.0 - y])
 
 
 def setup_trajopt_for_rosenbrock(
@@ -43,7 +43,7 @@ def setup_trajopt_for_rosenbrock(
         # TODO: Setup somewhere if not too problem specific.
         trajopt_params = TrajOptParams(
             mu_0=0.01,
-            s_0=1e-2,
+            s_0=10,
             c=1e-4,
             tau_plus=2.0,
             tau_minus=0.1,

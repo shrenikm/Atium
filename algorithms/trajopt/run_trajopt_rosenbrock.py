@@ -31,7 +31,7 @@ def _visualize_trajopt_rosenbrock_result(
     Z = rosenbrock_fn(x=X, y=Y, a=params.a, b=params.b)
     min_z, max_z = np.min(Z), np.max(Z)
     surf = ax.plot_surface(
-        X, Y, Z, cmap=cm.coolwarm, linewidth=0, antialiased=False, alpha=0.5
+        X, Y, Z, cmap=cm.coolwarm, linewidth=0, antialiased=False, alpha=0.3
     )
 
     ax.set_xlim(-5.0, 5.0)
@@ -50,7 +50,7 @@ def _visualize_trajopt_rosenbrock_result(
         zs=[0.0],
         marker="o",
         markersize=5,
-        color="brown",
+        color="mediumturquoise",
     )
     xyz_point = ma3.Line3D(
         xs=[initial_guess_x[0]],
@@ -60,21 +60,35 @@ def _visualize_trajopt_rosenbrock_result(
         markersize=5,
         color="black",
     )
-    xyz_line = ma3.Line3D(
+    xyz_projection_line = ma3.Line3D(
         xs=[initial_guess_x[0], initial_guess_x[0]],
         ys=[initial_guess_x[1], initial_guess_x[1]],
         zs=[0.0, rosenbrock_cost_fn(initial_guess_x, params)],
         linestyle="dotted",
         color="gray",
     )
+    xy_trajectory = ma3.Line3D(
+        xs=[initial_guess_x[0]],
+        ys=[initial_guess_x[1]],
+        zs=[0.0],
+        linestyle="dotted",
+        color="rosybrown",
+    )
     ax.add_line(xy_point)
     ax.add_line(xyz_point)
-    ax.add_line(xyz_line)
+    ax.add_line(xyz_projection_line)
+    ax.add_line(xy_trajectory)
 
     def anim_update(trust_region_iter):
         entry = result[trust_region_iter]
         x, y = entry.min_x
         cost = entry.cost
+        x_trajectory = [
+            entry.min_x[0] for entry in result.entries[: trust_region_iter + 1]
+        ]
+        y_trajectory = [
+            entry.min_x[1] for entry in result.entries[: trust_region_iter + 1]
+        ]
         ax.set_title(
             f"""
             Rosenbrock TrajOpt trust region step: {trust_region_iter + 1}/{trust_region_steps}
@@ -86,7 +100,8 @@ def _visualize_trajopt_rosenbrock_result(
         # print("============")
         xy_point.set_data_3d([x], [y], [0.0])
         xyz_point.set_data_3d([x], [y], [cost])
-        xyz_line.set_data_3d([x, x], [y, y], [0.0, cost])
+        xyz_projection_line.set_data_3d([x, x], [y, y], [0.0, cost])
+        xy_trajectory.set_data_3d(x_trajectory, y_trajectory, [0] * len(x_trajectory))
 
     animation = anim.FuncAnimation(
         fig=fig,
@@ -107,7 +122,7 @@ def run() -> None:
 
     # _visualze(params=rosenbrock_params)
 
-    initial_guess_x = np.array([5.0, -5.0])
+    initial_guess_x = np.array([1.5, 1.5])
     result = trajopt.solve(initial_guess_x=initial_guess_x)
     print(result.solution_x())
 

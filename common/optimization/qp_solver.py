@@ -6,11 +6,11 @@ from common.optimization.constructs import QPInputs
 OSQP_SOLVED_STATUS_STR = "solved"
 
 
-def solve_qp(qp_inputs: QPInputs) -> None:
+def solve_qp(qp_inputs: QPInputs, verbose: bool = False) -> None:
     solver = osqp.OSQP()
     # Not using **attr.asdict in case the interface changes in the future or we need to add more options.
     settings = dict(
-        verbose=True,
+        verbose=verbose,
     )
     solver.setup(
         P=csc_matrix(qp_inputs.P),

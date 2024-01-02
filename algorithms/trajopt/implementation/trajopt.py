@@ -291,7 +291,9 @@ class TrajOpt:
         if is_qp_solved(osqp_results=osqp_results):
             return osqp_results.x[:size_x]
         else:
-            raise AtiumOptError("QP could not be solved using OSQP.")
+            raise AtiumOptError(
+                f"QP could not be solved using OSQP. Status is: {osqp_results.info.status}"
+            )
 
     def is_improvement(
         self,
