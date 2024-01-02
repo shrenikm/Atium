@@ -140,7 +140,7 @@ def run() -> None:
 
     # _visualze(params=rosenbrock_params)
 
-    initial_guess_x = np.array([1.5, 1.5])
+    initial_guess_x = np.array([3., 3.])
     result = trajopt.solve(initial_guess_x=initial_guess_x)
     print(result.solution_x())
 

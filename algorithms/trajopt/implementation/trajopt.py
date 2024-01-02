@@ -193,7 +193,9 @@ class TrajOpt:
 
             # Expanding A to account for the new t_g slack variables. As the older constraints don't
             # depend on the slack variables, these can just be zero.
-            A = np.hstack((A, np.zeros((A.shape[0], num_nl_g_constraints))))
+            A = np.hstack(
+                (A, np.zeros((A.shape[0], num_nl_g_constraints), dtype=np.float64))
+            )
 
             A_nlg = W_nlg
             ub_nlg = W_nlg @ x - nlg0
@@ -220,13 +222,17 @@ class TrajOpt:
             # Doing the same thing, expanding the A matrices and accounting for the slack terms. It's slightly different
             # due to having two slack terms for each constraint row.
 
-            A = np.hstack((A, np.zeros((A.shape[0], 2 * num_nl_h_constraints))))
+            A = np.hstack(
+                (A, np.zeros((A.shape[0], 2 * num_nl_h_constraints), dtype=np.float64))
+            )
 
             A_nlh = W_nlh
             b_nlh = W_nlh @ x - nlh0
 
             assert A_nlh.shape[0] == num_nl_h_constraints
-            A_nlh_aux = np.zeros((num_nl_h_constraints, 2 * num_nl_h_constraints))
+            A_nlh_aux = np.zeros(
+                (num_nl_h_constraints, 2 * num_nl_h_constraints), dtype=np.float64
+            )
             for i in range(num_nl_h_constraints):
                 # Constraint is W@x - t_h + s_h = W@x0 - h(x0)
                 # Assuming the final x matrix is layed out as:
@@ -249,12 +255,29 @@ class TrajOpt:
         lb_trust = x - s
         ub_trust = x + s
 
-        A_trust = np.zeros((n, num_total_variables))
-        A_trust[:n, :n] = np.eye(n)
+        print("???")
+        print(A)
+        print("???")
+        A_trust_bounds = np.zeros((n, num_total_variables), dtype=np.float64)
+        A_trust_bounds[:n, :n] = np.eye(n)
 
-        A = np.vstack((A, A_trust))
+        A = np.vstack((A, A_trust_bounds))
         lb = np.hstack((lb, lb_trust))
         ub = np.hstack((ub, ub_trust))
+
+        # Constraints for the slack terms t_g, t_h and s_h to be >= 0
+        A_slack_bounds = np.zeros(
+            (num_slack_variables, num_total_variables), dtype=np.float64
+        )
+        A_slack_bounds[-num_slack_variables:, -num_slack_variables:] = np.eye(
+            num_slack_variables
+        )
+        lb_slack = np.zeros(num_slack_variables)
+        ub_slack = np.full(num_slack_variables, np.inf)
+
+        A = np.vstack((A, A_slack_bounds))
+        lb = np.hstack((lb, lb_slack))
+        ub = np.hstack((ub, ub_slack))
 
         # Computing the necessary gradients and hessians for the current x.
         # Cost function. Gradient vector by omega and hessian matrix by W
@@ -262,7 +285,7 @@ class TrajOpt:
         W_f = self.cost_fn.hess(x)
 
         # For the quadratic term 0.5 x^T@P@x, P is just W_f expanded by zeros to account for the slack terms.
-        P = np.zeros((num_total_variables, num_total_variables))
+        P = np.zeros((num_total_variables, num_total_variables), dtype=np.float64)
         P[:n, :n] = W_f
 
         # For the linear term q^Tx, the first part (x part) of q is given by
@@ -277,6 +300,13 @@ class TrajOpt:
 
         assert q.ndim == 1
         assert len(q) == num_total_variables
+
+        print("#" * 80)
+        print(P)
+        print(A)
+        print(lb)
+        print(ub)
+        print("#" * 80)
 
         return QPInputs(
             P=P,
@@ -450,6 +480,7 @@ class TrajOpt:
                 break
             else:
                 mu = self.params.k * mu
+                print("Constraints not satisfied", mu)
                 # Adding the updated penalty in the result.
                 result[-1] = attr.evolve(
                     result[-1],

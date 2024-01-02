@@ -23,14 +23,25 @@ class RosenbrockOptParamsConstructor:
         return self.params
 
 
-def lg_fn1(z: VectorNf64, params: RosenbrockParams) -> VectorNf64:
+def lg_fn1(z: VectorNf64) -> VectorNf64:
     """
-    Constraints of the form:
+    Linear constraints of the form:
     x >= c, y >= d
     (x, y) >= (c, d) => (x-c, y-d) >= 0 => (c-x, d-y) <= 0
     """
     x, y = z
     return jnp.array([2.0 - x, 2.0 - y])
+
+
+def nlg_fn1(z: VectorNf64) -> VectorNf64:
+    """
+    Non linear (circle) constraints of the form:
+    (x - xc)^2 + (y - yc)^2 - r^2 <= 0
+    """
+    x, y = z
+    xc, yc = (3.0, 3.0)
+    r = 1.0
+    return jnp.array([(x - xc) ** 2 + (y - yc) ** 2 - r**2])
 
 
 def setup_trajopt_for_rosenbrock(
@@ -42,7 +53,7 @@ def setup_trajopt_for_rosenbrock(
         # Default trajopt params if not given.
         # TODO: Setup somewhere if not too problem specific.
         trajopt_params = TrajOptParams(
-            mu_0=0.01,
+            mu_0=1.,
             s_0=10,
             c=1e-4,
             tau_plus=2.0,
@@ -68,13 +79,17 @@ def setup_trajopt_for_rosenbrock(
     lg_fn_ds = DerivativeSplicedConstraintsFn(
         core_fn=lg_fn1,
         use_jit=True,
-        construct_params_fn=rosenbrock_params_constructor,
+    )
+    nlg_fn_ds = DerivativeSplicedConstraintsFn(
+        core_fn=nlg_fn1,
+        use_jit=True,
     )
 
     trajopt_optimizer = TrajOpt(
         params=trajopt_params,
         cost_fn=cost_fn_ds,
-        linear_inequality_constraints_fn=lg_fn_ds,
+        # linear_inequality_constraints_fn=lg_fn_ds,
+        non_linear_inequality_constraints_fn=nlg_fn_ds,
     )
 
     return trajopt_optimizer
