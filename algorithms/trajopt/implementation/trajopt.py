@@ -12,12 +12,13 @@ import numpy as np
 import osqp
 
 from common.custom_types import VectorNf64
+from common.exceptions import AtiumOptError
 from common.optimization.constructs import QPInputs
 from common.optimization.derivative_splicer import (
     DerivativeSplicedConstraintsFn,
     DerivativeSplicedCostFn,
 )
-from common.optimization.qp_solver import solve_qp
+from common.optimization.qp_solver import is_qp_solved, solve_qp
 
 
 # TODO: Validators.
@@ -286,8 +287,11 @@ class TrajOpt:
         )
 
     def compute_convexified_x(self, qp_inputs: QPInputs, size_x: int) -> VectorNf64:
-        osqp_res = solve_qp(qp_inputs=qp_inputs)
-        return osqp_res.x[:size_x]
+        osqp_results = solve_qp(qp_inputs=qp_inputs)
+        if is_qp_solved(osqp_results=osqp_results):
+            return osqp_results.x[:size_x]
+        else:
+            raise AtiumOptError("QP could not be solved using OSQP.")
 
     def is_improvement(
         self,

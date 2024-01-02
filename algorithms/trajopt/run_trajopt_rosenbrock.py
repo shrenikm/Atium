@@ -81,9 +81,9 @@ def _visualize_trajopt_rosenbrock_result(
             x: [{x:.3f}, {y:.3f}]
             """
         )
-        print(trust_region_iter, f"[{x}, {y}]", cost)
-        print(cost, rosenbrock_cost_fn([x, y], params))
-        print("============")
+        # print(trust_region_iter, f"[{x}, {y}]", cost)
+        # print(cost, rosenbrock_cost_fn([x, y], params))
+        # print("============")
         xy_point.set_data_3d([x], [y], [0.0])
         xyz_point.set_data_3d([x], [y], [cost])
         xyz_line.set_data_3d([x, x], [y, y], [0.0, cost])

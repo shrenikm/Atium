@@ -1,10 +1,14 @@
 from typing import Optional
 
 import attr
+import jax.numpy as jnp
 
 from algorithms.trajopt.implementation.trajopt import TrajOpt, TrajOptParams
 from common.custom_types import VectorNf64
-from common.optimization.derivative_splicer import DerivativeSplicedCostFn
+from common.optimization.derivative_splicer import (
+    DerivativeSplicedConstraintsFn,
+    DerivativeSplicedCostFn,
+)
 from common.optimization.standard_functions.rosenbrock import (
     RosenbrockParams,
     rosenbrock_cost_fn,
@@ -19,6 +23,16 @@ class RosenbrockOptParamsConstructor:
         return self.params
 
 
+def lg_fn1(z: VectorNf64, params: RosenbrockParams) -> VectorNf64:
+    """
+    Constraints of the form:
+    x >= 2, y >= 3
+    (x, y) >= (2, 3) => (x-2, y-3) >= 0 => (2-x, 3-y) <= 0
+    """
+    x, y = z
+    return jnp.array([2.0 - x, 3.0 - y])
+
+
 def setup_trajopt_for_rosenbrock(
     rosenbrock_params: RosenbrockParams,
     trajopt_params: Optional[TrajOptParams] = None,
@@ -29,7 +43,7 @@ def setup_trajopt_for_rosenbrock(
         # TODO: Setup somewhere if not too problem specific.
         trajopt_params = TrajOptParams(
             mu_0=0.01,
-            s_0=1e-4,
+            s_0=1e-2,
             c=1e-4,
             tau_plus=2.0,
             tau_minus=0.1,
@@ -51,9 +65,16 @@ def setup_trajopt_for_rosenbrock(
         construct_params_fn=rosenbrock_params_constructor,
     )
 
+    lg_fn_ds = DerivativeSplicedConstraintsFn(
+        core_fn=lg_fn1,
+        use_jit=True,
+        construct_params_fn=rosenbrock_params_constructor,
+    )
+
     trajopt_optimizer = TrajOpt(
         params=trajopt_params,
         cost_fn=cost_fn_ds,
+        linear_inequality_constraints_fn=lg_fn_ds,
     )
 
     return trajopt_optimizer
