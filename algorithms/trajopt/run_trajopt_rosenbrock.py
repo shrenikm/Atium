@@ -28,10 +28,28 @@ def _visualize_trajopt_rosenbrock_result(
     X = np.arange(-5.0, 5.1, 0.1)
     Y = np.arange(-5.0, 5.1, 0.1)
     X, Y = np.meshgrid(X, Y)
-    Z = rosenbrock_fn(x=X, y=Y, a=params.a, b=params.b)
-    min_z, max_z = np.min(Z), np.max(Z)
-    surf = ax.plot_surface(
-        X, Y, Z, cmap=cm.coolwarm, linewidth=0, antialiased=False, alpha=0.3
+    Z_rosenbrock = rosenbrock_fn(x=X, y=Y, a=params.a, b=params.b)
+    min_z, max_z = np.min(Z_rosenbrock), np.max(Z_rosenbrock)
+    ax.plot_surface(
+        X,
+        Y,
+        Z_rosenbrock,
+        cmap=cm.coolwarm,
+        linewidth=0,
+        antialiased=False,
+        alpha=0.4,
+        edgecolor="none",
+    )
+
+    def _constraint_plane1(x, y):
+        Z = np.zeros_like(x)
+        Z[np.where(np.logical_and(x >= 2.0, y >= 2.0))] = np.inf
+        return Z
+
+    Z_constraint1 = _constraint_plane1(X, Y)
+
+    ax.plot_surface(
+        X, Y, Z_constraint1, cmap="Dark2", linewidth=0, antialiased=False, alpha=0.5
     )
 
     ax.set_xlim(-5.0, 5.0)
@@ -50,14 +68,14 @@ def _visualize_trajopt_rosenbrock_result(
         zs=[0.0],
         marker="o",
         markersize=5,
-        color="mediumturquoise",
+        color="indianred",
     )
     xyz_point = ma3.Line3D(
         xs=[initial_guess_x[0]],
         ys=[initial_guess_x[1]],
         zs=[rosenbrock_cost_fn(initial_guess_x, params)],
         marker="x",
-        markersize=5,
+        markersize=1,
         color="black",
     )
     xyz_projection_line = ma3.Line3D(
