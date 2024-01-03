@@ -155,15 +155,23 @@ class TrajOpt:
             lg0 = self.linear_inequality_constraints_fn(x)
             W_lg = self.linear_inequality_constraints_fn.grad(x)
 
-            #if lg0.size == 0:
+            # TODO: Consolidate.
+            if lg0.size == 1:
                 # Single constraint
+                assert lg0.ndim == 0
+                assert W_lg.ndim == 1
+                assert W_lg.size == n
+            else:
+                # Multiple constraints.
+                assert lg0.ndim == 1
+                assert W_lg.ndim == 2
+                assert W_lg.shape == (lg0.size, n)
 
             A_lg = W_lg
             ub_lg = W_lg @ x - lg0
             # Lower limits are all -inf for this set.
             lb_lg = np.full(len(ub_lg), fill_value=-np.inf)
 
-            assert lg0.ndim == 1
             A = np.vstack((A, A_lg))
             lb = np.hstack((lb, lb_lg))
             ub = np.hstack((ub, ub_lg))
@@ -172,10 +180,20 @@ class TrajOpt:
             lh0 = self.linear_equality_constraints_fn(x)
             W_lh = self.linear_equality_constraints_fn.grad(x)
 
+            # TODO: Consolidate.
+            if lh0.size == 1:
+                # Single constraint
+                assert lh0.ndim == 0
+                assert W_lh.ndim == 1
+                assert W_lh.size == n
+            else:
+                # Multiple constraints.
+                assert lh0.ndim == 1
+                assert W_lh.ndim == 2
+                assert W_lh.shape == (lh0.size, n)
+
             A_lh = W_lh
             b_lh = W_lh @ x - lh0
-
-            assert lh0.ndim == 1
 
             # As it is an equality constraint, upper and lower bounds are both equal
             A = np.vstack((A, A_lh))
@@ -203,9 +221,19 @@ class TrajOpt:
             #      [0 -I]]        [t_g]]
             nlg0 = self.non_linear_inequality_constraints_fn(x)
             W_nlg = self.non_linear_inequality_constraints_fn.grad(x)
+            num_nl_g_constraints = nlg0.size
 
-            assert nlg0.ndim == 1
-            num_nl_g_constraints = len(nlg0)
+            # TODO: Consolidate.
+            if num_nl_g_constraints == 1:
+                # Single constraint
+                assert nlg0.ndim == 0
+                assert W_nlg.ndim == 1
+                assert W_nlg.size == n
+            else:
+                # Multiple constraints.
+                assert nlg0.ndim == 1
+                assert W_nlg.ndim == 2
+                assert W_nlg.shape == (num_nl_g_constraints, n)
 
             # Expanding A to account for the new t_g slack variables. As the older constraints don't
             # depend on the slack variables, these can just be zero.
@@ -216,7 +244,7 @@ class TrajOpt:
             A_nlg = W_nlg
             ub_nlg = W_nlg @ x - nlg0
             # Lower limits are again -inf
-            lb_nlg = np.full(len(ub_nlg), fill_value=-np.inf)
+            lb_nlg = np.full(ub_nlg.size, fill_value=-np.inf)
 
             print("%" * 80)
             print(A_nlg)
@@ -226,9 +254,11 @@ class TrajOpt:
 
             # Expanding A_lh as well and changing values to account for the slack terms.
             # The slack terms will correspond to each constraint, so can be mapped using the identity matrix.
-            assert A_nlg.shape[0] == num_nl_g_constraints
-            A_nlg_aux = -1.0 * np.eye(num_nl_g_constraints, num_nl_g_constraints)
-            A_nlg = np.hstack((A_nlg, A_nlg_aux))
+            A_nlg_aux = -1.0 * np.eye(num_nl_g_constraints)
+            if num_nl_g_constraints == 1:
+                A_nlg = np.hstack((A_nlg, A_nlg_aux.squeeze()))
+            else:
+                A_nlg = np.hstack((A_nlg, A_nlg_aux))
 
             A = np.vstack((A, A_nlg))
             lb = np.hstack((lb, lb_nlg))
@@ -252,9 +282,6 @@ class TrajOpt:
                 Omega_nlg = self.non_linear_inequality_constraints_fn.hess(x)
                 if num_nl_g_constraints == 1:
                     # Omega is not a tensor in this case.
-                    print(Omega_nlg.ndim, Omega_nlg.shape)
-                    print(Omega_nlg)
-                    print(Omega_nlg[:, :, 0])
                     assert Omega_nlg.ndim == 2
                     # Note that OSQP already assumes 0.5 multiplies P, so we don't include that here.
                     W += mu * Omega_nlg
@@ -272,9 +299,19 @@ class TrajOpt:
         if self.non_linear_equality_constraints_fn is not None:
             nlh0 = self.non_linear_equality_constraints_fn(x)
             W_nlh = self.non_linear_equality_constraints_fn.grad(x)
+            num_nl_h_constraints = nlh0.size
 
-            assert nlh0.ndim == 1
-            num_nl_h_constraints = len(nlh0)
+            # TODO: Consolidate.
+            if num_nl_h_constraints == 1:
+                # Single constraint
+                assert nlh0.ndim == 0
+                assert W_nlh.ndim == 1
+                assert W_nlh.size == n
+            else:
+                # Multiple constraints.
+                assert nlh0.ndim == 1
+                assert W_nlh.ndim == 2
+                assert W_nlh.shape == (num_nl_h_constraints, n)
 
             # Doing the same thing, expanding the A matrices and accounting for the slack terms. It's slightly different
             # due to having two slack terms for each constraint row.
@@ -286,7 +323,6 @@ class TrajOpt:
             A_nlh = W_nlh
             b_nlh = W_nlh @ x - nlh0
 
-            assert A_nlh.shape[0] == num_nl_h_constraints
             A_nlh_aux = np.zeros(
                 (num_nl_h_constraints, 2 * num_nl_h_constraints), dtype=np.float64
             )
@@ -331,9 +367,10 @@ class TrajOpt:
         A_slack_bounds = np.zeros(
             (num_slack_variables, num_total_variables), dtype=np.float64
         )
-        A_slack_bounds[-num_slack_variables:, -num_slack_variables:] = np.eye(
-            num_slack_variables
-        )
+        if num_slack_variables:
+            A_slack_bounds[-num_slack_variables:, -num_slack_variables:] = np.eye(
+                num_slack_variables
+            )
         lb_slack = np.zeros(num_slack_variables)
         ub_slack = np.full(num_slack_variables, np.inf)
 

@@ -41,7 +41,7 @@ def nlg_fn1(z: VectorNf64) -> VectorNf64:
     x, y = z
     xc, yc = (3.0, 3.0)
     r = 1.0
-    return jnp.array([(x - xc) ** 2 + (y - yc) ** 2 - r**2])
+    return jnp.array((x - xc) ** 2 + (y - yc) ** 2 - r**2)
 
 
 def setup_trajopt_for_rosenbrock(
@@ -88,8 +88,8 @@ def setup_trajopt_for_rosenbrock(
     trajopt_optimizer = TrajOpt(
         params=trajopt_params,
         cost_fn=cost_fn_ds,
-        # linear_inequality_constraints_fn=lg_fn_ds,
-        non_linear_inequality_constraints_fn=nlg_fn_ds,
+        #linear_inequality_constraints_fn=lg_fn_ds,
+        #non_linear_inequality_constraints_fn=nlg_fn_ds,
     )
 
     return trajopt_optimizer
