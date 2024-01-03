@@ -43,6 +43,8 @@ class TrajOptParams:
     c_tol: float
 
     # Implementation params.
+    tau_max: float
+    tau_min: float
     max_iter: int
     # Whether or not to model the quadratic terms and approximate
     # the non linear equalities and inequalities as quadratic functions.
@@ -115,10 +117,8 @@ class TrajOpt:
     def convexify_problem(
         self,
         x: VectorNf64,
-        s: float,
         mu: float,
     ) -> QPInputs:
-        assert s > 0.0, f"s: {s} is not > 0."
         assert x.ndim == 1
         n = x.size
         # Computing the gradient and hessian of the cost function.
@@ -151,6 +151,9 @@ class TrajOpt:
         # in the form lb <= Ax <= ub as this is what OSQP requires as input.
         A = np.empty((0, n), dtype=np.float64)
         lb, ub = np.empty(0), np.empty(0)
+
+        # TODO: Validate the g and h functions to make sure that for a single constraint, we output
+        # a 0 dimension array.
 
         if self.linear_inequality_constraints_fn is not None:
             lg0 = self.linear_inequality_constraints_fn(x)
@@ -281,13 +284,16 @@ class TrajOpt:
                 # Note that the penalty scaling factor mu also multiplies the cost function term.
 
                 Omega_nlg = self.non_linear_inequality_constraints_fn.hess(x)
+                # TODO: Check for positive semi-definitiveness of Omega
+
                 if num_nl_g_constraints == 1:
                     # Omega is not a tensor in this case.
                     assert Omega_nlg.ndim == 2
                     # Note that OSQP already assumes 0.5 multiplies P, so we don't include that here.
                     W += mu * Omega_nlg
                     # For q, we need to include the 0.5
-                    q -= 0.5 * mu * np.dot(x, Omega_nlg + Omega_nlg.T)
+                    # Note that v.T @ (A + A.T) = ((A + A.T).T @ v).T = (A + A.T) @ v (As it's a vector and the transpose doesn't change the values)
+                    q -= 0.5 * mu * ((Omega_nlg + Omega_nlg.T) @ x)
 
                 else:
                     assert Omega_nlg.ndim == 3
@@ -295,7 +301,7 @@ class TrajOpt:
                     for i in range(n):
                         omega_nlg = Omega_nlg[:, :, i]
                         W += mu * omega_nlg
-                        q -= 0.5 * mu * np.dot(x, omega_nlg + omega_nlg.T)
+                        q -= 0.5 * mu * ((omega_nlg + omega_nlg.T) @ x)
 
         if self.non_linear_equality_constraints_fn is not None:
             nlh0 = self.non_linear_equality_constraints_fn(x)
@@ -344,13 +350,15 @@ class TrajOpt:
             # Doing the same thing for the equality constraints if required.
             if self.params.second_order_equalities:
                 Omega_nlh = self.non_linear_equality_constraints_fn.hess(x)
+                # TODO: Check for positive semi-definitiveness of Omega
+
                 if num_nl_h_constraints == 1:
                     # Omega is not a tensor in this case.
                     assert Omega_nlh.ndim == 2
                     # Note that OSQP already assumes 0.5 multiplies P, so we don't include that here.
                     W += mu * Omega_nlh
                     # For q, we need to include the 0.5
-                    q -= 0.5 * mu * np.dot(x, Omega_nlh + Omega_nlh.T)
+                    q -= 0.5 * mu * ((Omega_nlh + Omega_nlh.T) @ x)
 
                 else:
                     assert Omega_nlh.ndim == 3
@@ -358,7 +366,7 @@ class TrajOpt:
                     for i in range(n):
                         omega_nlh = Omega_nlh[:, :, i]
                         W += mu * omega_nlh
-                        q -= 0.5 * mu * np.dot(x, omega_nlh + omega_nlh.T)
+                        q -= 0.5 * mu * ((omega_nlh + omega_nlh.T) @ x)
 
         num_slack_variables = num_nl_g_constraints + 2 * num_nl_h_constraints
         num_total_variables = n + num_slack_variables
@@ -420,11 +428,11 @@ class TrajOpt:
     def incorporate_trust_region(
         self,
         x: VectorNf64,
-        qp_inputs: QPInputs,
         s: float,
-        mu: float,
+        qp_inputs: QPInputs,
     ) -> QPInputs:
         assert x.ndim == 1
+        assert s > 0.0, f"s: {s} is not > 0."
         # Adding the trust region constraints as box inequalities.
         # x - s <= x <= x + s (We know that s >= 0.)
         lb_trust = x - s
@@ -439,6 +447,13 @@ class TrajOpt:
         A = np.vstack((qp_inputs.A, A_trust_bounds))
         lb = np.hstack((qp_inputs.lb, lb_trust))
         ub = np.hstack((qp_inputs.ub, ub_trust))
+
+        return attr.evolve(
+            qp_inputs,
+            A=A,
+            lb=lb,
+            ub=ub,
+        )
 
     def compute_convexified_x(self, qp_inputs: QPInputs, size_x: int) -> VectorNf64:
         osqp_results = solve_qp(qp_inputs=qp_inputs, verbose=False)
@@ -550,16 +565,20 @@ class TrajOpt:
         for penalty_iter in range(self.params.max_iter):
             for convexify_iter in count():
                 trust_region_size_below_threshold = False
+                qp_inputs = self.convexify_problem(
+                    x=x,
+                    mu=mu,
+                )
                 for trust_region_iter in count():
                     print(penalty_iter, convexify_iter, trust_region_iter)
                     if improvement:
                         x = new_x
                     s = updated_s
                     print(f"X: {x}, s: {s}")
-                    qp_inputs = self.convexify_problem(
+                    qp_inputs = self.incorporate_trust_region(
                         x=x,
                         s=s,
-                        mu=mu,
+                        qp_inputs=qp_inputs,
                     )
                     # Solving the QP
                     new_x = self.compute_convexified_x(
@@ -573,12 +592,12 @@ class TrajOpt:
 
                     if improvement:
                         print("Improve!")
-                        updated_s = self.params.tau_plus * s
+                        updated_s = min(self.params.tau_plus * s, self.params.tau_max)
                         updated_s = max(updated_s, 1.0)
                         break
                     else:
                         print("Not improve :(")
-                        updated_s = self.params.tau_minus * s
+                        updated_s = max(self.params.tau_minus * s, self.params.tau_min)
                     if updated_s < self.params.x_tol:
                         print("sub")
                         trust_region_size_below_threshold = True

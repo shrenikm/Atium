@@ -94,7 +94,7 @@ def _visualize_trajopt_rosenbrock_result(
     )
     ax.add_line(xy_point)
     ax.add_line(xyz_point)
-    ax.add_line(xyz_projection_line)
+    #ax.add_line(xyz_projection_line)
     ax.add_line(xy_trajectory)
 
     def anim_update(trust_region_iter):
@@ -118,7 +118,7 @@ def _visualize_trajopt_rosenbrock_result(
         # print("============")
         xy_point.set_data_3d([x], [y], [0.0])
         xyz_point.set_data_3d([x], [y], [cost])
-        xyz_projection_line.set_data_3d([x, x], [y, y], [0.0, cost])
+        #xyz_projection_line.set_data_3d([x, x], [y, y], [0.0, cost])
         xy_trajectory.set_data_3d(x_trajectory, y_trajectory, [0] * len(x_trajectory))
 
     animation = anim.FuncAnimation(
@@ -140,7 +140,7 @@ def run() -> None:
 
     # _visualze(params=rosenbrock_params)
 
-    initial_guess_x = np.array([4., 2.])
+    initial_guess_x = np.array([5., 5.])
     result = trajopt.solve(initial_guess_x=initial_guess_x)
     print(result.solution_x())
 
