@@ -9,7 +9,6 @@ from typing import Any, List, Optional, Protocol, Sequence
 
 import attr
 import numpy as np
-import osqp
 
 from common.custom_types import VectorNf64
 from common.exceptions import AtiumOptError
@@ -45,6 +44,12 @@ class TrajOptParams:
 
     # Implementation params.
     max_iter: int
+    # Whether or not to model the quadratic terms and approximate
+    # the non linear equalities and inequalities as quadratic functions.
+    # It is highly advised that this is done as non-linear constraint satisfaction
+    # might prove difficult using just a linear approximation.
+    second_order_inequalities: bool = True
+    second_order_equalities: bool = True
 
 
 @attr.frozen
@@ -113,7 +118,7 @@ class TrajOpt:
         s: float,
         mu: float,
     ) -> QPInputs:
-        assert s > 0.0
+        assert s > 0.0, f"s: {s} is not > 0."
         n = len(x)
         # Computing the gradient and hessian of the cost function.
         # f = cost function, g = inequality constraints, h = equality constraints
@@ -136,11 +141,22 @@ class TrajOpt:
         # We compute the A for each linear constraint first and stack them up.
         # The non linear constraints have a dependency on the slack variables introduced so these
         # will be added later after A has been expanded.
+
+        # W stores the accumulation of the required hessians (second order terms) in the cost function.
+        W = np.zeros((n, n), dtype=np.float64)
+        # q stores the accumulation of the linear cost function terms.
+        q = np.zeros(n, dtype=np.float64)
+        # A, lb and ub stores the accumulation of the linear (and linearized/linear parts of) constraints
+        # in the form lb <= Ax <= ub as this is what OSQP requires as input.
         A = np.empty((0, n), dtype=np.float64)
         lb, ub = np.empty(0), np.empty(0)
+
         if self.linear_inequality_constraints_fn is not None:
             lg0 = self.linear_inequality_constraints_fn(x)
             W_lg = self.linear_inequality_constraints_fn.grad(x)
+
+            #if lg0.size == 0:
+                # Single constraint
 
             A_lg = W_lg
             ub_lg = W_lg @ x - lg0
@@ -202,6 +218,12 @@ class TrajOpt:
             # Lower limits are again -inf
             lb_nlg = np.full(len(ub_nlg), fill_value=-np.inf)
 
+            print("%" * 80)
+            print(A_nlg)
+            print(ub_nlg)
+            print(lb_nlg)
+            print("%" * 80)
+
             # Expanding A_lh as well and changing values to account for the slack terms.
             # The slack terms will correspond to each constraint, so can be mapped using the identity matrix.
             assert A_nlg.shape[0] == num_nl_g_constraints
@@ -211,6 +233,41 @@ class TrajOpt:
             A = np.vstack((A, A_nlg))
             lb = np.hstack((lb, lb_nlg))
             ub = np.hstack((ub, ub_nlg))
+
+            if self.params.second_order_inequalities:
+                # If we're required to model the inequalities as quadratic terms, the hessian term goes in the
+                # cost function and the linear term goes into the constraints directly.
+                # This is because |g(x)|+ = |g(x0) + W(x0)@(x - x0) + Sum_i (x - x0)^T@Omega[i]@(x - x0)|
+                # Where |g(x)|+ = max(g(x), 0) and Omega = Hessian tensor (matrix for a single constraint)
+                # If the individual Omega[:, :, i] are positive semi-definite, then we can remove this out of the
+                # max() as dx^T @ Omega[i] @ dx >= 0.
+                # Which then gets added to the cost function as:
+                # |g(x)|+ = sum_i dx^T @ Omega[i] @ dx + t_g
+                # Ax + b <= t_g, t_g >= 0, Where Ax + b is the linear form of the approximation.
+
+                # So here for the cost, we expand dx^T @ Omega[i] @ dx and accumulate the quadratic terms
+                # (0.5 * Omega[i]) in W and the linear terms (-0.5 * x0^T @ (Omega[i] + Omega[i]^T)) into q.
+                # Note that the penalty scaling factor mu also multiplies the cost function term.
+
+                Omega_nlg = self.non_linear_inequality_constraints_fn.hess(x)
+                if num_nl_g_constraints == 1:
+                    # Omega is not a tensor in this case.
+                    print(Omega_nlg.ndim, Omega_nlg.shape)
+                    print(Omega_nlg)
+                    print(Omega_nlg[:, :, 0])
+                    assert Omega_nlg.ndim == 2
+                    # Note that OSQP already assumes 0.5 multiplies P, so we don't include that here.
+                    W += mu * Omega_nlg
+                    # For q, we need to include the 0.5
+                    q -= 0.5 * mu * np.dot(x, Omega_nlg + Omega_nlg.T)
+
+                else:
+                    assert Omega_nlg.ndim == 3
+                    assert Omega_nlg.shape == (n, n, num_nl_g_constraints)
+                    for i in range(n):
+                        omega_nlg = Omega_nlg[:, :, i]
+                        W += mu * omega_nlg
+                        q -= 0.5 * mu * np.dot(x, omega_nlg + omega_nlg.T)
 
         if self.non_linear_equality_constraints_fn is not None:
             nlh0 = self.non_linear_equality_constraints_fn(x)
@@ -247,23 +304,28 @@ class TrajOpt:
             lb = np.hstack((lb, b_nlh))
             ub = np.hstack((ub, b_nlh))
 
+            # Doing the same thing for the equality constraints if required.
+            if self.params.second_order_equalities:
+                Omega_nlh = self.non_linear_equality_constraints_fn.hess(x)
+                if num_nl_h_constraints == 1:
+                    # Omega is not a tensor in this case.
+                    assert Omega_nlh.ndim == 2
+                    # Note that OSQP already assumes 0.5 multiplies P, so we don't include that here.
+                    W += mu * Omega_nlh
+                    # For q, we need to include the 0.5
+                    q -= 0.5 * mu * np.dot(x, Omega_nlh + Omega_nlh.T)
+
+                else:
+                    assert Omega_nlh.ndim == 3
+                    assert Omega_nlh.shape == (n, n, num_nl_h_constraints)
+                    for i in range(n):
+                        omega_nlh = Omega_nlh[:, :, i]
+                        W += mu * omega_nlh
+                        q -= 0.5 * mu * np.dot(x, omega_nlh + omega_nlh.T)
+
         num_slack_variables = num_nl_g_constraints + 2 * num_nl_h_constraints
         num_total_variables = n + num_slack_variables
         assert A.shape[1] == num_total_variables
-        # Finally we add the trust region constraints as box inequalities.
-        # x - s <= x <= x + s (We know that s >= 0.)
-        lb_trust = x - s
-        ub_trust = x + s
-
-        print("???")
-        print(A)
-        print("???")
-        A_trust_bounds = np.zeros((n, num_total_variables), dtype=np.float64)
-        A_trust_bounds[:n, :n] = np.eye(n)
-
-        A = np.vstack((A, A_trust_bounds))
-        lb = np.hstack((lb, lb_trust))
-        ub = np.hstack((ub, ub_trust))
 
         # Constraints for the slack terms t_g, t_h and s_h to be >= 0
         A_slack_bounds = np.zeros(
@@ -286,13 +348,13 @@ class TrajOpt:
 
         # For the quadratic term 0.5 x^T@P@x, P is just W_f expanded by zeros to account for the slack terms.
         P = np.zeros((num_total_variables, num_total_variables), dtype=np.float64)
-        P[:n, :n] = W_f
+        P[:n, :n] = W + W_f
 
         # For the linear term q^Tx, the first part (x part) of q is given by
         # omega_f - 0.5 * (W_f + W_f^T)@x0
         # For proof: Expand f_convex(x) = f(x0) + omega_f^T@(x - x0) + 0.5 * (x - x0)^T@W_f@(x - x0)
         # f(x0) is not a function of x so can be ignored.
-        q = omega_f - 0.5 * ((W_f + W_f.T) @ x)
+        q += omega_f - 0.5 * ((W_f + W_f.T) @ x)
         # The second part corresponds to the slack terms and are all equal to the penalty factor as
         # in the cost function they are sum(t_g) + sum(t_h + s_h)
         q_aux = np.full(num_slack_variables, fill_value=mu)
@@ -303,6 +365,7 @@ class TrajOpt:
 
         print("#" * 80)
         print(P)
+        print(q)
         print(A)
         print(lb)
         print(ub)
@@ -316,8 +379,30 @@ class TrajOpt:
             ub=ub,
         )
 
+    def incorporate_trust_region_and_penalties(
+        self,
+        x: VectorNf64,
+        qp_inputs: QPInputs,
+        s: float,
+        mu: float,
+    ) -> QPInputs:
+        # Adding the trust region constraints as box inequalities.
+        # x - s <= x <= x + s (We know that s >= 0.)
+        lb_trust = x - s
+        ub_trust = x + s
+
+        n = len(x)
+        num_total_variables = qp_inputs.A.shape[1]
+
+        A_trust_bounds = np.zeros((n, num_total_variables), dtype=np.float64)
+        A_trust_bounds[:n, :n] = np.eye(n)
+
+        A = np.vstack((qp_inputs.A, A_trust_bounds))
+        lb = np.hstack((qp_inputs.lb, lb_trust))
+        ub = np.hstack((qp_inputs.ub, ub_trust))
+
     def compute_convexified_x(self, qp_inputs: QPInputs, size_x: int) -> VectorNf64:
-        osqp_results = solve_qp(qp_inputs=qp_inputs)
+        osqp_results = solve_qp(qp_inputs=qp_inputs, verbose=False)
         if is_qp_solved(osqp_results=osqp_results):
             return osqp_results.x[:size_x]
         else:
@@ -336,15 +421,16 @@ class TrajOpt:
         # and the convexified cost at new_x. The convexified cost at x is basically just
         # the full cost at x as delta_x is zero
         model_improve = self.cost_fn(x) - self.convexified_cost_fn(x=x, new_x=new_x)
-        print(true_improve, model_improve, true_improve / model_improve)
-        if true_improve < 0.0 or model_improve < 0.0:
-            return False
 
         # assert true_improve >= 0.0
         # assert model_improve >= 0.0
 
-        if np.isclose(model_improve, 0.0):
-            return False
+        print(true_improve, model_improve, true_improve / model_improve)
+
+        # if true_improve < 0.0 or model_improve < 0.0:
+        #    return False
+        # if np.isclose(model_improve, 0.0):
+        #    return False
 
         return true_improve / model_improve > self.params.c
 
@@ -430,6 +516,7 @@ class TrajOpt:
                     if improvement:
                         x = new_x
                     s = updated_s
+                    print(f"X: {x}, s: {s}")
                     qp_inputs = self.convexify_problem(
                         x=x,
                         s=s,
@@ -440,12 +527,15 @@ class TrajOpt:
                         qp_inputs=qp_inputs,
                         size_x=size_x,
                     )
+                    print("new_x: ", new_x)
+                    input()
                     cost = self.cost_fn(new_x)
                     improvement = self.is_improvement(x=x, new_x=new_x)
 
                     if improvement:
                         print("Improve!")
                         updated_s = self.params.tau_plus * s
+                        updated_s = max(updated_s, 1.0)
                         break
                     else:
                         print("Not improve :(")
@@ -479,8 +569,10 @@ class TrajOpt:
                 print("TrajOpt found a solution!")
                 break
             else:
+                # mu = min(self.params.k * mu, 1e10)
                 mu = self.params.k * mu
                 print("Constraints not satisfied", mu)
+                improvement = False
                 # Adding the updated penalty in the result.
                 result[-1] = attr.evolve(
                     result[-1],

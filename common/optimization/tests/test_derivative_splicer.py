@@ -295,8 +295,7 @@ def test_realistic_constraint_fn_tag(use_jit: bool):
 
     np.testing.assert_array_almost_equal(grad_value, expected_grad_value, decimal=6)
     for i in range(n):
-        # TODO: The hessian returned has dimensions 3x5x5. Check if there is some way of changing it to 5x3x5
-        #  without reshaping it manually.
+        # Hessian has shape (5, 5, 3)
         np.testing.assert_array_almost_equal(
             hess_value[:, :, i], expected_hess_value_tensor_list[i], decimal=6
         )
