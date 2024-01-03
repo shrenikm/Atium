@@ -30,7 +30,8 @@ def lg_fn1(z: VectorNf64) -> VectorNf64:
     (x, y) >= (c, d) => (x-c, y-d) >= 0 => (c-x, d-y) <= 0
     """
     x, y = z
-    return jnp.array([2.0 - x, 2.0 - y])
+    #return jnp.array([2.0 - x, 2.0 - y])
+    return jnp.array(2.0 - x)
 
 
 def nlg_fn1(z: VectorNf64) -> VectorNf64:
@@ -89,7 +90,7 @@ def setup_trajopt_for_rosenbrock(
         params=trajopt_params,
         cost_fn=cost_fn_ds,
         #linear_inequality_constraints_fn=lg_fn_ds,
-        #non_linear_inequality_constraints_fn=nlg_fn_ds,
+        non_linear_inequality_constraints_fn=nlg_fn_ds,
     )
 
     return trajopt_optimizer

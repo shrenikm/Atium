@@ -119,7 +119,8 @@ class TrajOpt:
         mu: float,
     ) -> QPInputs:
         assert s > 0.0, f"s: {s} is not > 0."
-        n = len(x)
+        assert x.ndim == 1
+        n = x.size
         # Computing the gradient and hessian of the cost function.
         # f = cost function, g = inequality constraints, h = equality constraints
 
@@ -170,7 +171,7 @@ class TrajOpt:
             A_lg = W_lg
             ub_lg = W_lg @ x - lg0
             # Lower limits are all -inf for this set.
-            lb_lg = np.full(len(ub_lg), fill_value=-np.inf)
+            lb_lg = np.full(ub_lg.size, fill_value=-np.inf)
 
             A = np.vstack((A, A_lg))
             lb = np.hstack((lb, lb_lg))
@@ -398,7 +399,7 @@ class TrajOpt:
         q = np.hstack((q, q_aux))
 
         assert q.ndim == 1
-        assert len(q) == num_total_variables
+        assert q.size == num_total_variables
 
         print("#" * 80)
         print(P)
@@ -416,19 +417,20 @@ class TrajOpt:
             ub=ub,
         )
 
-    def incorporate_trust_region_and_penalties(
+    def incorporate_trust_region(
         self,
         x: VectorNf64,
         qp_inputs: QPInputs,
         s: float,
         mu: float,
     ) -> QPInputs:
+        assert x.ndim == 1
         # Adding the trust region constraints as box inequalities.
         # x - s <= x <= x + s (We know that s >= 0.)
         lb_trust = x - s
         ub_trust = x + s
 
-        n = len(x)
+        n = x.size
         num_total_variables = qp_inputs.A.shape[1]
 
         A_trust_bounds = np.zeros((n, num_total_variables), dtype=np.float64)
