@@ -30,7 +30,7 @@ def lg_fn1(z: VectorNf64) -> VectorNf64:
     (x, y) >= (c, d) => (x-c, y-d) >= 0 => (c-x, d-y) <= 0
     """
     x, y = z
-    return jnp.array(2.0 - x, 2.0 - y)
+    return jnp.array([1.0 - x, 2.0 - y], dtype=jnp.float32)
 
 
 def nlg_fn1(z: VectorNf64) -> VectorNf64:
@@ -39,9 +39,9 @@ def nlg_fn1(z: VectorNf64) -> VectorNf64:
     (x - xc)^2 + (y - yc)^2 - r^2 <= 0
     """
     x, y = z
-    xc, yc = (3.0, 3.0)
+    xc, yc = (3.0, 0.0)
     r = 1.0
-    return jnp.array((x - xc) ** 2 + (y - yc) ** 2 - r**2)
+    return jnp.array((x - xc) ** 2 + (y - yc) ** 2 - r**2, dtype=jnp.float32)
 
 
 def setup_trajopt_for_rosenbrock(
@@ -54,15 +54,15 @@ def setup_trajopt_for_rosenbrock(
         trajopt_params = TrajOptParams(
             mu_0=1.0,
             s_0=1e-3,
-            c=1e-4,
-            tau_plus=1.5,
-            tau_minus=0.1,
+            c=0.1,
             k=10.0,
             f_tol=1e-6,
             x_tol=1e-6,
             c_tol=1e-4,
+            tau_plus=1.5,
+            tau_minus=0.1,
             tau_max=10.0,
-            tau_min=1e-7,
+            tau_min=1e-5,
             max_iter=1000,
             second_order_inequalities=True,
             second_order_equalities=True,

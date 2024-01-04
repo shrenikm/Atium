@@ -26,25 +26,26 @@ from common.optimization.qp_solver import is_qp_solved, solve_qp
 class TrajOptParams:
     # Optimization params.
     # Initial penalty coefficient
-    mu_0: float
+    mu_0: float = attr.ib(validator=attr.validators.ge(0.0))
     # Initial trust region size
-    s_0: float
+    s_0: float = attr.ib(validator=attr.validators.gt(0.0))
     # Step acceptance parameter
-    c: float
-    # Trust region expansion and shrinkage factors
-    tau_plus: float
-    tau_minus: float
+    c: float = attr.ib(validator=attr.validators.gt(0.0))
     # Penalty scaling factor
-    k: float
+    k: float = attr.ib(validator=attr.validators.gt(0.0))
     # Convergence thresholds
-    f_tol: float
-    x_tol: float
+    f_tol: float = attr.ib(validator=attr.validators.gt(0.0))
+    x_tol: float = attr.ib(validator=attr.validators.gt(0.0))
     # Constraint satisfaction threshold
-    c_tol: float
+    c_tol: float = attr.ib(validator=attr.validators.gt(0.0))
+
+    # Trust region expansion and shrinkage factors
+    tau_plus: float = attr.ib(validator=attr.validators.ge(1.0))
+    tau_minus: float = attr.ib(validator=attr.validators.le(1.0))
 
     # Implementation params.
-    tau_max: float
-    tau_min: float
+    tau_max: float = attr.ib()
+    tau_min: float = attr.ib()
     max_iter: int
     # Whether or not to model the quadratic terms and approximate
     # the non linear equalities and inequalities as quadratic functions.
@@ -52,6 +53,16 @@ class TrajOptParams:
     # might prove difficult using just a linear approximation.
     second_order_inequalities: bool = True
     second_order_equalities: bool = True
+
+    @tau_max.validator
+    def _validate_tau_max(self, attribute, value) -> None:
+        del attribute
+        assert value >= self.s_0
+
+    @tau_min.validator
+    def _validate_tau_minus(self, attribute, value) -> None:
+        del attribute
+        assert value >= self.x_tol
 
 
 @attr.frozen
@@ -586,7 +597,7 @@ class TrajOpt:
                         size_x=size_x,
                     )
                     print("new_x: ", new_x)
-                    #input()
+                    # input()
                     cost = self.cost_fn(new_x)
                     improvement = self.is_improvement(x=x, new_x=new_x)
 

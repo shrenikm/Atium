@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import mpl_toolkits.mplot3d as m3
 import mpl_toolkits.mplot3d.art3d as ma3
 import numpy as np
 from matplotlib import animation as anim
@@ -21,16 +22,21 @@ def _visualize_trajopt_rosenbrock_result(
     params: RosenbrockParams,
     result: TrajOptResult,
     trajopt: TrajOpt,
+    plot_cost: bool,
+    plot_constraints: bool,
 ) -> None:
 
-    fig = plt.figure(figsize=(5, 5))
-    ax = fig.add_subplot(111, projection="3d")
+    assert any([plot_cost, plot_constraints]), "Something must be plotted."
+
+    fig = plt.figure(figsize=(7, 7))
+    ax: m3.Axes3D = fig.add_subplot(111, projection="3d")
 
     X = np.arange(-5.0, 5.1, 0.1)
     Y = np.arange(-5.0, 5.1, 0.1)
     X, Y = np.meshgrid(X, Y)
     Z_rosenbrock = rosenbrock_fn(x=X, y=Y, a=params.a, b=params.b)
     min_z, max_z = np.min(Z_rosenbrock), np.max(Z_rosenbrock)
+    nzr, nzc = Z_rosenbrock.shape
 
     # Computing the Z's for each of the constraints so that they can be represented
     # on the plot.
@@ -40,43 +46,56 @@ def _visualize_trajopt_rosenbrock_result(
     # generically get a visual representation of each region.
 
     Z_lg = np.full_like(Z_rosenbrock, np.inf)
-    Z_hg = np.full_like(Z_rosenbrock, np.inf)
+    Z_lh = np.full_like(Z_rosenbrock, np.inf)
     Z_nlg = np.full_like(Z_rosenbrock, np.inf)
-    Z_nhg = np.full_like(Z_rosenbrock, np.inf)
+    Z_nlh = np.full_like(Z_rosenbrock, np.inf)
 
-    def _constraint_plane1(x, y):
-        Z = np.zeros_like(x)
-        Z[np.where(np.logical_and(x >= 2.0, y >= 2.0))] = np.inf
-        return Z
+    for i in range(nzr):
+        for j in range(nzc):
+            x = np.array([X[i, j], Y[i, j]], dtype=np.float64)
+            # For the inequality constraints, we set Z to zero if they are satisfied.
+            # As the Z's are inf by default, they won't display in the plot and doing
+            # this makes sure that the constraint satisfied regions are plotted.
+            # For the equality constraints, Z is zero if the constraint is zero.
+            if trajopt.linear_inequality_constraints_fn is not None:
+                if np.all(trajopt.linear_inequality_constraints_fn(x) <= 0):
+                    Z_lg[i, j] = 0.0
+            if trajopt.linear_equality_constraints_fn is not None:
+                if np.allclose(trajopt.linear_equality_constraints_fn(x), 0.0):
+                    Z_lh[i, j] = 0.0
+            if trajopt.non_linear_inequality_constraints_fn is not None:
+                if np.all(trajopt.non_linear_inequality_constraints_fn(x) <= 0):
+                    Z_nlg[i, j] = 0.0
+            if trajopt.non_linear_equality_constraints_fn is not None:
+                if np.allclose(trajopt.non_linear_equality_constraints_fn(x), 0.0):
+                    Z_nlh[i, j] = 0.0
 
-    def _constraint_plane2(x, y):
-        Z = np.zeros_like(x)
-        center = (3.0, 3.0)
-        radius = 1.0
-        Z[np.where((x - center[0]) ** 2 + (y - center[1]) ** 2 >= radius**2)] = np.inf
-        return Z
+    # Plot the cost surface.
+    if plot_cost:
+        ax.plot_surface(
+            X,
+            Y,
+            Z_rosenbrock,
+            cmap=cm.coolwarm,
+            linewidth=0,
+            antialiased=False,
+            alpha=0.4,
+            edgecolor="none",
+        )
 
-    Z_constraint1 = _constraint_plane1(X, Y)
-    Z_constraint2 = _constraint_plane2(X, Y)
-
-    ax.plot_surface(
-        X,
-        Y,
-        Z_rosenbrock,
-        cmap=cm.coolwarm,
-        linewidth=0,
-        antialiased=False,
-        alpha=0.4,
-        edgecolor="none",
-    )
-
-    ax.plot_surface(
-        X, Y, Z_constraint1, cmap="Dark2", linewidth=0, antialiased=False, alpha=0.5
-    )
-
-    ax.plot_surface(
-        X, Y, Z_constraint2, cmap="Pastel1", linewidth=0, antialiased=False, alpha=0.5
-    )
+    if plot_constraints:
+        ax.plot_surface(
+            X, Y, Z_lg, cmap="Pastel1", linewidth=0, antialiased=False, alpha=0.5
+        )
+        ax.plot_surface(
+            X, Y, Z_lh, cmap="Dark2", linewidth=0, antialiased=False, alpha=0.5
+        )
+        ax.plot_surface(
+            X, Y, Z_nlg, cmap="Set3", linewidth=0, antialiased=False, alpha=0.5
+        )
+        ax.plot_surface(
+            X, Y, Z_nlh, cmap="tab20b", linewidth=0, antialiased=False, alpha=0.5
+        )
 
     ax.set_xlim(-5.0, 5.0)
     ax.set_ylim(-5.0, 5.0)
@@ -88,13 +107,16 @@ def _visualize_trajopt_rosenbrock_result(
     trust_region_steps = len(result)
     initial_guess_x = result[0].min_x
 
+    # For the xyz point, we only plot the z coordinate cost if the cost surface needs to be
+    # plotted. Otherwise, for just the constraint regions, we plot (x, y, 0) along the
+    # ground surface as this helps in better visualization.
     xyz_point = ma3.Line3D(
         xs=[initial_guess_x[0]],
         ys=[initial_guess_x[1]],
-        zs=[rosenbrock_cost_fn(initial_guess_x, params)],
+        zs=[rosenbrock_cost_fn(initial_guess_x, params)] if plot_cost else [0.0],
         marker="o",
         markersize=7,
-        color="salmon",
+        color="firebrick",
     )
     xy_trajectory = ma3.Line3D(
         xs=[initial_guess_x[0]],
@@ -122,10 +144,8 @@ def _visualize_trajopt_rosenbrock_result(
             x: [{x:.3f}, {y:.3f}]
             """
         )
-        # print(trust_region_iter, f"[{x}, {y}]", cost)
-        # print(cost, rosenbrock_cost_fn([x, y], params))
-        # print("============")
-        xyz_point.set_data_3d([x], [y], [cost])
+        z = cost if plot_cost else 0.0
+        xyz_point.set_data_3d([x], [y], [z])
         xy_trajectory.set_data_3d(x_trajectory, y_trajectory, [0] * len(x_trajectory))
 
     animation = anim.FuncAnimation(
@@ -155,6 +175,8 @@ def run() -> None:
         params=rosenbrock_params,
         result=result,
         trajopt=trajopt,
+        plot_cost=False,
+        plot_constraints=True,
     )
 
 
