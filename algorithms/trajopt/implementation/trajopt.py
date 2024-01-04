@@ -262,12 +262,6 @@ class TrajOpt:
             # Lower limits are again -inf
             lb_nlg = np.full(ub_nlg.size, fill_value=-np.inf)
 
-            print("%" * 80)
-            print(A_nlg)
-            print(ub_nlg)
-            print(lb_nlg)
-            print("%" * 80)
-
             # Expanding A_lh as well and changing values to account for the slack terms.
             # The slack terms will correspond to each constraint, so can be mapped using the identity matrix.
             A_nlg_aux = -1.0 * np.eye(num_nl_g_constraints)
@@ -429,14 +423,6 @@ class TrajOpt:
         assert q.ndim == 1
         assert q.size == num_total_variables
 
-        print("#" * 80)
-        print(P)
-        print(q)
-        print(A)
-        print(lb)
-        print(ub)
-        print("#" * 80)
-
         return QPInputs(
             P=P,
             q=q,
@@ -495,16 +481,6 @@ class TrajOpt:
         # and the convexified cost at new_x. The convexified cost at x is basically just
         # the full cost at x as delta_x is zero
         model_improve = self.cost_fn(x) - self.convexified_cost_fn(x=x, new_x=new_x)
-
-        # assert true_improve >= 0.0
-        # assert model_improve >= 0.0
-
-        print(true_improve, model_improve, true_improve / model_improve)
-
-        # if true_improve < 0.0 or model_improve < 0.0:
-        #    return False
-        # if np.isclose(model_improve, 0.0):
-        #    return False
 
         return true_improve / model_improve > self.params.c
 
@@ -591,11 +567,9 @@ class TrajOpt:
                     mu=mu,
                 )
                 for trust_region_iter in count():
-                    print(penalty_iter, convexify_iter, trust_region_iter)
                     if improvement:
                         x = new_x
                     s = updated_s
-                    print(f"X: {x}, s: {s}")
                     qp_inputs = self.incorporate_trust_region(
                         x=x,
                         s=s,
@@ -606,7 +580,6 @@ class TrajOpt:
                         qp_inputs=qp_inputs,
                         size_x=size_x,
                     )
-                    print("new_x: ", new_x)
                     # input()
                     cost = self.cost_fn(new_x)
                     improvement = self.is_improvement(x=x, new_x=new_x)
@@ -628,15 +601,12 @@ class TrajOpt:
                     )
 
                     if improvement:
-                        print("Improve!")
                         updated_s = min(self.params.tau_plus * s, self.params.tau_max)
                         updated_s = max(updated_s, 1.0)
                         break
                     else:
-                        print("Not improve :(")
                         updated_s = max(self.params.tau_minus * s, self.params.tau_min)
                     if updated_s < self.params.x_tol:
-                        print("sub")
                         trust_region_size_below_threshold = True
                         break
 
@@ -651,8 +621,6 @@ class TrajOpt:
             else:
                 # mu = min(self.params.k * mu, 1e10)
                 mu = self.params.k * mu
-                print("Constraints not satisfied", mu)
-                improvement = False
                 # Adding the updated penalty in the result.
                 result[-1] = attr.evolve(
                     result[-1],
