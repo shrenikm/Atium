@@ -51,7 +51,7 @@ def nlh_fn1(z: VectorNf64) -> VectorNf64:
     """
     x, y = z
     xc, yc = (2.0, 2.0)
-    r = 1.5
+    r = 1.0
     return jnp.array((x - xc) ** 2 + (y - yc) ** 2 - r**2, dtype=jnp.float32)
 
 
@@ -67,13 +67,13 @@ def setup_trajopt_for_rosenbrock(
             s_0=1e-4,
             c=1e-2,
             k=10.0,
-            f_tol=1e-6,
-            x_tol=1e-6,
-            c_tol=1e-4,
+            f_tol=1e-4,
+            x_tol=1e-4,
+            c_tol=1e-2,
             tau_plus=1.5,
             tau_minus=0.1,
             tau_max=10.0,
-            tau_min=1e-5,
+            tau_min=1e-4,
             max_iter=200,
             second_order_inequalities=True,
             second_order_equalities=True,

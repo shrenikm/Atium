@@ -31,8 +31,9 @@ def _visualize_trajopt_rosenbrock_result(
     fig = plt.figure(figsize=(7, 7))
     ax: m3.Axes3D = fig.add_subplot(111, projection="3d")
 
-    X = np.arange(-5.0, 5.1, 0.1)
-    Y = np.arange(-5.0, 5.1, 0.1)
+    resolution = 0.1
+    X = np.arange(-5.0, 5.1, resolution)
+    Y = np.arange(-5.0, 5.1, resolution)
     X, Y = np.meshgrid(X, Y)
     Z_rosenbrock = rosenbrock_fn(x=X, y=Y, a=params.a, b=params.b)
     min_z, max_z = np.min(Z_rosenbrock), np.max(Z_rosenbrock)
@@ -61,13 +62,19 @@ def _visualize_trajopt_rosenbrock_result(
                 if np.all(trajopt.linear_inequality_constraints_fn(x) <= 0):
                     Z_lg[i, j] = 0.0
             if trajopt.linear_equality_constraints_fn is not None:
-                if np.allclose(trajopt.linear_equality_constraints_fn(x), 0.0):
+                # Requires a generous atol here that is > resolution, otherwise nothing would plot.
+                if np.allclose(
+                    trajopt.linear_equality_constraints_fn(x), 0.0, atol=0.5
+                ):
                     Z_lh[i, j] = 0.0
             if trajopt.non_linear_inequality_constraints_fn is not None:
                 if np.all(trajopt.non_linear_inequality_constraints_fn(x) <= 0):
                     Z_nlg[i, j] = 0.0
             if trajopt.non_linear_equality_constraints_fn is not None:
-                if np.allclose(trajopt.non_linear_equality_constraints_fn(x), 0.0):
+                # Requires a generous atol here that is > resolution, otherwise nothing would plot.
+                if np.allclose(
+                    trajopt.non_linear_equality_constraints_fn(x), 0.0, atol=0.5
+                ):
                     Z_nlh[i, j] = 0.0
 
     # Plot the cost surface.
@@ -167,7 +174,7 @@ def run() -> None:
 
     # _visualze(params=rosenbrock_params)
 
-    initial_guess_x = np.array([4.0, 0.])
+    initial_guess_x = np.array([4.0, 0.0])
     result = trajopt.solve(initial_guess_x=initial_guess_x)
     print(result.solution_x())
 
