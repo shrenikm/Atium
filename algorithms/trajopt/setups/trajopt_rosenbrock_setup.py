@@ -25,22 +25,33 @@ class RosenbrockOptParamsConstructor:
 
 def lg_fn1(z: VectorNf64) -> VectorNf64:
     """
-    Linear constraints of the form:
+    Linear inequality constraints of the form:
     x >= c, y >= d
     (x, y) >= (c, d) => (x-c, y-d) >= 0 => (c-x, d-y) <= 0
     """
     x, y = z
-    return jnp.array([1.0 - x, 2.0 - y], dtype=jnp.float32)
+    return jnp.array([2.0 - x, -2.0 - y], dtype=jnp.float32)
 
 
 def nlg_fn1(z: VectorNf64) -> VectorNf64:
     """
-    Non linear (circle) constraints of the form:
+    Non linear inequality (circle) constraints of the form:
     (x - xc)^2 + (y - yc)^2 - r^2 <= 0
     """
     x, y = z
-    xc, yc = (3.0, 0.0)
-    r = 1.0
+    xc, yc = (2.0, 2.0)
+    r = 2.0
+    return jnp.array((x - xc) ** 2 + (y - yc) ** 2 - r**2, dtype=jnp.float32)
+
+
+def nlh_fn1(z: VectorNf64) -> VectorNf64:
+    """
+    Non linear equality (circle) constraints of the form:
+    (x - xc)^2 + (y - yc)^2 - r^2 == 0
+    """
+    x, y = z
+    xc, yc = (2.0, 2.0)
+    r = 1.5
     return jnp.array((x - xc) ** 2 + (y - yc) ** 2 - r**2, dtype=jnp.float32)
 
 
@@ -53,8 +64,8 @@ def setup_trajopt_for_rosenbrock(
         # TODO: Setup somewhere if not too problem specific.
         trajopt_params = TrajOptParams(
             mu_0=1.0,
-            s_0=1e-3,
-            c=0.1,
+            s_0=1e-4,
+            c=1e-2,
             k=10.0,
             f_tol=1e-6,
             x_tol=1e-6,
@@ -63,7 +74,7 @@ def setup_trajopt_for_rosenbrock(
             tau_minus=0.1,
             tau_max=10.0,
             tau_min=1e-5,
-            max_iter=1000,
+            max_iter=200,
             second_order_inequalities=True,
             second_order_equalities=True,
         )
@@ -87,12 +98,17 @@ def setup_trajopt_for_rosenbrock(
         core_fn=nlg_fn1,
         use_jit=True,
     )
+    nlh_fn_ds = DerivativeSplicedConstraintsFn(
+        core_fn=nlh_fn1,
+        use_jit=True,
+    )
 
     trajopt_optimizer = TrajOpt(
         params=trajopt_params,
         cost_fn=cost_fn_ds,
-        #linear_inequality_constraints_fn=lg_fn_ds,
-        #non_linear_inequality_constraints_fn=nlg_fn_ds,
+        linear_inequality_constraints_fn=lg_fn_ds,
+        non_linear_inequality_constraints_fn=nlg_fn_ds,
+        non_linear_equality_constraints_fn=nlh_fn_ds,
     )
 
     return trajopt_optimizer

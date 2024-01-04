@@ -130,7 +130,7 @@ def _visualize_trajopt_rosenbrock_result(
 
     def anim_update(trust_region_iter):
         entry = result[trust_region_iter]
-        x, y = entry.min_x
+        x, y = entry.updated_min_x if entry.improvement else entry.min_x
         cost = entry.cost
         x_trajectory = [
             entry.min_x[0] for entry in result.entries[: trust_region_iter + 1]
@@ -167,7 +167,7 @@ def run() -> None:
 
     # _visualze(params=rosenbrock_params)
 
-    initial_guess_x = np.array([5.0, 5.0])
+    initial_guess_x = np.array([4.0, 0.])
     result = trajopt.solve(initial_guess_x=initial_guess_x)
     print(result.solution_x())
 

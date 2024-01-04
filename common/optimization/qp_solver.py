@@ -25,5 +25,5 @@ def solve_qp(qp_inputs: QPInputs, verbose: bool = False) -> None:
 
 # TODO: Figure out this result type. OSQP documentation smh.
 def is_qp_solved(osqp_results) -> bool:
-    return OSQP_SOLVED_STATUS_STR in osqp_results.info.status
-    #return osqp_results.info.status == OSQP_SOLVED_STATUS_STR
+    #return OSQP_SOLVED_STATUS_STR in osqp_results.info.status
+    return osqp_results.info.status == OSQP_SOLVED_STATUS_STR

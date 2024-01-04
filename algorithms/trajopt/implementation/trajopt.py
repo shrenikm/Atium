@@ -60,7 +60,7 @@ class TrajOptParams:
         assert value >= self.s_0
 
     @tau_min.validator
-    def _validate_tau_minus(self, attribute, value) -> None:
+    def _validate_tau_min(self, attribute, value) -> None:
         del attribute
         assert value >= self.x_tol
 
@@ -71,6 +71,7 @@ class TrajOptEntry:
     convexify_iter: int
     trust_region_iter: int
     min_x: VectorNf64
+    updated_min_x: VectorNf64
     cost: float
     trust_region_size: float
     updated_trust_region_size: float
@@ -98,7 +99,7 @@ class TrajOptResult:
         self.entries.append(entry)
 
     def solution_x(self) -> VectorNf64:
-        return self[-1].min_x
+        return self[-1].updated_min_x if self[-1].improvement else self[-1].min_x
 
 
 @attr.define
@@ -337,12 +338,14 @@ class TrajOpt:
             A = np.hstack(
                 (A, np.zeros((A.shape[0], 2 * num_nl_h_constraints), dtype=np.float64))
             )
+            # Offset due to any previous nlg constraints.
+            nlg_offset = A.shape[1] - n - 2 * num_nl_h_constraints
 
             A_nlh = W_nlh
             b_nlh = W_nlh @ x - nlh0
 
             A_nlh_aux = np.zeros(
-                (num_nl_h_constraints, 2 * num_nl_h_constraints), dtype=np.float64
+                (num_nl_h_constraints, A.shape[1] - n), dtype=np.float64
             )
             for i in range(num_nl_h_constraints):
                 # Constraint is W@x - t_h + s_h = W@x0 - h(x0)
@@ -350,8 +353,14 @@ class TrajOpt:
                 # x = [[x]
                 #      [t_h]
                 #      [s_h]]
-                A_nlh[i, i] = 1.0
-                A_nlh[i, i + num_nl_h_constraints] = -1.0
+                # Also we need to add the offset to make sure we ignore the g slack terms
+                # if any. If no nlg constraints, this offset will be = 0.
+                A_nlh_aux[i, nlg_offset + i] = 1.0
+                A_nlh_aux[i, nlg_offset + i + num_nl_h_constraints] = -1.0
+
+            if num_nl_h_constraints == 1:
+                # A_lh is 1-D and A_nlh_aux is a 2-D but in 1-D form
+                A_nlh_aux = A_nlh_aux.reshape(nlg_offset + 2 * num_nl_h_constraints)
             A_nlh = np.hstack((A_nlh, A_nlh_aux))
 
             A = np.vstack((A, A_nlh))
@@ -564,6 +573,7 @@ class TrajOpt:
                 convexify_iter=0,
                 trust_region_iter=0,
                 min_x=initial_guess_x,
+                updated_min_x=initial_guess_x,
                 cost=self.cost_fn(initial_guess_x),
                 trust_region_size=s,
                 updated_trust_region_size=s,
@@ -601,6 +611,22 @@ class TrajOpt:
                     cost = self.cost_fn(new_x)
                     improvement = self.is_improvement(x=x, new_x=new_x)
 
+                    result.record_entry(
+                        entry=TrajOptEntry(
+                            penalty_iter=penalty_iter,
+                            convexify_iter=convexify_iter,
+                            trust_region_iter=trust_region_iter,
+                            min_x=x,
+                            updated_min_x=new_x,
+                            cost=cost,
+                            trust_region_size=s,
+                            updated_trust_region_size=updated_s,
+                            improvement=improvement,
+                            trust_region_size_below_threshold=trust_region_size_below_threshold,
+                            penalty_factor=mu,
+                        ),
+                    )
+
                     if improvement:
                         print("Improve!")
                         updated_s = min(self.params.tau_plus * s, self.params.tau_max)
@@ -613,21 +639,6 @@ class TrajOpt:
                         print("sub")
                         trust_region_size_below_threshold = True
                         break
-
-                    result.record_entry(
-                        entry=TrajOptEntry(
-                            penalty_iter=penalty_iter,
-                            convexify_iter=convexify_iter,
-                            trust_region_iter=trust_region_iter,
-                            min_x=new_x,
-                            cost=cost,
-                            trust_region_size=s,
-                            updated_trust_region_size=updated_s,
-                            improvement=improvement,
-                            trust_region_size_below_threshold=trust_region_size_below_threshold,
-                            penalty_factor=mu,
-                        ),
-                    )
 
                 if trust_region_size_below_threshold or self.is_converged(
                     x=x, new_x=new_x
