@@ -586,7 +586,7 @@ class TrajOpt:
                         size_x=size_x,
                     )
                     print("new_x: ", new_x)
-                    input()
+                    #input()
                     cost = self.cost_fn(new_x)
                     improvement = self.is_improvement(x=x, new_x=new_x)
 

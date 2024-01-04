@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import animation as anim
 from matplotlib import cm
 
-from algorithms.trajopt.implementation.trajopt import TrajOptResult
+from algorithms.trajopt.implementation.trajopt import TrajOpt, TrajOptResult
 from algorithms.trajopt.setups.trajopt_rosenbrock_setup import (
     setup_trajopt_for_rosenbrock,
 )
@@ -20,6 +20,7 @@ from common.optimization.standard_functions.rosenbrock import (
 def _visualize_trajopt_rosenbrock_result(
     params: RosenbrockParams,
     result: TrajOptResult,
+    trajopt: TrajOpt,
 ) -> None:
 
     fig = plt.figure(figsize=(5, 5))
@@ -30,6 +31,34 @@ def _visualize_trajopt_rosenbrock_result(
     X, Y = np.meshgrid(X, Y)
     Z_rosenbrock = rosenbrock_fn(x=X, y=Y, a=params.a, b=params.b)
     min_z, max_z = np.min(Z_rosenbrock), np.max(Z_rosenbrock)
+
+    # Computing the Z's for each of the constraints so that they can be represented
+    # on the plot.
+    # For each X, Y, we pass the individual values into the constraint functions and
+    # fill up the Z matrices.
+    # This isn't really the most efficient way of doing it but is the cleanest way to
+    # generically get a visual representation of each region.
+
+    Z_lg = np.full_like(Z_rosenbrock, np.inf)
+    Z_hg = np.full_like(Z_rosenbrock, np.inf)
+    Z_nlg = np.full_like(Z_rosenbrock, np.inf)
+    Z_nhg = np.full_like(Z_rosenbrock, np.inf)
+
+    def _constraint_plane1(x, y):
+        Z = np.zeros_like(x)
+        Z[np.where(np.logical_and(x >= 2.0, y >= 2.0))] = np.inf
+        return Z
+
+    def _constraint_plane2(x, y):
+        Z = np.zeros_like(x)
+        center = (3.0, 3.0)
+        radius = 1.0
+        Z[np.where((x - center[0]) ** 2 + (y - center[1]) ** 2 >= radius**2)] = np.inf
+        return Z
+
+    Z_constraint1 = _constraint_plane1(X, Y)
+    Z_constraint2 = _constraint_plane2(X, Y)
+
     ax.plot_surface(
         X,
         Y,
@@ -41,15 +70,12 @@ def _visualize_trajopt_rosenbrock_result(
         edgecolor="none",
     )
 
-    def _constraint_plane1(x, y):
-        Z = np.zeros_like(x)
-        Z[np.where(np.logical_and(x >= 2.0, y >= 2.0))] = np.inf
-        return Z
-
-    Z_constraint1 = _constraint_plane1(X, Y)
-
     ax.plot_surface(
         X, Y, Z_constraint1, cmap="Dark2", linewidth=0, antialiased=False, alpha=0.5
+    )
+
+    ax.plot_surface(
+        X, Y, Z_constraint2, cmap="Pastel1", linewidth=0, antialiased=False, alpha=0.5
     )
 
     ax.set_xlim(-5.0, 5.0)
@@ -62,28 +88,13 @@ def _visualize_trajopt_rosenbrock_result(
     trust_region_steps = len(result)
     initial_guess_x = result[0].min_x
 
-    xy_point = ma3.Line3D(
-        xs=[initial_guess_x[0]],
-        ys=[initial_guess_x[1]],
-        zs=[0.0],
-        marker="o",
-        markersize=5,
-        color="indianred",
-    )
     xyz_point = ma3.Line3D(
         xs=[initial_guess_x[0]],
         ys=[initial_guess_x[1]],
         zs=[rosenbrock_cost_fn(initial_guess_x, params)],
-        marker="x",
-        markersize=1,
-        color="black",
-    )
-    xyz_projection_line = ma3.Line3D(
-        xs=[initial_guess_x[0], initial_guess_x[0]],
-        ys=[initial_guess_x[1], initial_guess_x[1]],
-        zs=[0.0, rosenbrock_cost_fn(initial_guess_x, params)],
-        linestyle="dotted",
-        color="gray",
+        marker="o",
+        markersize=7,
+        color="salmon",
     )
     xy_trajectory = ma3.Line3D(
         xs=[initial_guess_x[0]],
@@ -92,9 +103,7 @@ def _visualize_trajopt_rosenbrock_result(
         linestyle="dotted",
         color="rosybrown",
     )
-    ax.add_line(xy_point)
     ax.add_line(xyz_point)
-    #ax.add_line(xyz_projection_line)
     ax.add_line(xy_trajectory)
 
     def anim_update(trust_region_iter):
@@ -116,9 +125,7 @@ def _visualize_trajopt_rosenbrock_result(
         # print(trust_region_iter, f"[{x}, {y}]", cost)
         # print(cost, rosenbrock_cost_fn([x, y], params))
         # print("============")
-        xy_point.set_data_3d([x], [y], [0.0])
         xyz_point.set_data_3d([x], [y], [cost])
-        #xyz_projection_line.set_data_3d([x, x], [y, y], [0.0, cost])
         xy_trajectory.set_data_3d(x_trajectory, y_trajectory, [0] * len(x_trajectory))
 
     animation = anim.FuncAnimation(
@@ -140,13 +147,14 @@ def run() -> None:
 
     # _visualze(params=rosenbrock_params)
 
-    initial_guess_x = np.array([5., 5.])
+    initial_guess_x = np.array([5.0, 5.0])
     result = trajopt.solve(initial_guess_x=initial_guess_x)
     print(result.solution_x())
 
     _visualize_trajopt_rosenbrock_result(
         params=rosenbrock_params,
         result=result,
+        trajopt=trajopt,
     )
 
 
