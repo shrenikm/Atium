@@ -40,6 +40,13 @@ def _visualize_trajopt_rosenbrock_result(
     fig = plt.figure(figsize=(7, 7))
     ax: m3.Axes3D = fig.add_subplot(111, projection="3d")
 
+    # More of a 3D view if the cost surface needs to be plotted.
+    # For just the constraints, we go for a more flat view of the x-y grid.
+    if plot_cost:
+        ax.view_init(elev=20.0, azim=110.0, roll=0.0)
+    else:
+        ax.view_init(elev=50.0, azim=120.0, roll=0.0)
+
     resolution = 0.1
     X = np.arange(-5.0, 5.1, resolution)
     Y = np.arange(-5.0, 5.1, resolution)
@@ -171,8 +178,14 @@ def _visualize_trajopt_rosenbrock_result(
         interval=300,
         repeat=True,
     )
+    postfix_list = []
+    if plot_cost:
+        postfix_list.append("cost")
+    if plot_constraints:
+        postfix_list.append("constraint")
+    output_filename = f"trajopt_rosenbrock_{setup_num}_{'_'.join(postfix_list)}.gif"
     output_video_path = get_file_path_in_results_dir(
-        output_filename=f"trajopt_rosenbrock_{setup_num}.gif",
+        output_filename=output_filename,
     )
     animation.save(
         filename=output_video_path,
@@ -187,6 +200,7 @@ class RosenbrockOptParamsConstructor:
     params: RosenbrockParams
 
     def __call__(self, x: VectorNf64) -> RosenbrockParams:
+        del x
         return self.params
 
 
@@ -302,5 +316,5 @@ def run_trajopt(setup_num: int) -> None:
 
 
 if __name__ == "__main__":
-    setup_num = 1
+    setup_num = 2
     run_trajopt(setup_num=setup_num)

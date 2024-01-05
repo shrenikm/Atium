@@ -3,9 +3,9 @@ Implementation of the TrajOpt algorithm.
 
 See: https://rll.berkeley.edu/~sachin/papers/Schulman-IJRR2014.pdf
 """
-from functools import cached_property
+import time
 from itertools import count
-from typing import Any, List, Optional, Protocol, Sequence
+from typing import List, Optional
 
 import attr
 import numpy as np
@@ -531,6 +531,7 @@ class TrajOpt:
         self,
         initial_guess_x: VectorNf64,
     ) -> TrajOptResult:
+        trajopt_solve_start_time = time.perf_counter()
         # Initial values of variables and optimization params.
         x = initial_guess_x
         s = self.params.s_0
@@ -616,7 +617,9 @@ class TrajOpt:
                     break
             if self.are_constraints_satisfied(x=new_x):
                 # TODO: Log
-                print("TrajOpt found a solution!")
+                print(
+                    f"TrajOpt found a solution in {time.perf_counter() - trajopt_solve_start_time} seconds!"
+                )
                 print(f"Optimal x: {result.solution_x()}")
                 break
             else:
