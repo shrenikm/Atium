@@ -12,7 +12,7 @@ from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPResult,
     MVMIPVehicle,
 )
-from algorithms.multi_vehicle_mip.results.utils import get_full_path_of_output_video
+from common.file_utils import get_file_path_in_results_dir
 
 # Visualization params. These could be parameterized later if need be.
 OBSTACLE_CLEARANCE_POLYGON_ALPHA = 0.5
@@ -325,8 +325,8 @@ def visualize_mvmip_result(
     # Save the animation if required.
     if animation_params.save_video:
         print("Saving the animation ...")
-        output_video_path = get_full_path_of_output_video(
-            output_video_filename=animation_params.output_video_filename,
+        output_video_path = get_file_path_in_results_dir(
+            output_filename=animation_params.output_video_filename,
         )
         animation.save(
             filename=output_video_path,

@@ -1,3 +1,5 @@
+import attr
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d as m3
 import mpl_toolkits.mplot3d.art3d as ma3
@@ -5,11 +7,17 @@ import numpy as np
 from matplotlib import animation as anim
 from matplotlib import cm
 
-from algorithms.trajopt.implementation.trajopt import TrajOpt, TrajOptResult
-from algorithms.trajopt.setups.trajopt_rosenbrock_setup import (
-    setup_trajopt_for_rosenbrock,
+from algorithms.trajopt.implementation.trajopt import (
+    TrajOpt,
+    TrajOptParams,
+    TrajOptResult,
 )
 from common.custom_types import VectorNf64
+from common.file_utils import get_file_path_in_results_dir
+from common.optimization.derivative_splicer import (
+    DerivativeSplicedConstraintsFn,
+    DerivativeSplicedCostFn,
+)
 from common.optimization.standard_functions.rosenbrock import (
     RosenbrockParams,
     rosenbrock_cost_fn,
@@ -24,6 +32,7 @@ def _visualize_trajopt_rosenbrock_result(
     trajopt: TrajOpt,
     plot_cost: bool,
     plot_constraints: bool,
+    setup_num: int,
 ) -> None:
 
     assert any([plot_cost, plot_constraints]), "Something must be plotted."
@@ -104,8 +113,8 @@ def _visualize_trajopt_rosenbrock_result(
             X, Y, Z_nlh, cmap="tab20b", linewidth=0, antialiased=False, alpha=0.5
         )
 
-    ax.set_xlim(-5.0, 5.0)
-    ax.set_ylim(-5.0, 5.0)
+    ax.set_xlim(-5.5, 5.5)
+    ax.set_ylim(-5.5, 5.5)
     ax.set_zlim(min_z, max_z)
     ax.set_xlabel("x")
     ax.set_ylabel("y")
@@ -159,33 +168,139 @@ def _visualize_trajopt_rosenbrock_result(
         fig=fig,
         func=anim_update,
         frames=trust_region_steps,
-        interval=200,
+        interval=300,
         repeat=True,
     )
+    output_video_path = get_file_path_in_results_dir(
+        output_filename=f"trajopt_rosenbrock_{setup_num}.gif",
+    )
+    animation.save(
+        filename=output_video_path,
+    )
+    print(f"Animation saved to {output_video_path}")
 
     plt.show()
 
 
-def run() -> None:
+@attr.frozen
+class RosenbrockOptParamsConstructor:
+    params: RosenbrockParams
+
+    def __call__(self, x: VectorNf64) -> RosenbrockParams:
+        return self.params
+
+
+def lg_fn1(z: VectorNf64) -> VectorNf64:
+    """
+    Linear inequality constraints of the form:
+    x >= c, y >= d
+    (x, y) >= (c, d) => (x-c, y-d) >= 0 => (c-x, d-y) <= 0
+    """
+    x, y = z
+    return jnp.array([2.0 - x, -2.0 - y], dtype=jnp.float32)
+
+
+def nlg_fn1(z: VectorNf64) -> VectorNf64:
+    """
+    Non linear inequality (circle) constraints of the form:
+    (x - xc)^2 + (y - yc)^2 - r^2 <= 0
+    """
+    x, y = z
+    xc, yc = (2.0, 2.0)
+    r = 2.0
+    return jnp.array((x - xc) ** 2 + (y - yc) ** 2 - r**2, dtype=jnp.float32)
+
+
+def nlh_fn1(z: VectorNf64) -> VectorNf64:
+    """
+    Non linear equality (circle) constraints of the form:
+    (x - xc)^2 + (y - yc)^2 - r^2 == 0
+    """
+    x, y = z
+    xc, yc = (2.0, 2.0)
+    r = 1.0
+    return jnp.array((x - xc) ** 2 + (y - yc) ** 2 - r**2, dtype=jnp.float32)
+
+
+def run_trajopt(setup_num: int) -> None:
     rosenbrock_params = RosenbrockParams(a=1.0, b=100.0)
-    trajopt = setup_trajopt_for_rosenbrock(
-        rosenbrock_params=rosenbrock_params,
+    trajopt_params = TrajOptParams(
+        mu_0=1.0,
+        s_0=1e-4,
+        c=1e-2,
+        k=10.0,
+        f_tol=1e-4,
+        x_tol=1e-4,
+        c_tol=1e-2,
+        tau_plus=1.5,
+        tau_minus=0.1,
+        tau_max=10.0,
+        tau_min=1e-4,
+        max_iter=200,
+        second_order_inequalities=True,
+        second_order_equalities=True,
     )
 
-    # _visualze(params=rosenbrock_params)
+    rosenbrock_params_constructor = RosenbrockOptParamsConstructor(
+        params=rosenbrock_params
+    )
+    cost_fn_ds = DerivativeSplicedCostFn(
+        core_fn=rosenbrock_cost_fn,
+        use_jit=True,
+        construct_params_fn=rosenbrock_params_constructor,
+    )
 
-    initial_guess_x = np.array([4.0, 0.0])
+    lg_fn_ds1 = DerivativeSplicedConstraintsFn(
+        core_fn=lg_fn1,
+        use_jit=True,
+    )
+    nlg_fn_ds1 = DerivativeSplicedConstraintsFn(
+        core_fn=nlg_fn1,
+        use_jit=True,
+    )
+    nlh_fn_ds1 = DerivativeSplicedConstraintsFn(
+        core_fn=nlh_fn1,
+        use_jit=True,
+    )
+
+    if setup_num == 1:
+        initial_guess_x = np.array([-1.0, -2.0])
+        trajopt = TrajOpt(
+            params=trajopt_params,
+            cost_fn=cost_fn_ds,
+        )
+
+    elif setup_num == 2:
+        initial_guess_x = np.array([5.0, 5.0])
+        trajopt = TrajOpt(
+            params=trajopt_params,
+            cost_fn=cost_fn_ds,
+        )
+
+    elif setup_num == 1:
+        initial_guess_x = np.array([5.0, 5.0])
+        trajopt = TrajOpt(
+            params=trajopt_params,
+            cost_fn=cost_fn_ds,
+            # linear_inequality_constraints_fn=lg_fn_ds,
+            # non_linear_inequality_constraints_fn=nlg_fn_ds,
+            # non_linear_equality_constraints_fn=nlh_fn_ds,
+        )
+    else:
+        raise NotImplementedError(f"Invalid setup number: {setup_num}")
+
     result = trajopt.solve(initial_guess_x=initial_guess_x)
-    print(result.solution_x())
 
     _visualize_trajopt_rosenbrock_result(
         params=rosenbrock_params,
         result=result,
         trajopt=trajopt,
-        plot_cost=False,
-        plot_constraints=True,
+        plot_cost=True,
+        plot_constraints=False,
+        setup_num=setup_num,
     )
 
 
 if __name__ == "__main__":
-    run()
+    setup_num = 1
+    run_trajopt(setup_num=setup_num)

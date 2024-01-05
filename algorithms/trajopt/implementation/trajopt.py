@@ -617,6 +617,7 @@ class TrajOpt:
             if self.are_constraints_satisfied(x=new_x):
                 # TODO: Log
                 print("TrajOpt found a solution!")
+                print(f"Optimal x: {result.solution_x()}")
                 break
             else:
                 # mu = min(self.params.k * mu, 1e10)
