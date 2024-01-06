@@ -73,11 +73,13 @@ Vector2f64 = Union[NpVector2f64, JpVector2f64]
 Vector3f64 = Union[NpVector3f64, JpVector3f64]
 Scalarf64 = Union[NpScalarf64, JpScalarf64]
 
-ScalarOrVectorNf64 = Union[NpScalarOrVectorNf64, JpScalarOrVectorNf64]
+ScalarOrVectorNf64 = Union[Scalarf64, VectorNf64]
 
 MatrixMNf64 = Union[NpMatrixMNf64, JpMatrixMNf64]
 MatrixNNf64 = Union[NpMatrixNNf64, JpMatrixNNf64]
 MatrixN2f64 = Union[NpMatrixN2f64, JpMatrixN2f64]
+
+VectorOrMatrixNf64 = Union[VectorNf64, MatrixMNf64]
 
 TensorLMNf64 = Union[NpTensorLMNf64, JpTensorLMNf64]
 TensorMN3ui8 = Union[NpTensorMN3ui8, JpTensorMN3ui8]
