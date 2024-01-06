@@ -97,6 +97,8 @@ class DerivativeSplicedOptFn(Generic[TOptInput, TOptOutput]):
         """
         Returns a function that can be used to compute the convexified version of the core function.
         Utilizes the gradient and hessian.
+        The convexified cost is the second order Taylor expansion around x
+        f(new_x) = f(x) + f'(x)^T@(new_x - x) + (new_x - x)^T @ f''(x) @ (new_x - x)
         """
 
         def _ccf(

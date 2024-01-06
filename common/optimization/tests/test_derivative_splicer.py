@@ -321,6 +321,63 @@ def test_convexified_fn_on_convex_fn(use_jit: bool):
     np.testing.assert_almost_equal(core_value, convexified_core_value, decimal=6)
 
 
+@pytest.mark.parametrize("use_jit", [True, False])
+def test_convexified_fn_on_convex_fn(use_jit: bool):
+    """
+    The implicit convexified cost computation of a convex function
+    must return the same value.
+    """
+
+    def f(z: VectorNf64, params: _Params) -> Scalarf64:
+        x, y, theta = z
+        return jnp.array(
+            params.a * x * jnp.cos(theta) + params.b * y * jnp.sin(theta),
+            dtype=jnp.float32,
+        )
+
+    params = _Params(a=2, b=0.5)
+    f_ds = DerivativeSplicedOptFn(
+        core_fn=f,
+        use_jit=use_jit,
+        construct_params_fn=lambda _: params,
+    )
+
+    rng = np.random.RandomState(7)
+    z = rng.randn(3).round(6)
+    new_z = rng.randn(3).round(6)
+
+    convexified_core_value = f_ds.convexified(z, new_z)
+
+    # Expected convexified cost.
+    x, y, theta = z
+    omega = np.array(
+        [
+            params.a * np.cos(theta),
+            params.b * np.sin(theta),
+            -params.a * x * np.sin(theta) + params.b * y * np.cos(theta),
+        ]
+    )
+    W = np.array(
+        [
+            [0.0, 0.0, -params.a * np.sin(theta)],
+            [0.0, 0.0, params.b * np.cos(theta)],
+            [
+                -params.a * np.sin(theta),
+                params.b * np.cos(theta),
+                -params.a * x * np.cos(theta) - params.b * y * np.sin(theta),
+            ],
+        ]
+    )
+    expected_convexified_core_value = (
+        f_ds(z)
+        + np.dot(omega, new_z - z)
+        + 0.5 * np.dot(np.dot(new_z - z, W), new_z - z)
+    )
+    np.testing.assert_almost_equal(
+        convexified_core_value, expected_convexified_core_value, decimal=6
+    )
+
+
 if __name__ == "__main__":
 
     pytest.main(["-s", "-v", __file__])
