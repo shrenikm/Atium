@@ -25,7 +25,6 @@ from common.optimization.standard_functions.rosenbrock import (
 )
 
 
-# TODO: Move elsewhere.
 def _visualize_trajopt_rosenbrock_result(
     params: RosenbrockParams,
     result: TrajOptResult,
@@ -33,6 +32,7 @@ def _visualize_trajopt_rosenbrock_result(
     plot_cost: bool,
     plot_constraints: bool,
     setup_num: int,
+    save_video: bool,
 ) -> None:
 
     assert any([plot_cost, plot_constraints]), "Something must be plotted."
@@ -45,9 +45,12 @@ def _visualize_trajopt_rosenbrock_result(
     if plot_cost:
         ax.view_init(elev=20.0, azim=110.0, roll=0.0)
     else:
-        ax.view_init(elev=50.0, azim=120.0, roll=0.0)
+        # For the flat view, we don't want to be plotting the numbers on the z axis
+        # as they would overlap and look bad.
+        ax.set_zticklabels([])
+        ax.view_init(elev=90.0, azim=90.0, roll=0.0)
 
-    resolution = 0.1
+    resolution = 0.05
     X = np.arange(-5.0, 5.1, resolution)
     Y = np.arange(-5.0, 5.1, resolution)
     X, Y = np.meshgrid(X, Y)
@@ -80,7 +83,7 @@ def _visualize_trajopt_rosenbrock_result(
             if trajopt.linear_equality_constraints_fn is not None:
                 # Requires a generous atol here that is > resolution, otherwise nothing would plot.
                 if np.allclose(
-                    trajopt.linear_equality_constraints_fn(x), 0.0, atol=0.5
+                    trajopt.linear_equality_constraints_fn(x), 0.0, atol=2 * resolution
                 ):
                     Z_lh[i, j] = 0.0
             if trajopt.non_linear_inequality_constraints_fn is not None:
@@ -89,7 +92,9 @@ def _visualize_trajopt_rosenbrock_result(
             if trajopt.non_linear_equality_constraints_fn is not None:
                 # Requires a generous atol here that is > resolution, otherwise nothing would plot.
                 if np.allclose(
-                    trajopt.non_linear_equality_constraints_fn(x), 0.0, atol=0.5
+                    trajopt.non_linear_equality_constraints_fn(x),
+                    0.0,
+                    atol=2 * resolution,
                 ):
                     Z_nlh[i, j] = 0.0
 
@@ -178,19 +183,21 @@ def _visualize_trajopt_rosenbrock_result(
         interval=300,
         repeat=True,
     )
-    postfix_list = []
-    if plot_cost:
-        postfix_list.append("cost")
-    if plot_constraints:
-        postfix_list.append("constraint")
-    output_filename = f"trajopt_rosenbrock_{setup_num}_{'_'.join(postfix_list)}.gif"
-    output_video_path = get_file_path_in_results_dir(
-        output_filename=output_filename,
-    )
-    animation.save(
-        filename=output_video_path,
-    )
-    print(f"Animation saved to {output_video_path}")
+
+    if save_video:
+        postfix_list = []
+        if plot_cost:
+            postfix_list.append("cost")
+        if plot_constraints:
+            postfix_list.append("constraint")
+        output_filename = f"trajopt_rosenbrock_{setup_num}_{'_'.join(postfix_list)}.gif"
+        output_video_path = get_file_path_in_results_dir(
+            output_filename=output_filename,
+        )
+        animation.save(
+            filename=output_video_path,
+        )
+        print(f"Animation saved to {output_video_path}")
 
     plt.show()
 
@@ -209,9 +216,25 @@ def lg_fn1(z: VectorNf64) -> VectorNf64:
     Linear inequality constraints of the form:
     x >= c, y >= d
     (x, y) >= (c, d) => (x-c, y-d) >= 0 => (c-x, d-y) <= 0
+    or x <=c, y <= d
+    (x, y) <= (c, d) => (x-c, y=d) <= 0
     """
     x, y = z
-    return jnp.array([2.0 - x, -2.0 - y], dtype=jnp.float32)
+    # x <= -2., y >= 0.
+    return jnp.array([x + 2.0, 0.0 - y], dtype=jnp.float32)
+
+
+def lg_fn2(z: VectorNf64) -> VectorNf64:
+    """
+    Linear inequality constraints of the form:
+    x >= c, y >= d
+    (x, y) >= (c, d) => (x-c, y-d) >= 0 => (c-x, d-y) <= 0
+    or x <=c, y <= d
+    (x, y) <= (c, d) => (x-c, y=d) <= 0
+    """
+    x, y = z
+    # x >= 2., y >= -5.
+    return jnp.array([2.0 - x, -5.0 - y], dtype=jnp.float32)
 
 
 def nlg_fn1(z: VectorNf64) -> VectorNf64:
@@ -223,6 +246,26 @@ def nlg_fn1(z: VectorNf64) -> VectorNf64:
     xc, yc = (2.0, 2.0)
     r = 2.0
     return jnp.array((x - xc) ** 2 + (y - yc) ** 2 - r**2, dtype=jnp.float32)
+
+
+def nlg_fn2(z: VectorNf64) -> VectorNf64:
+    """
+    Two circle constraints.
+    One at (2., 2.) with a radius of 2.
+    One at (4., 0.) with a radius of 1.5
+    """
+    x, y = z
+    xc1, yc1 = (2.0, 2.0)
+    r1 = 2.0
+    xc2, yc2 = (4.0, 1.0)
+    r2 = 2.5
+    return jnp.array(
+        [
+            (x - xc1) ** 2 + (y - yc1) ** 2 - r1**2,
+            (x - xc2) ** 2 + (y - yc2) ** 2 - r2**2,
+        ],
+        dtype=jnp.float32,
+    )
 
 
 def nlh_fn1(z: VectorNf64) -> VectorNf64:
@@ -268,8 +311,16 @@ def run_trajopt(setup_num: int) -> None:
         core_fn=lg_fn1,
         use_jit=True,
     )
+    lg_fn_ds2 = DerivativeSplicedConstraintsFn(
+        core_fn=lg_fn2,
+        use_jit=True,
+    )
     nlg_fn_ds1 = DerivativeSplicedConstraintsFn(
         core_fn=nlg_fn1,
+        use_jit=True,
+    )
+    nlg_fn_ds2 = DerivativeSplicedConstraintsFn(
+        core_fn=nlg_fn2,
         use_jit=True,
     )
     nlh_fn_ds1 = DerivativeSplicedConstraintsFn(
@@ -290,15 +341,39 @@ def run_trajopt(setup_num: int) -> None:
             params=trajopt_params,
             cost_fn=cost_fn_ds,
         )
-
-    elif setup_num == 1:
-        initial_guess_x = np.array([5.0, 5.0])
+    elif setup_num == 3:
+        initial_guess_x = np.array([-5.0, 5.0])
         trajopt = TrajOpt(
             params=trajopt_params,
             cost_fn=cost_fn_ds,
-            # linear_inequality_constraints_fn=lg_fn_ds,
-            # non_linear_inequality_constraints_fn=nlg_fn_ds,
-            # non_linear_equality_constraints_fn=nlh_fn_ds,
+            linear_inequality_constraints_fn=lg_fn_ds1,
+        )
+    elif setup_num == 4:
+        initial_guess_x = np.array([5.0, -5.0])
+        trajopt = TrajOpt(
+            params=trajopt_params,
+            cost_fn=cost_fn_ds,
+            linear_inequality_constraints_fn=lg_fn_ds2,
+            non_linear_inequality_constraints_fn=nlg_fn_ds1,
+        )
+    elif setup_num == 5:
+        initial_guess_x = np.array([5.0, -5.0])
+        trajopt = TrajOpt(
+            params=trajopt_params,
+            cost_fn=cost_fn_ds,
+            linear_inequality_constraints_fn=lg_fn_ds2,
+            non_linear_inequality_constraints_fn=nlg_fn_ds1,
+            non_linear_equality_constraints_fn=nlh_fn_ds1,
+        )
+
+    elif setup_num == 6:
+        initial_guess_x = np.array([5.0, -5.0])
+        trajopt = TrajOpt(
+            params=trajopt_params,
+            cost_fn=cost_fn_ds,
+            linear_inequality_constraints_fn=lg_fn_ds2,
+            non_linear_inequality_constraints_fn=nlg_fn_ds2,
+            non_linear_equality_constraints_fn=nlh_fn_ds1,
         )
     else:
         raise NotImplementedError(f"Invalid setup number: {setup_num}")
@@ -309,12 +384,13 @@ def run_trajopt(setup_num: int) -> None:
         params=rosenbrock_params,
         result=result,
         trajopt=trajopt,
-        plot_cost=True,
-        plot_constraints=False,
+        plot_cost=False,
+        plot_constraints=True,
         setup_num=setup_num,
+        save_video=False,
     )
 
 
 if __name__ == "__main__":
-    setup_num = 2
+    setup_num = 6
     run_trajopt(setup_num=setup_num)

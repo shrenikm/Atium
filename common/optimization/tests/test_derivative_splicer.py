@@ -12,7 +12,7 @@ from common.custom_types import (
     Vector3f64,
     VectorNf64,
 )
-from common.exceptions import AtiumAttributeError, AtiumOptError
+from common.exceptions import AtiumAttributeError
 from common.optimization.derivative_splicer import DerivativeSplicedOptFn
 
 
@@ -241,11 +241,6 @@ def test_realistic_constraint_fn_tag(use_jit: bool):
         g = [xcos(theta) + ysin(theta); ax^3 + v^2 + bw; theta]
         """
         x, y, theta, v, w = z
-
-        # g = jnp.zeros(3)
-        # g.at[0].set(x * jnp.cos(theta) + y * jnp.sin(theta))
-        # g.at[1].set(params.a * x**3 + v**2 + params.b * w)
-        # g.at[2].set(theta)
 
         g = jnp.array(
             [
