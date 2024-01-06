@@ -10,6 +10,7 @@ from typing import List, Optional
 import attr
 import numpy as np
 
+from algorithms.trajopt.implementation.trajopt_utils import assert_gradient_sizes
 from common.custom_types import VectorNf64
 from common.exceptions import AtiumOptError
 from common.optimization.constructs import QPInputs
@@ -156,17 +157,11 @@ class TrajOpt:
             lg0 = self.linear_inequality_constraints_fn(x)
             W_lg = self.linear_inequality_constraints_fn.grad(x)
 
-            # TODO: Consolidate.
-            if lg0.size == 1:
-                # Single constraint
-                assert lg0.ndim == 0
-                assert W_lg.ndim == 1
-                assert W_lg.size == n
-            else:
-                # Multiple constraints.
-                assert lg0.ndim == 1
-                assert W_lg.ndim == 2
-                assert W_lg.shape == (lg0.size, n)
+            assert_gradient_sizes(
+                x0=lg0,
+                x_grad=W_lg,
+                num_variables=n,
+            )
 
             A_lg = W_lg
             ub_lg = W_lg @ x - lg0
@@ -181,17 +176,11 @@ class TrajOpt:
             lh0 = self.linear_equality_constraints_fn(x)
             W_lh = self.linear_equality_constraints_fn.grad(x)
 
-            # TODO: Consolidate.
-            if lh0.size == 1:
-                # Single constraint
-                assert lh0.ndim == 0
-                assert W_lh.ndim == 1
-                assert W_lh.size == n
-            else:
-                # Multiple constraints.
-                assert lh0.ndim == 1
-                assert W_lh.ndim == 2
-                assert W_lh.shape == (lh0.size, n)
+            assert_gradient_sizes(
+                x0=lh0,
+                x_grad=W_lh,
+                num_variables=n,
+            )
 
             A_lh = W_lh
             b_lh = W_lh @ x - lh0
@@ -224,17 +213,11 @@ class TrajOpt:
             W_nlg = self.non_linear_inequality_constraints_fn.grad(x)
             num_nl_g_constraints = nlg0.size
 
-            # TODO: Consolidate.
-            if num_nl_g_constraints == 1:
-                # Single constraint
-                assert nlg0.ndim == 0
-                assert W_nlg.ndim == 1
-                assert W_nlg.size == n
-            else:
-                # Multiple constraints.
-                assert nlg0.ndim == 1
-                assert W_nlg.ndim == 2
-                assert W_nlg.shape == (num_nl_g_constraints, n)
+            assert_gradient_sizes(
+                x0=nlg0,
+                x_grad=W_nlg,
+                num_variables=n,
+            )
 
             # Expanding A to account for the new t_g slack variables. As the older constraints don't
             # depend on the slack variables, these can just be zero.
@@ -299,17 +282,11 @@ class TrajOpt:
             W_nlh = self.non_linear_equality_constraints_fn.grad(x)
             num_nl_h_constraints = nlh0.size
 
-            # TODO: Consolidate.
-            if num_nl_h_constraints == 1:
-                # Single constraint
-                assert nlh0.ndim == 0
-                assert W_nlh.ndim == 1
-                assert W_nlh.size == n
-            else:
-                # Multiple constraints.
-                assert nlh0.ndim == 1
-                assert W_nlh.ndim == 2
-                assert W_nlh.shape == (num_nl_h_constraints, n)
+            assert_gradient_sizes(
+                x0=nlh0,
+                x_grad=W_nlh,
+                num_variables=n,
+            )
 
             # Doing the same thing, expanding the A matrices and accounting for the slack terms. It's slightly different
             # due to having two slack terms for each constraint row.
