@@ -13,6 +13,7 @@ import numpy as np
 from algorithms.trajopt.implementation.trajopt_utils import assert_gradient_sizes
 from common.custom_types import VectorNf64
 from common.exceptions import AtiumOptError
+from common.logging_utils import AtiumLogger
 from common.math_utils import assert_matrix_positive_semidefinite
 from common.optimization.constructs import QPInputs
 from common.optimization.derivative_splicer import (
@@ -115,6 +116,12 @@ class TrajOpt:
         DerivativeSplicedConstraintsFn
     ] = None
     non_linear_equality_constraints_fn: Optional[DerivativeSplicedConstraintsFn] = None
+
+    _logger: AtiumLogger = attr.ib(init=False)
+
+    @_logger.default
+    def _initialize_logger(self) -> AtiumLogger:
+        return AtiumLogger(self.__class__.__name__)
 
     def convexify_problem(
         self,
@@ -582,11 +589,10 @@ class TrajOpt:
                 ):
                     break
             if self.are_constraints_satisfied(x=new_x):
-                # TODO: Log
-                print(
+                self._logger.info(
                     f"TrajOpt found a solution in {time.perf_counter() - trajopt_solve_start_time} seconds!"
                 )
-                print(f"Optimal x: {result.solution_x()}")
+                self._logger.info(f"Optimal x: {result.solution_x()}")
                 break
             else:
                 # mu = min(self.params.k * mu, 1e10)
@@ -597,8 +603,7 @@ class TrajOpt:
                     updated_penalty_factor=mu,
                 )
         else:
-            # TODO: Log
-            print(
+            self._logger.info(
                 f"TrajOpt failed to find a solution within {self.params.max_iter} iterations!"
             )
 

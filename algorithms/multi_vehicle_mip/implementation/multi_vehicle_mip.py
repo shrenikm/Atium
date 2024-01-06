@@ -4,7 +4,9 @@ from typing import Optional, Sequence
 
 from ortools.linear_solver import pywraplp
 
-from algorithms.multi_vehicle_mip.implementation.constraints import construct_constraints_for_mvmip
+from algorithms.multi_vehicle_mip.implementation.constraints import (
+    construct_constraints_for_mvmip,
+)
 from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPObstacle,
     MVMIPOptimizationParams,
@@ -15,7 +17,10 @@ from algorithms.multi_vehicle_mip.implementation.objective import (
     construct_objective_for_mvmip,
     mvmip_result_from_solver,
 )
-from algorithms.multi_vehicle_mip.implementation.variables import construct_variables_for_mvmip
+from algorithms.multi_vehicle_mip.implementation.variables import (
+    construct_variables_for_mvmip,
+)
+from common.logging_utils import AtiumLogger
 
 
 def solve_mvmip(
@@ -25,12 +30,7 @@ def solve_mvmip(
 ) -> Optional[MVMIPResult]:
 
     # TODO: Check validity of vehicles and obstacles.
-    # mvmip_logger = logging.Logger("MVMIPLogger")
-
-    # TODO: Set up a logging wrapper. Forgot how much BS this thing is.
-    logging.basicConfig()
-    mvmip_logger = logging.getLogger("MVMIPLogger")
-    mvmip_logger.setLevel(logging.INFO)
+    mvmip_logger = AtiumLogger("MVMIPLogger")
     mvmip_logger.info("Starting MVMIP problem setup ...")
 
     pre_setup_time = time.perf_counter()
