@@ -13,6 +13,7 @@ import numpy as np
 from algorithms.trajopt.implementation.trajopt_utils import assert_gradient_sizes
 from common.custom_types import VectorNf64
 from common.exceptions import AtiumOptError
+from common.math_utils import assert_matrix_positive_semidefinite
 from common.optimization.constructs import QPInputs
 from common.optimization.derivative_splicer import (
     DerivativeSplicedConstraintsFn,
@@ -258,11 +259,10 @@ class TrajOpt:
                 # Note that the penalty scaling factor mu also multiplies the cost function term.
 
                 Omega_nlg = self.non_linear_inequality_constraints_fn.hess(x)
-                # TODO: Check for positive semi-definitiveness of Omega
 
                 if num_nl_g_constraints == 1:
                     # Omega is not a tensor in this case.
-                    assert Omega_nlg.ndim == 2
+                    assert_matrix_positive_semidefinite(mat=Omega_nlg)
                     # Note that OSQP already assumes 0.5 multiplies P, so we don't include that here.
                     W += mu * Omega_nlg
                     # For q, we need to include the 0.5
@@ -274,6 +274,7 @@ class TrajOpt:
                     assert Omega_nlg.shape == (n, n, num_nl_g_constraints)
                     for i in range(n):
                         omega_nlg = Omega_nlg[:, :, i]
+                        assert_matrix_positive_semidefinite(mat=omega_nlg)
                         W += mu * omega_nlg
                         q -= 0.5 * mu * ((omega_nlg + omega_nlg.T) @ x)
 
@@ -326,11 +327,10 @@ class TrajOpt:
             # Doing the same thing for the equality constraints if required.
             if self.params.second_order_equalities:
                 Omega_nlh = self.non_linear_equality_constraints_fn.hess(x)
-                # TODO: Check for positive semi-definitiveness of Omega
 
                 if num_nl_h_constraints == 1:
                     # Omega is not a tensor in this case.
-                    assert Omega_nlh.ndim == 2
+                    assert_matrix_positive_semidefinite(mat=Omega_nlh)
                     # Note that OSQP already assumes 0.5 multiplies P, so we don't include that here.
                     W += mu * Omega_nlh
                     # For q, we need to include the 0.5
@@ -341,6 +341,7 @@ class TrajOpt:
                     assert Omega_nlh.shape == (n, n, num_nl_h_constraints)
                     for i in range(n):
                         omega_nlh = Omega_nlh[:, :, i]
+                        assert_matrix_positive_semidefinite(mat=omega_nlh)
                         W += mu * omega_nlh
                         q -= 0.5 * mu * ((omega_nlh + omega_nlh.T) @ x)
 
@@ -371,6 +372,8 @@ class TrajOpt:
         # For the quadratic term 0.5 x^T@P@x, P is just W_f expanded by zeros to account for the slack terms.
         P = np.zeros((num_total_variables, num_total_variables), dtype=np.float64)
         P[:n, :n] = W + W_f
+        # Making sure that it is positive semi-definite.
+        assert_matrix_positive_semidefinite(mat=P)
 
         # For the linear term q^Tx, the first part (x part) of q is given by
         # omega_f - 0.5 * (W_f + W_f^T)@x0

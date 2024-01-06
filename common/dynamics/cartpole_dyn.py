@@ -4,7 +4,7 @@ import numpy as np
 from common.constants import ACC_GRAVITY
 from common.custom_types import ControlInputVector, StateDerivativeVector, StateVector
 from common.dynamics.constructs import IDynamics
-from common.geometry import normalize_angle
+from common.geometry_utils import normalize_angle
 
 
 @attr.frozen
