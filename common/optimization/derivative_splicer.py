@@ -6,6 +6,7 @@ from jax import hessian, jacfwd, jit
 
 from common.attrs_utils import AttrsValidators
 from common.custom_types import (
+    OptimizationCostFn,
     OptimizationFn,
     OptimizationGradFn,
     OptimizationGradOrHessFn,
@@ -61,6 +62,10 @@ class DerivativeSplicedOptFn(Generic[TOptInput, TOptOutput]):
             AttrsValidators.num_args_validator(num_min_args=1, num_max_args=1)
         ),
     )
+    _convexified_core_fn: OptimizationHessFn = attr.ib(
+        init=False,
+        validator=AttrsValidators.num_args_validator(num_min_args=2, num_max_args=3),
+    )
 
     @_grad_fn.default
     def _initialize_grad_fn(self) -> OptimizationGradFn:
@@ -86,6 +91,31 @@ class DerivativeSplicedOptFn(Generic[TOptInput, TOptOutput]):
         if self.use_jit:
             hess_fn = _get_jit_applied_fn(fn=hess_fn)
         return hess_fn
+
+    @_convexified_core_fn.default
+    def _initialize_convexified_core_fn(self) -> OptimizationCostFn:
+        """
+        Returns a function that can be used to compute the convexified version of the core function.
+        Utilizes the gradient and hessian.
+        """
+
+        def _ccf(
+            x: ScalarOrVectorNf64,
+            new_x: ScalarOrVectorNf64,
+            params: Optional[Any] = None,
+        ) -> Scalarf64:
+            if params is None:
+                f0 = self.core_fn(x)
+                omega = self._grad_fn(x)
+                W = self._hess_fn(x)
+            else:
+                f0 = self.core_fn(x, params)
+                omega = self._grad_fn(x, params)
+                W = self._hess_fn(x, params)
+            delta_x = new_x - x
+            return f0 + omega @ delta_x + 0.5 * delta_x @ W @ delta_x
+
+        return _ccf
 
     def construct_params(self, x: ScalarOrVectorNf64) -> Any:
         if self._construct_params_fn is None:
@@ -114,6 +144,14 @@ class DerivativeSplicedOptFn(Generic[TOptInput, TOptOutput]):
             return self._hess_fn(x)
         else:
             return self._hess_fn(x, params)
+
+    def convexified(self, x: ScalarOrVectorNf64, new_x: ScalarOrVectorNf64) -> Any:
+        # Params construction is done internally, so we only need to pass in x.
+        params = self.construct_params(x=x)
+        if params is None:
+            return self._convexified_core_fn(x, new_x)
+        else:
+            return self._convexified_core_fn(x, new_x, params)
 
 
 DerivativeSplicedCostFn = DerivativeSplicedOptFn[ScalarOrVectorNf64, Scalarf64]

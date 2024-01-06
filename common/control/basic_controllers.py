@@ -1,11 +1,8 @@
 import attr
 import numpy as np
-from common.control.constructs import IController
 
-from common.custom_types import (
-    ControlInputVector,
-    StateVector,
-)
+from common.control.constructs import IController
+from common.custom_types import ControlInputVector, StateVector
 from common.dynamics.utils import ControlInputVectorLimits
 
 

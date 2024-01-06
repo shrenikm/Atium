@@ -296,6 +296,31 @@ def test_realistic_constraint_fn_tag(use_jit: bool):
         )
 
 
+@pytest.mark.parametrize("use_jit", [True, False])
+def test_convexified_fn_on_convex_fn(use_jit: bool):
+    """
+    The implicit convexified cost computation of a convex function
+    must return the same value.
+    """
+
+    def f(x: VectorNf64) -> Scalarf64:
+        return jnp.dot(x, x)
+
+    f_ds = DerivativeSplicedOptFn(
+        core_fn=f,
+        use_jit=use_jit,
+    )
+
+    rng = np.random.RandomState(7)
+    x = rng.randn(5).round(6)
+    new_x = rng.randn(5).round(6)
+
+    core_value = f_ds(new_x)
+    convexified_core_value = f_ds.convexified(x, new_x)
+
+    np.testing.assert_almost_equal(core_value, convexified_core_value, decimal=6)
+
+
 if __name__ == "__main__":
 
     pytest.main(["-s", "-v", __file__])

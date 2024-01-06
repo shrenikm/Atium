@@ -20,7 +20,6 @@ from common.optimization.derivative_splicer import (
 from common.optimization.qp_solver import is_qp_solved, solve_qp
 
 
-# TODO: Validators.
 # x_tol <= s_0, tau_plus > 1, etc.
 @attr.frozen
 class TrajOptParams:
@@ -115,17 +114,6 @@ class TrajOpt:
     ] = None
     non_linear_equality_constraints_fn: Optional[DerivativeSplicedConstraintsFn] = None
 
-    # TODO: Maybe add to DerivativeSplicedCostFn?
-    def convexified_cost_fn(self, x: VectorNf64, new_x: VectorNf64) -> float:
-        """
-        Convextified cost function value at new_x around x.
-        """
-        f0 = self.cost_fn(x)
-        omega = self.cost_fn.grad(x)
-        W = self.cost_fn.hess(x)
-        delta_x = new_x - x
-        return f0 + omega @ delta_x + 0.5 * delta_x @ W @ delta_x
-
     def convexify_problem(
         self,
         x: VectorNf64,
@@ -163,9 +151,6 @@ class TrajOpt:
         # in the form lb <= Ax <= ub as this is what OSQP requires as input.
         A = np.empty((0, n), dtype=np.float64)
         lb, ub = np.empty(0), np.empty(0)
-
-        # TODO: Validate the g and h functions to make sure that for a single constraint, we output
-        # a 0 dimension array.
 
         if self.linear_inequality_constraints_fn is not None:
             lg0 = self.linear_inequality_constraints_fn(x)
@@ -480,7 +465,8 @@ class TrajOpt:
         # For the model improvement, we measure the difference between the cost at x (previous)
         # and the convexified cost at new_x. The convexified cost at x is basically just
         # the full cost at x as delta_x is zero
-        model_improve = self.cost_fn(x) - self.convexified_cost_fn(x=x, new_x=new_x)
+        # model_improve = self.cost_fn(x) - self.convexified_cost_fn(x=x, new_x=new_x)
+        model_improve = self.cost_fn(x) - self.cost_fn.convexified(x=x, new_x=new_x)
 
         return true_improve / model_improve > self.params.c
 

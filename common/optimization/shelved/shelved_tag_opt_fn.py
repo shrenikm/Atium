@@ -5,8 +5,8 @@ to an optimization function.
 import functools
 import inspect
 from typing import Any, Callable, Generic, Optional, Protocol, Union
-import attr
 
+import attr
 import jax.numpy as jnp
 import numpy as np
 from jax import grad, hessian, jacfwd, jacrev, jit
@@ -16,8 +16,8 @@ from common.custom_types import (
     OptimizationGradFn,
     OptimizationGradOrHessFn,
     OptimizationHessFn,
-    ScalarOrVectorNf64,
     Scalarf64,
+    ScalarOrVectorNf64,
     VectorInputScalarOutputFn,
     VectorNf64,
 )
