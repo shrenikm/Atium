@@ -1,7 +1,8 @@
-import attr
-import numpy as np
 import os
 from typing import Sequence
+
+import attr
+
 from algorithms.multi_vehicle_mip.implementation.custom_types import SetupYamlDict
 from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPObstacle,
@@ -11,10 +12,7 @@ from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPVehicleDynamics,
     MVMIPVehicleOptimizationParams,
 )
-from algorithms.multi_vehicle_mip.implementation.visualization import (
-    MVMIPAnimationParams,
-)
-
+from algorithms.multi_vehicle_mip.implementation.visualization import MVMIPAnimationParams
 from common.custom_types import FileName, FilePath
 
 SETUP_YAML_MVMIP_PARAMS_KEY = "mvmip_params"

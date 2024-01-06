@@ -8,10 +8,7 @@ from algorithms.multi_vehicle_mip.implementation.setups.utils import (
     obstacles_from_setup_yaml_dict,
     vehicles_from_setup_yaml_dict,
 )
-from algorithms.multi_vehicle_mip.implementation.visualization import (
-    visualize_mvmip_result,
-)
-
+from algorithms.multi_vehicle_mip.implementation.visualization import visualize_mvmip_result
 
 if __name__ == "__main__":
 

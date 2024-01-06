@@ -1,5 +1,6 @@
-from ortools.linear_solver import pywraplp
 from typing import Any, Dict
+
+from ortools.linear_solver import pywraplp
 
 from common.custom_types import ControlTrajectoryArray, StateTrajectoryArray
 

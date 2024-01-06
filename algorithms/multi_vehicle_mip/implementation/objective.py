@@ -1,25 +1,27 @@
 from typing import Sequence, Tuple
+
 import numpy as np
 
-from algorithms.multi_vehicle_mip.implementation.definitions import (
-    MVMIPObstacle,
-    MVMIPOptimizationParams,
-    MVMIPResult,
-    MVMIPVehicle,
-)
-
-from algorithms.multi_vehicle_mip.implementation.utils import (
-    state_variable_str_from_ids as s_v,
-    state_slack_variable_str_from_ids as s_sv,
-    control_variable_str_from_ids as c_v,
-    control_slack_variable_str_from_ids as c_sv,
-)
 from algorithms.multi_vehicle_mip.implementation.custom_types import (
     Solver,
     SolverObjective,
     VehicleControlTrajectoryMap,
     VehicleStateTrajectoryMap,
 )
+from algorithms.multi_vehicle_mip.implementation.definitions import (
+    MVMIPObstacle,
+    MVMIPOptimizationParams,
+    MVMIPResult,
+    MVMIPVehicle,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import (
+    control_slack_variable_str_from_ids as c_sv,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import control_variable_str_from_ids as c_v
+from algorithms.multi_vehicle_mip.implementation.utils import (
+    state_slack_variable_str_from_ids as s_sv,
+)
+from algorithms.multi_vehicle_mip.implementation.utils import state_variable_str_from_ids as s_v
 
 
 def construct_objective_for_mvmip(
@@ -132,9 +134,7 @@ def mvmip_result_from_solver(
     solver_solve_time_s: float,
 ) -> MVMIPResult:
 
-    objective_value = np.round(
-        solver.Objective().Value(), mvmip_params.result_float_precision
-    )
+    objective_value = np.round(solver.Objective().Value(), mvmip_params.result_float_precision)
 
     vst_map, vct_map = vehicle_state_and_control_trajectory_map_from_solver(
         solver=solver,
