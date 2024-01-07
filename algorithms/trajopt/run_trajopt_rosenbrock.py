@@ -384,7 +384,7 @@ def run_trajopt(setup_num: int) -> None:
         params=rosenbrock_params,
         result=result,
         trajopt=trajopt,
-        plot_cost=False,
+        plot_cost=True,
         plot_constraints=True,
         setup_num=setup_num,
         save_video=False,
