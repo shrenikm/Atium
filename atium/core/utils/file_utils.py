@@ -1,7 +1,7 @@
 import inspect
 import os
 
-from common.custom_types import FileName, FilePath
+from atium.core.utils.custom_types import FileName, FilePath
 
 RESULTS_DIR_NAME = "results"
 ALGORITHMS_DIR_NAME = "algorithms"

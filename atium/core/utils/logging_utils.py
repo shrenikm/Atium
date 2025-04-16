@@ -5,7 +5,6 @@ import attr
 
 @attr.frozen
 class AtiumLogger:
-
     name: str
     level: int = logging.INFO
 

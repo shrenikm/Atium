@@ -1,6 +1,6 @@
 import numpy as np
 
-from common.custom_types import AngleOrAnglesRad
+from atium.core.utils.custom_types import AngleOrAnglesRad
 
 
 def normalize_angle(angles: AngleOrAnglesRad) -> AngleOrAnglesRad:

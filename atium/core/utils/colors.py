@@ -3,7 +3,6 @@ import attr
 
 @attr.frozen
 class AtiumColorsBGR:
-
     # TODO: Smart way to move between RGB <-> BGR
 
     WHITE = (255, 255, 255)

@@ -3,8 +3,8 @@ from typing import Optional
 
 import numpy as np
 
-from common.custom_types import AttrsConverterFunc, AttrsValidatorFunc, NpArrf64
-from common.exceptions import AtiumAttributeError
+from atium.core.utils.custom_exceptions import AtiumAttributeError
+from atium.core.utils.custom_types import AttrsConverterFunc, AttrsValidatorFunc, NpArrf64
 
 # TODO: Tests for these.
 

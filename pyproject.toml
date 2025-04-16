@@ -22,6 +22,8 @@ dependencies = [
   "matplotlib==3.10.1",
   "opencv-python==4.11.0.86",
   "ortools==9.12.4544",
+  # TODO: Separate install for CPU and GPU versions.
+  "jax==0.5.3",
 ]
 
 [tool.black]

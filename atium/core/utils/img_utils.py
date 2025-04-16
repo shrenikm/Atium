@@ -3,7 +3,7 @@ from typing import Optional
 import cv2
 import numpy as np
 
-from common.custom_types import BGRColor, CoordinateXY, Img3Channel, Index2D
+from atium.core.utils.custom_types import BGRColor, CoordinateXY, Img3Channel, Index2D
 
 
 def paint_img_inplace(
@@ -34,7 +34,6 @@ def world_coordinate_to_px_coordinate(
     world_xy: CoordinateXY,
     resolution: float,
 ) -> Index2D:
-
     return (
         int(world_xy[0] // resolution),
         canvas.shape[0] - int(world_xy[1] // resolution),
