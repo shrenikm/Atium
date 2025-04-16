@@ -1,21 +1,17 @@
 """
 Runs the cartpole simulation with a controller that outputs random values between its limits.
 """
+
 import numpy as np
 
-from common.constants import ACC_GRAVITY
-from common.control.basic_controllers import (
-    ConstantController,
-    UniformPDFController,
-    ZeroController,
-)
-from common.dynamics.cartpole_dyn import CartpoleParams
-from common.dynamics.utils import ControlInputVectorLimits, StateVectorLimits
-from common.simulation.envs.cartpole_env import CartpoleSiliconEnv
-from common.simulation.integrators.state_integrators import StateIntegratorType
+from atium.core.control.basic_controllers import ConstantController, UniformPDFController, ZeroController
+from atium.core.dynamics.cartpole_dyn import CartpoleParams
+from atium.core.dynamics.constructs import ControlInputVectorLimits, StateVectorLimits
+from atium.core.simulation.envs.cartpole_env import CartpoleSiliconEnv
+from atium.core.simulation.integrators.state_integrators import StateIntegratorType
+from atium.core.utils.constants import ACC_GRAVITY
 
 if __name__ == "__main__":
-
     dt = 0.01
     initial_state = np.zeros(4)
     initial_control_input = np.zeros(1)
@@ -65,7 +61,7 @@ if __name__ == "__main__":
 
     controllers = [zero_controller, constant_controller, uniform_controller]
 
-    controller_id = 2
+    controller_id = 1
     assert controller_id < len(controllers)
     controller = controllers[controller_id]
 

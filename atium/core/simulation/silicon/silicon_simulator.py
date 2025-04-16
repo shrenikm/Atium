@@ -2,19 +2,17 @@
 Light-weight simulator for kinematic and simple dynamic systems.
 Useful for quick prototyping with custom visualization without having to set up a PyBullet/Drake env.
 """
+
 from abc import ABCMeta, abstractmethod
 from typing import Generic, TypeVar
 
 import attr
 import numpy as np
 
-from common.control.constructs import IController
-from common.custom_types import ControlInputVector, StateVector
-from common.dynamics.constructs import IDynamics
-from common.simulation.integrators.state_integrators import (
-    STATE_INTEGRATORS_FN_MAP,
-    StateIntegratorType,
-)
+from atium.core.control.constructs import IController
+from atium.core.dynamics.constructs import IDynamics
+from atium.core.simulation.integrators.state_integrators import STATE_INTEGRATORS_FN_MAP, StateIntegratorType
+from atium.core.utils.custom_types import ControlInputVector, StateVector
 
 TDynamics = TypeVar("TDynamics", bound=IDynamics)
 
@@ -50,9 +48,7 @@ class SiliconSimulator(Generic[TDynamics], metaclass=ABCMeta):
                 state=self.state,
             )
             # Bound the control input.
-            self.control_input = self.dynamics.bound_control_input(
-                control_input=control_input
-            )
+            self.control_input = self.dynamics.bound_control_input(control_input=control_input)
 
             state = state_integrator_fn(
                 state=self.state,

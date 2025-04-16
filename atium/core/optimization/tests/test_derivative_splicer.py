@@ -5,15 +5,9 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-from common.custom_types import (
-    MatrixNNf64,
-    OptimizationFn,
-    Scalarf64,
-    Vector3f64,
-    VectorNf64,
-)
-from common.exceptions import AtiumAttributeError
-from common.optimization.derivative_splicer import DerivativeSplicedOptFn
+from atium.core.optimization.derivative_splicer import DerivativeSplicedOptFn
+from atium.core.utils.custom_exceptions import AtiumAttributeError
+from atium.core.utils.custom_types import MatrixNNf64, OptimizationFn, Scalarf64, Vector3f64, VectorNf64
 
 
 @attr.frozen
@@ -291,9 +285,7 @@ def test_realistic_constraint_fn_tag(use_jit: bool):
     np.testing.assert_array_almost_equal(grad_value, expected_grad_value, decimal=6)
     for i in range(n):
         # Hessian has shape (5, 5, 3)
-        np.testing.assert_array_almost_equal(
-            hess_value[:, :, i], expected_hess_value_tensor_list[i], decimal=6
-        )
+        np.testing.assert_array_almost_equal(hess_value[:, :, i], expected_hess_value_tensor_list[i], decimal=6)
 
 
 @pytest.mark.parametrize("use_jit", [True, False])
@@ -368,16 +360,9 @@ def test_convexified_fn_on_convex_fn(use_jit: bool):
             ],
         ]
     )
-    expected_convexified_core_value = (
-        f_ds(z)
-        + np.dot(omega, new_z - z)
-        + 0.5 * np.dot(np.dot(new_z - z, W), new_z - z)
-    )
-    np.testing.assert_almost_equal(
-        convexified_core_value, expected_convexified_core_value, decimal=6
-    )
+    expected_convexified_core_value = f_ds(z) + np.dot(omega, new_z - z) + 0.5 * np.dot(np.dot(new_z - z, W), new_z - z)
+    np.testing.assert_almost_equal(convexified_core_value, expected_convexified_core_value, decimal=6)
 
 
 if __name__ == "__main__":
-
     pytest.main(["-s", "-v", __file__])

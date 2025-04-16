@@ -1,20 +1,15 @@
-from __future__ import annotations
+from typing import Self, override
 
 import attr
 import cv2
 import numpy as np
-from typing_extensions import override
 
-from common.colors import AtiumColorsBGR
-from common.custom_types import ControlInputVector, StateVector
-from common.dynamics.cartpole_dyn import CartpoleDynamics, CartpoleParams
-from common.dynamics.utils import ControlInputVectorLimits, StateVectorLimits
-from common.img_utils import (
-    create_canvas,
-    draw_line_on_canvas,
-    draw_rectangle_on_canvas,
-)
-from common.simulation.silicon.silicon_simulator import SiliconSimulator
+from atium.core.dynamics.cartpole_dyn import CartpoleDynamics, CartpoleParams
+from atium.core.dynamics.constructs import ControlInputVectorLimits, StateVectorLimits
+from atium.core.simulation.silicon.silicon_simulator import SiliconSimulator
+from atium.core.utils.colors import AtiumColorsBGR
+from atium.core.utils.custom_types import ControlInputVector, StateVector
+from atium.core.utils.img_utils import create_canvas, draw_line_on_canvas, draw_rectangle_on_canvas
 
 RESOLUTION = 0.015
 MIN_ENV_SIZE = 10.0
@@ -30,7 +25,7 @@ class CartpoleSiliconEnv(SiliconSimulator[CartpoleDynamics]):
         state_limits: StateVectorLimits,
         control_input_limits: ControlInputVectorLimits,
         params: CartpoleParams,
-    ) -> CartpoleSiliconEnv:
+    ) -> Self:
         dynamics = CartpoleDynamics(
             state_limits=state_limits,
             control_input_limits=control_input_limits,
@@ -44,15 +39,12 @@ class CartpoleSiliconEnv(SiliconSimulator[CartpoleDynamics]):
 
     @override
     def visualize(self) -> None:
-
         window_name = f"{self.__class__.__name__}"
         x, theta, _, _ = self.state
 
         cv2.namedWindow(window_name)
 
-        env_width = (
-            self.dynamics.state_limits.upper[0] - self.dynamics.state_limits.lower[0]
-        )
+        env_width = self.dynamics.state_limits.upper[0] - self.dynamics.state_limits.lower[0]
         env_height = max(env_width, 2 * self.dynamics.params.l)
         env_size = max(env_width, env_height, MIN_ENV_SIZE)
 

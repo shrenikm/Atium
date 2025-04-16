@@ -1,7 +1,7 @@
 from enum import Enum, auto
-from typing import Callable, Protocol
+from typing import Protocol
 
-from common.custom_types import ControlInputVector, StateDerivativeFn, StateVector
+from atium.core.utils.custom_types import ControlInputVector, StateDerivativeFn, StateVector
 
 
 class StateIntegratorCallable(Protocol):
@@ -12,7 +12,7 @@ class StateIntegratorCallable(Protocol):
         state_derivative_fn: StateDerivativeFn,
         dt: float,
     ) -> StateVector:
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class StateIntegratorType(Enum):
@@ -27,7 +27,6 @@ def explicit_euler_state_integrator_fn(
     state_derivative_fn: StateDerivativeFn,
     dt: float,
 ) -> StateVector:
-
     return state + dt * state_derivative_fn(state, control_input)
 
 

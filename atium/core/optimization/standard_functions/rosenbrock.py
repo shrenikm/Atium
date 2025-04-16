@@ -1,6 +1,6 @@
 import attr
 
-from common.custom_types import VectorNf64
+from atium.core.utils.custom_types import VectorNf64
 
 
 @attr.frozen
