@@ -1,25 +1,21 @@
 from typing import Sequence
 
-from algorithms.multi_vehicle_mip.implementation.custom_types import Solver, SolverVariableMap
-from algorithms.multi_vehicle_mip.implementation.definitions import (
+from atium.algorithms.multi_vehicle_mip.implementation.custom_types import Solver, SolverVariableMap
+from atium.algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPObstacle,
     MVMIPOptimizationParams,
     MVMIPRectangleObstacle,
     MVMIPVehicle,
 )
-from algorithms.multi_vehicle_mip.implementation.utils import assert_uniqueness_and_update_mvmip_map
-from algorithms.multi_vehicle_mip.implementation.utils import (
-    control_slack_variable_str_from_ids as c_sv,
-)
-from algorithms.multi_vehicle_mip.implementation.utils import control_variable_str_from_ids as c_v
-from algorithms.multi_vehicle_mip.implementation.utils import (
-    state_slack_variable_str_from_ids as s_sv,
-)
-from algorithms.multi_vehicle_mip.implementation.utils import state_variable_str_from_ids as s_v
-from algorithms.multi_vehicle_mip.implementation.utils import (
+from atium.algorithms.multi_vehicle_mip.implementation.utils import assert_uniqueness_and_update_mvmip_map
+from atium.algorithms.multi_vehicle_mip.implementation.utils import control_slack_variable_str_from_ids as c_sv
+from atium.algorithms.multi_vehicle_mip.implementation.utils import control_variable_str_from_ids as c_v
+from atium.algorithms.multi_vehicle_mip.implementation.utils import state_slack_variable_str_from_ids as s_sv
+from atium.algorithms.multi_vehicle_mip.implementation.utils import state_variable_str_from_ids as s_v
+from atium.algorithms.multi_vehicle_mip.implementation.utils import (
     vehicle_obstacle_collision_binary_slack_variable_str_from_ids as voc_bsv,
 )
-from algorithms.multi_vehicle_mip.implementation.utils import (
+from atium.algorithms.multi_vehicle_mip.implementation.utils import (
     vehicle_vehicle_collision_binary_slack_variable_str_from_ids as vvc_bsv,
 )
 
@@ -30,7 +26,6 @@ def construct_state_slack_variables(
     vehicle_id: int,
     vehicle: MVMIPVehicle,
 ) -> SolverVariableMap:
-
     vars_map = {}
     nt = mvmip_params.num_time_steps
     nx = vehicle.dynamics.a_matrix.shape[0]
@@ -66,7 +61,6 @@ def construct_control_slack_variables(
     vehicle_id: int,
     vehicle: MVMIPVehicle,
 ) -> SolverVariableMap:
-
     vars_map = {}
     nt = mvmip_params.num_time_steps
     nu = vehicle.dynamics.b_matrix.shape[1]
@@ -101,7 +95,6 @@ def construct_vehicle_obstacle_collision_variables(
     vehicle_id: int,
     obstacles: Sequence[MVMIPObstacle],
 ) -> SolverVariableMap:
-
     vars_map = {}
     nt = mvmip_params.num_time_steps
     # Vehicle-obstacle collision constraint variables.
@@ -128,7 +121,6 @@ def construct_vehicle_vehicle_collision_variables(
     vehicle_id: int,
     vehicles: Sequence[MVMIPVehicle],
 ) -> SolverVariableMap:
-
     vars_map = {}
     nt = mvmip_params.num_time_steps
     # Binary variables for vehicle-vehicle collision constraint variables.
@@ -153,11 +145,9 @@ def construct_variables_for_mvmip(
     vehicles: Sequence[MVMIPVehicle],
     obstacles: Sequence[MVMIPObstacle],
 ) -> SolverVariableMap:
-
     vars_map = {}
     # Creating state and control trajectory variables for each vehicle.
     for vehicle_id, vehicle in enumerate(vehicles):
-
         ss_vars_map = construct_state_slack_variables(
             solver=solver,
             mvmip_params=mvmip_params,

@@ -1,7 +1,7 @@
 import numpy as np
 
-from algorithms.multi_vehicle_mip.implementation.definitions import MVMIPVehicleDynamics
-from common.custom_types import StateVector
+from atium.algorithms.multi_vehicle_mip.implementation.definitions import MVMIPVehicleDynamics
+from atium.core.utils.custom_types import StateVector
 
 
 def create_standard_omni_vehicle_dynamics(
@@ -10,7 +10,6 @@ def create_standard_omni_vehicle_dynamics(
     clearance_m: float,
     dt: float,
 ) -> MVMIPVehicleDynamics:
-
     assert initial_state.ndim == 1 and final_state.ndim == 1
     assert initial_state.size == final_state.size
 

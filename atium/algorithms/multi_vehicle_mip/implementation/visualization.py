@@ -6,13 +6,13 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 
-from algorithms.multi_vehicle_mip.implementation.definitions import (
+from atium.algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPObstacle,
     MVMIPOptimizationParams,
     MVMIPResult,
     MVMIPVehicle,
 )
-from common.file_utils import get_file_path_in_results_dir
+from atium.core.utils.file_utils import get_file_path_in_results_dir
 
 # Visualization params. These could be parameterized later if need be.
 OBSTACLE_CLEARANCE_POLYGON_ALPHA = 0.5
@@ -64,7 +64,6 @@ def _setup_figure(
     vehicles: Sequence[MVMIPVehicle],
     padding_m: float = 1.0,
 ) -> Tuple[plt.Figure, plt.Axes]:
-
     fig = plt.figure("MVMIP")
     ax = fig.gca()
 
@@ -95,7 +94,6 @@ def _draw_fixed_elements(
     animation_params: MVMIPAnimationParams,
     vehicles: Sequence[MVMIPVehicle],
 ) -> None:
-
     for vehicle in vehicles:
         sx, sy = vehicle.dynamics.initial_state[:2]
         fx, fy = vehicle.dynamics.final_state[:2]
@@ -111,7 +109,6 @@ def _create_animation_elements(
     vehicles: Sequence[MVMIPVehicle],
     obstacles: Sequence[MVMIPObstacle],
 ) -> MVMIPAnimationElements:
-
     vehicle_core_map = {}
     vehicle_clearance_map = {}
     vehicle_control_map = {}
@@ -211,7 +208,6 @@ def visualize_mvmip_result(
     mvmip_result: MVMIPResult,
     animation_params: MVMIPAnimationParams,
 ) -> None:
-
     nt = mvmip_result.mvmip_params.num_time_steps
     dt = mvmip_result.mvmip_params.dt
     vst_map = mvmip_result.vehicle_state_trajectory_map
@@ -252,9 +248,7 @@ def visualize_mvmip_result(
             )
 
             animation_elements.obstacle_core_map[obstacle_id].set_xy(corner_points_xy)
-            animation_elements.obstacle_clearance_map[obstacle_id].set_xy(
-                clearance_corner_points_xy
-            )
+            animation_elements.obstacle_clearance_map[obstacle_id].set_xy(clearance_corner_points_xy)
 
         for vehicle_id, vehicle in enumerate(vehicles):
             state_trajectory = vst_map[vehicle_id]
@@ -294,11 +288,9 @@ def visualize_mvmip_result(
 
             c_m = vehicle.dynamics.clearance_m
 
-            animation_elements.vehicle_core_map[vehicle_id].set_xdata(x)
-            animation_elements.vehicle_core_map[vehicle_id].set_ydata(y)
-            animation_elements.vehicle_clearance_map[vehicle_id].set_xy(
-                (x - c_m, y - c_m)
-            )
+            animation_elements.vehicle_core_map[vehicle_id].set_xdata([x])
+            animation_elements.vehicle_core_map[vehicle_id].set_ydata([y])
+            animation_elements.vehicle_clearance_map[vehicle_id].set_xy((x - c_m, y - c_m))
             animation_elements.vehicle_control_map[vehicle_id].set_data(
                 x=x,
                 y=y,
@@ -308,12 +300,8 @@ def visualize_mvmip_result(
                 head_width=VEHICLE_CONTROL_ARROW_HEAD_WIDTH_FACTOR * arrow_length,
                 head_length=VEHICLE_CONTROL_ARROW_HEAD_LENGTH_FACTOR * arrow_length,
             )
-            animation_elements.vehicle_trajectory_map[vehicle_id].set_xdata(
-                state_trajectory[: time_step_id + 1, 0]
-            )
-            animation_elements.vehicle_trajectory_map[vehicle_id].set_ydata(
-                state_trajectory[: time_step_id + 1, 1]
-            )
+            animation_elements.vehicle_trajectory_map[vehicle_id].set_xdata(state_trajectory[: time_step_id + 1, 0])
+            animation_elements.vehicle_trajectory_map[vehicle_id].set_ydata(state_trajectory[: time_step_id + 1, 1])
 
     animation = anim.FuncAnimation(
         fig=fig,

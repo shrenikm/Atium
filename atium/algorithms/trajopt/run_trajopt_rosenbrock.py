@@ -7,22 +7,11 @@ import numpy as np
 from matplotlib import animation as anim
 from matplotlib import cm
 
-from algorithms.trajopt.implementation.trajopt import (
-    TrajOpt,
-    TrajOptParams,
-    TrajOptResult,
-)
-from common.custom_types import VectorNf64
-from common.file_utils import get_file_path_in_results_dir
-from common.optimization.derivative_splicer import (
-    DerivativeSplicedConstraintsFn,
-    DerivativeSplicedCostFn,
-)
-from common.optimization.standard_functions.rosenbrock import (
-    RosenbrockParams,
-    rosenbrock_cost_fn,
-    rosenbrock_fn,
-)
+from atium.algorithms.trajopt.implementation.trajopt import TrajOpt, TrajOptParams, TrajOptResult
+from atium.core.optimization.derivative_splicer import DerivativeSplicedConstraintsFn, DerivativeSplicedCostFn
+from atium.core.optimization.standard_functions.rosenbrock import RosenbrockParams, rosenbrock_cost_fn, rosenbrock_fn
+from atium.core.utils.custom_types import VectorNf64
+from atium.core.utils.file_utils import get_file_path_in_results_dir
 
 
 def _visualize_trajopt_rosenbrock_result(
@@ -34,7 +23,6 @@ def _visualize_trajopt_rosenbrock_result(
     setup_num: int,
     save_video: bool,
 ) -> None:
-
     assert any([plot_cost, plot_constraints]), "Something must be plotted."
 
     fig = plt.figure(figsize=(7, 7))
@@ -82,9 +70,7 @@ def _visualize_trajopt_rosenbrock_result(
                     Z_lg[i, j] = 0.0
             if trajopt.linear_equality_constraints_fn is not None:
                 # Requires a generous atol here that is > resolution, otherwise nothing would plot.
-                if np.allclose(
-                    trajopt.linear_equality_constraints_fn(x), 0.0, atol=2 * resolution
-                ):
+                if np.allclose(trajopt.linear_equality_constraints_fn(x), 0.0, atol=2 * resolution):
                     Z_lh[i, j] = 0.0
             if trajopt.non_linear_inequality_constraints_fn is not None:
                 if np.all(trajopt.non_linear_inequality_constraints_fn(x) <= 0):
@@ -112,18 +98,10 @@ def _visualize_trajopt_rosenbrock_result(
         )
 
     if plot_constraints:
-        ax.plot_surface(
-            X, Y, Z_lg, cmap="Pastel1", linewidth=0, antialiased=False, alpha=0.5
-        )
-        ax.plot_surface(
-            X, Y, Z_lh, cmap="Dark2", linewidth=0, antialiased=False, alpha=0.5
-        )
-        ax.plot_surface(
-            X, Y, Z_nlg, cmap="Set3", linewidth=0, antialiased=False, alpha=0.5
-        )
-        ax.plot_surface(
-            X, Y, Z_nlh, cmap="tab20b", linewidth=0, antialiased=False, alpha=0.5
-        )
+        ax.plot_surface(X, Y, Z_lg, cmap="Pastel1", linewidth=0, antialiased=False, alpha=0.5)
+        ax.plot_surface(X, Y, Z_lh, cmap="Dark2", linewidth=0, antialiased=False, alpha=0.5)
+        ax.plot_surface(X, Y, Z_nlg, cmap="Set3", linewidth=0, antialiased=False, alpha=0.5)
+        ax.plot_surface(X, Y, Z_nlh, cmap="tab20b", linewidth=0, antialiased=False, alpha=0.5)
 
     ax.set_xlim(-5.5, 5.5)
     ax.set_ylim(-5.5, 5.5)
@@ -160,12 +138,8 @@ def _visualize_trajopt_rosenbrock_result(
         entry = result[trust_region_iter]
         x, y = entry.updated_min_x if entry.improvement else entry.min_x
         cost = entry.cost
-        x_trajectory = [
-            entry.min_x[0] for entry in result.entries[: trust_region_iter + 1]
-        ]
-        y_trajectory = [
-            entry.min_x[1] for entry in result.entries[: trust_region_iter + 1]
-        ]
+        x_trajectory = [entry.min_x[0] for entry in result.entries[: trust_region_iter + 1]]
+        y_trajectory = [entry.min_x[1] for entry in result.entries[: trust_region_iter + 1]]
         ax.set_title(
             f"""
             Rosenbrock TrajOpt trust region step: {trust_region_iter + 1}/{trust_region_steps}
@@ -298,9 +272,7 @@ def run_trajopt(setup_num: int) -> None:
         second_order_equalities=True,
     )
 
-    rosenbrock_params_constructor = RosenbrockOptParamsConstructor(
-        params=rosenbrock_params
-    )
+    rosenbrock_params_constructor = RosenbrockOptParamsConstructor(params=rosenbrock_params)
     cost_fn_ds = DerivativeSplicedCostFn(
         core_fn=rosenbrock_cost_fn,
         use_jit=True,

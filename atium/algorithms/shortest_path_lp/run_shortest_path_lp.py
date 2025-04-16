@@ -5,13 +5,14 @@ References:
 1. https://www.cs.purdue.edu/homes/egrigore/580FT15/26-lp-jefferickson.pdf
 2. https://people.seas.harvard.edu/~cs125/fall16/section-notes/05.pdf
 """
+
 import time
 
 import cv2
 import numpy as np
 from ortools.linear_solver import pywraplp
 
-from common.custom_types import CostMatrix, Index2D, Indices2D
+from atium.core.utils.custom_types import CostMatrix, Index2D, Indices2D
 
 NEIGHBOR_DELTA_I = [0, -1, -1, -1, 0, 1, 1, 1]
 NEIGHBOR_DELTA_J = [1, 1, 0, -1, -1, -1, 0, 1]
@@ -41,7 +42,6 @@ def find_shortest_path(
     start_coord: Index2D,
     end_coord: Index2D,
 ) -> Indices2D:
-
     assert cost_matrix[start_coord] >= 0.0, "Start in collision"
     assert cost_matrix[end_coord] >= 0.0, "End in collision"
 
@@ -65,7 +65,6 @@ def find_shortest_path(
     start_time = time.perf_counter()
     for i in range(m):
         for j in range(n):
-
             from_coord = (i, j)
             from_node = ind_map[from_coord]
             coord_map[from_node] = (i, j)
@@ -75,7 +74,7 @@ def find_shortest_path(
 
             w = cost_matrix[from_coord]
 
-            for delta_i, delta_j in zip(NEIGHBOR_DELTA_I, NEIGHBOR_DELTA_J):
+            for delta_i, delta_j in zip(NEIGHBOR_DELTA_I, NEIGHBOR_DELTA_J, strict=True):
                 neighbor_coord = (i + delta_i, j + delta_j)
                 if (
                     neighbor_coord[0] >= 0
@@ -83,7 +82,6 @@ def find_shortest_path(
                     and neighbor_coord[1] >= 0
                     and neighbor_coord[1] < n
                 ):
-
                     if cost_matrix[neighbor_coord] < 0.0:
                         continue
 
@@ -192,7 +190,6 @@ def find_shortest_path(
 
 
 if __name__ == "__main__":
-
     n = 75
     start_coord = (0, 0)
     end_coord = (n - 1, n - 1)

@@ -3,6 +3,7 @@ Implementation of the TrajOpt algorithm.
 
 See: https://rll.berkeley.edu/~sachin/papers/Schulman-IJRR2014.pdf
 """
+
 import time
 from itertools import count
 from typing import List, Optional
@@ -10,17 +11,14 @@ from typing import List, Optional
 import attr
 import numpy as np
 
-from algorithms.trajopt.implementation.trajopt_utils import assert_gradient_sizes
-from common.custom_types import VectorNf64
-from common.exceptions import AtiumOptError
-from common.logging_utils import AtiumLogger
-from common.math_utils import assert_matrix_positive_semidefinite
-from common.optimization.constructs import QPInputs
-from common.optimization.derivative_splicer import (
-    DerivativeSplicedConstraintsFn,
-    DerivativeSplicedCostFn,
-)
-from common.optimization.qp_solver import is_qp_solved, solve_qp
+from atium.algorithms.trajopt.implementation.trajopt_utils import assert_gradient_sizes
+from atium.core.optimization.constructs import QPInputs
+from atium.core.optimization.derivative_splicer import DerivativeSplicedConstraintsFn, DerivativeSplicedCostFn
+from atium.core.optimization.qp_solver import is_qp_solved, solve_qp
+from atium.core.utils.custom_exceptions import AtiumOptError
+from atium.core.utils.custom_types import VectorNf64
+from atium.core.utils.logging_utils import AtiumLogger
+from atium.core.utils.math_utils import assert_matrix_positive_semidefinite
 
 
 # x_tol <= s_0, tau_plus > 1, etc.
@@ -106,15 +104,12 @@ class TrajOptResult:
 
 @attr.define
 class TrajOpt:
-
     params: TrajOptParams
 
     cost_fn: DerivativeSplicedCostFn
     linear_inequality_constraints_fn: Optional[DerivativeSplicedConstraintsFn] = None
     linear_equality_constraints_fn: Optional[DerivativeSplicedConstraintsFn] = None
-    non_linear_inequality_constraints_fn: Optional[
-        DerivativeSplicedConstraintsFn
-    ] = None
+    non_linear_inequality_constraints_fn: Optional[DerivativeSplicedConstraintsFn] = None
     non_linear_equality_constraints_fn: Optional[DerivativeSplicedConstraintsFn] = None
 
     _logger: AtiumLogger = attr.ib(init=False)
@@ -229,9 +224,7 @@ class TrajOpt:
 
             # Expanding A to account for the new t_g slack variables. As the older constraints don't
             # depend on the slack variables, these can just be zero.
-            A = np.hstack(
-                (A, np.zeros((A.shape[0], num_nl_g_constraints), dtype=np.float64))
-            )
+            A = np.hstack((A, np.zeros((A.shape[0], num_nl_g_constraints), dtype=np.float64)))
 
             A_nlg = W_nlg
             ub_nlg = W_nlg @ x - nlg0
@@ -299,18 +292,14 @@ class TrajOpt:
             # Doing the same thing, expanding the A matrices and accounting for the slack terms. It's slightly different
             # due to having two slack terms for each constraint row.
 
-            A = np.hstack(
-                (A, np.zeros((A.shape[0], 2 * num_nl_h_constraints), dtype=np.float64))
-            )
+            A = np.hstack((A, np.zeros((A.shape[0], 2 * num_nl_h_constraints), dtype=np.float64)))
             # Offset due to any previous nlg constraints.
             nlg_offset = A.shape[1] - n - 2 * num_nl_h_constraints
 
             A_nlh = W_nlh
             b_nlh = W_nlh @ x - nlh0
 
-            A_nlh_aux = np.zeros(
-                (num_nl_h_constraints, A.shape[1] - n), dtype=np.float64
-            )
+            A_nlh_aux = np.zeros((num_nl_h_constraints, A.shape[1] - n), dtype=np.float64)
             for i in range(num_nl_h_constraints):
                 # Constraint is W@x - t_h + s_h = W@x0 - h(x0)
                 # Assuming the final x matrix is layed out as:
@@ -357,13 +346,9 @@ class TrajOpt:
         assert A.shape[1] == num_total_variables
 
         # Constraints for the slack terms t_g, t_h and s_h to be >= 0
-        A_slack_bounds = np.zeros(
-            (num_slack_variables, num_total_variables), dtype=np.float64
-        )
+        A_slack_bounds = np.zeros((num_slack_variables, num_total_variables), dtype=np.float64)
         if num_slack_variables:
-            A_slack_bounds[-num_slack_variables:, -num_slack_variables:] = np.eye(
-                num_slack_variables
-            )
+            A_slack_bounds[-num_slack_variables:, -num_slack_variables:] = np.eye(num_slack_variables)
         lb_slack = np.zeros(num_slack_variables)
         ub_slack = np.full(num_slack_variables, np.inf)
 
@@ -438,9 +423,7 @@ class TrajOpt:
         if is_qp_solved(osqp_results=osqp_results):
             return osqp_results.x[:size_x]
         else:
-            raise AtiumOptError(
-                f"QP could not be solved using OSQP. Status is: {osqp_results.info.status}"
-            )
+            raise AtiumOptError(f"QP could not be solved using OSQP. Status is: {osqp_results.info.status}")
 
     def is_improvement(
         self,
@@ -463,9 +446,7 @@ class TrajOpt:
         new_x: VectorNf64,
     ) -> bool:
         x_converged = np.linalg.norm(new_x - x) < self.params.x_tol
-        f_converged = (
-            np.linalg.norm(self.cost_fn(new_x) - self.cost_fn(x)) < self.params.f_tol
-        )
+        f_converged = np.linalg.norm(self.cost_fn(new_x) - self.cost_fn(x)) < self.params.f_tol
 
         return x_converged or f_converged
 
@@ -475,9 +456,7 @@ class TrajOpt:
     ) -> bool:
         constraints_satisfied = True
         if self.linear_inequality_constraints_fn is not None:
-            lg_satisfied = np.all(
-                self.linear_inequality_constraints_fn(x) <= self.params.c_tol
-            )
+            lg_satisfied = np.all(self.linear_inequality_constraints_fn(x) <= self.params.c_tol)
             constraints_satisfied = constraints_satisfied and lg_satisfied
         if self.linear_equality_constraints_fn is not None:
             lh_satisfied = np.allclose(
@@ -487,9 +466,7 @@ class TrajOpt:
             )
             constraints_satisfied = constraints_satisfied and lh_satisfied
         if self.non_linear_inequality_constraints_fn is not None:
-            nlg_satisfied = np.all(
-                self.non_linear_inequality_constraints_fn(x) <= self.params.c_tol
-            )
+            nlg_satisfied = np.all(self.non_linear_inequality_constraints_fn(x) <= self.params.c_tol)
             constraints_satisfied = constraints_satisfied and nlg_satisfied
         if self.non_linear_equality_constraints_fn is not None:
             nlh_satisfied = np.allclose(
@@ -584,9 +561,7 @@ class TrajOpt:
                         trust_region_size_below_threshold = True
                         break
 
-                if trust_region_size_below_threshold or self.is_converged(
-                    x=x, new_x=new_x
-                ):
+                if trust_region_size_below_threshold or self.is_converged(x=x, new_x=new_x):
                     break
             if self.are_constraints_satisfied(x=new_x):
                 self._logger.info(
@@ -603,8 +578,6 @@ class TrajOpt:
                     updated_penalty_factor=mu,
                 )
         else:
-            self._logger.info(
-                f"TrajOpt failed to find a solution within {self.params.max_iter} iterations!"
-            )
+            self._logger.info(f"TrajOpt failed to find a solution within {self.params.max_iter} iterations!")
 
         return result

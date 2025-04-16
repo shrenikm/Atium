@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from ortools.linear_solver import pywraplp
 
-from common.custom_types import ControlTrajectoryArray, StateTrajectoryArray
+from atium.core.utils.custom_types import ControlTrajectoryArray, StateTrajectoryArray
 
 Solver = pywraplp.Solver
 SolverVariable = pywraplp.Variable

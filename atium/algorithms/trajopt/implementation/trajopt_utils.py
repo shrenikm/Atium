@@ -1,4 +1,4 @@
-from common.custom_types import VectorNf64, VectorOrMatrixNf64
+from atium.core.utils.custom_types import VectorNf64, VectorOrMatrixNf64
 
 
 def assert_gradient_sizes(

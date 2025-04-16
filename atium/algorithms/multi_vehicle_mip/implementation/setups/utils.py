@@ -3,8 +3,8 @@ from typing import Sequence
 
 import attr
 
-from algorithms.multi_vehicle_mip.implementation.custom_types import SetupYamlDict
-from algorithms.multi_vehicle_mip.implementation.definitions import (
+from atium.algorithms.multi_vehicle_mip.implementation.custom_types import SetupYamlDict
+from atium.algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPObstacle,
     MVMIPOptimizationParams,
     MVMIPRectangleObstacle,
@@ -12,8 +12,8 @@ from algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPVehicleDynamics,
     MVMIPVehicleOptimizationParams,
 )
-from algorithms.multi_vehicle_mip.implementation.visualization import MVMIPAnimationParams
-from common.custom_types import FileName, FilePath
+from atium.algorithms.multi_vehicle_mip.implementation.visualization import MVMIPAnimationParams
+from atium.core.utils.custom_types import FileName, FilePath
 
 SETUP_YAML_MVMIP_PARAMS_KEY = "mvmip_params"
 SETUP_YAML_MVMIP_PARAMS_DT_KEY = "dt"
@@ -51,9 +51,7 @@ def vehicles_from_setup_yaml_dict(
 
     for vehicle_dict in vehicles_dict.values():
         dynamics_dict = vehicle_dict[SETUP_YAML_VEHICLE_DYNAMICS_KEY]
-        optimization_params_dict = vehicle_dict[
-            SETUP_YAML_VEHICLE_OPTIMIZATION_PARAMS_KEY
-        ]
+        optimization_params_dict = vehicle_dict[SETUP_YAML_VEHICLE_OPTIMIZATION_PARAMS_KEY]
 
         dynamics = MVMIPVehicleDynamics(**dynamics_dict)
         # Incorporate dt into the b_matrix
@@ -75,7 +73,6 @@ def vehicles_from_setup_yaml_dict(
 def obstacles_from_setup_yaml_dict(
     setup_yaml_dict: SetupYamlDict,
 ) -> Sequence[MVMIPObstacle]:
-
     obstacles_dict = setup_yaml_dict[SETUP_YAML_OBSTACLES_KEY]
     obstacles = []
 
@@ -83,9 +80,7 @@ def obstacles_from_setup_yaml_dict(
         try:
             obstacle = MVMIPRectangleObstacle(**obstacle_dict)
         except TypeError as e:
-            raise NotImplementedError(
-                f"Only rectangular obstacles have been implemented so far."
-            ) from e
+            raise NotImplementedError("Only rectangular obstacles have been implemented so far.") from e
         obstacles.append(obstacle)
 
     return obstacles
@@ -94,6 +89,5 @@ def obstacles_from_setup_yaml_dict(
 def animation_params_from_setup_yaml_dict(
     setup_yaml_dict: SetupYamlDict,
 ) -> MVMIPAnimationParams:
-
     animation_params_dict = setup_yaml_dict[SETUP_YAML_ANIMATION_PARAMS_KEY]
     return MVMIPAnimationParams(**animation_params_dict)

@@ -4,12 +4,12 @@ from typing import Protocol, Sequence, Union
 import attr
 import numpy as np
 
-from algorithms.multi_vehicle_mip.implementation.custom_types import (
+from atium.algorithms.multi_vehicle_mip.implementation.custom_types import (
     VehicleControlTrajectoryMap,
     VehicleStateTrajectoryMap,
 )
-from common.attrs_utils import AttrsConverters
-from common.custom_types import (
+from atium.core.utils.attrs_utils import AttrsConverters
+from atium.core.utils.custom_types import (
     AMatrix,
     BMatrix,
     ControlInputVector,
@@ -63,9 +63,7 @@ class MVMIPVehicle:
 class MVMIPObstacle(Protocol):
     initial_center_xy: PointXYVector = attr.ib(converter=AttrsConverters.np_f64_converter())
     size_xy_m: SizeXYVector = attr.ib(converter=AttrsConverters.np_f64_converter())
-    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray] = attr.ib(
-        converter=AttrsConverters.np_f64_converter()
-    )
+    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray] = attr.ib(converter=AttrsConverters.np_f64_converter())
     clearance_m: float
 
     def ordered_corner_points_xy(
@@ -82,9 +80,7 @@ class MVMIPObstacle(Protocol):
 class MVMIPRectangleObstacle:
     initial_center_xy: PointXYVector = attr.ib(converter=AttrsConverters.np_f64_converter())
     size_xy_m: SizeXYVector = attr.ib(converter=AttrsConverters.np_f64_converter())
-    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray] = attr.ib(
-        converter=AttrsConverters.np_f64_converter()
-    )
+    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray] = attr.ib(converter=AttrsConverters.np_f64_converter())
     clearance_m: float
 
     @lru_cache
@@ -96,9 +92,7 @@ class MVMIPRectangleObstacle:
         centers_xy = np.empty((num_time_steps + 1, 2), dtype=np.float64)
 
         if self.velocities_xy_mps.size == 2:
-            velocities_xy_mps = np.repeat(
-                self.velocities_xy_mps.reshape(1, 2), num_time_steps, axis=0
-            )
+            velocities_xy_mps = np.repeat(self.velocities_xy_mps.reshape(1, 2), num_time_steps, axis=0)
         else:
             assert self.velocities_xy_mps.ndim == 2
             assert self.velocities_xy_mps.shape[0] == num_time_steps
@@ -167,9 +161,7 @@ class MVMIPRectangleObstacle:
 class MVMIPPolygonObstacle:
     polygon: PolygonXYArray = attr.ib(converter=AttrsConverters.np_f64_converter())
     initial_center_xy: PointXYArray = attr.ib(converter=AttrsConverters.np_f64_converter())
-    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray] = attr.ib(
-        converter=AttrsConverters.np_f64_converter()
-    )
+    velocities_xy_mps: Union[VelocityXYVector, VelocityXYArray] = attr.ib(converter=AttrsConverters.np_f64_converter())
     clearance_m: float
 
     def ordered_corner_points_xy(
@@ -195,18 +187,3 @@ class MVMIPResult:
     # Performance attributes.
     solver_setup_time_s: float
     solver_solving_time_s: float
-
-
-if __name__ == "__main__":
-
-    @attr.frozen(slots=False, eq=False)
-    class A:
-        a: int
-        v: SizeXYVector
-
-        @lru_cache
-        def f(self, b) -> int:
-            return self.a**2 + b
-
-    a = A(3, np.array([2.0, 3.0]))
-    print(a.f(2))

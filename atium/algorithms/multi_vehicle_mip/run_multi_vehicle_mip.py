@@ -1,22 +1,19 @@
 import yaml
 
-from algorithms.multi_vehicle_mip.implementation.multi_vehicle_mip import solve_mvmip
-from algorithms.multi_vehicle_mip.implementation.setups.utils import (
+from atium.algorithms.multi_vehicle_mip.implementation.multi_vehicle_mip import solve_mvmip
+from atium.algorithms.multi_vehicle_mip.implementation.setups.utils import (
     animation_params_from_setup_yaml_dict,
     get_full_path_of_setup_yaml,
     mvmip_params_from_setup_yaml_dict,
     obstacles_from_setup_yaml_dict,
     vehicles_from_setup_yaml_dict,
 )
-from algorithms.multi_vehicle_mip.implementation.visualization import visualize_mvmip_result
+from atium.algorithms.multi_vehicle_mip.implementation.visualization import visualize_mvmip_result
 
 if __name__ == "__main__":
-
     setup_yaml_filename = "mvmip_setup1.yaml"
 
-    setup_file_path = get_full_path_of_setup_yaml(
-        setup_yaml_filename=setup_yaml_filename
-    )
+    setup_file_path = get_full_path_of_setup_yaml(setup_yaml_filename=setup_yaml_filename)
     with open(setup_file_path, "r") as file:
         setup_yaml_dict = yaml.safe_load(file)
 
