@@ -1,3 +1,3 @@
 # Atium
 
-Collection of motion planning ideas and algorithms
+Collection of the robotics related research and paper implementations.
