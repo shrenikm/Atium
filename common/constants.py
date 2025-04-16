@@ -1,1 +1,0 @@
-ACC_GRAVITY = 9.81
