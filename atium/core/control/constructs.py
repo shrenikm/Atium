@@ -1,11 +1,12 @@
 """
 Simple controller interface
 """
+
 from typing import Protocol
 
 import attr
 
-from common.custom_types import ControlInputVector, StateVector
+from atium.core.utils.custom_types import ControlInputVector, StateVector
 
 
 @attr.define

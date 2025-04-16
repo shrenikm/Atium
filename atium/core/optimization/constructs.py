@@ -1,6 +1,6 @@
 import attr
 
-from common.custom_types import MatrixMNf64, MatrixNNf64, VectorNf64
+from atium.core.utils.custom_types import MatrixMNf64, MatrixNNf64, VectorNf64
 
 
 @attr.frozen

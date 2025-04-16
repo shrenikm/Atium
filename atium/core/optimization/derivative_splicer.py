@@ -4,8 +4,8 @@ from typing import Any, Callable, Generic, Optional, TypeVar
 import attr
 from jax import hessian, jacfwd, jit
 
-from common.attrs_utils import AttrsValidators
-from common.custom_types import (
+from atium.core.utils.attrs_utils import AttrsValidators
+from atium.core.utils.custom_types import (
     OptimizationCostFn,
     OptimizationFn,
     OptimizationGradFn,
@@ -50,17 +50,13 @@ class DerivativeSplicedOptFn(Generic[TOptInput, TOptOutput]):
         validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2)
     )
     use_jit: bool
-    _grad_fn: OptimizationGradFn = attr.ib(
-        validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2)
-    )
+    _grad_fn: OptimizationGradFn = attr.ib(validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2))
     _hess_fn: OptimizationHessFn = attr.ib(
         validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2),
     )
     _construct_params_fn: Optional[Callable[[ScalarOrVectorNf64], Any]] = attr.ib(
         default=None,
-        validator=attr.validators.optional(
-            AttrsValidators.num_args_validator(num_min_args=1, num_max_args=1)
-        ),
+        validator=attr.validators.optional(AttrsValidators.num_args_validator(num_min_args=1, num_max_args=1)),
     )
     _convexified_core_fn: OptimizationHessFn = attr.ib(
         init=False,
@@ -157,6 +153,4 @@ class DerivativeSplicedOptFn(Generic[TOptInput, TOptOutput]):
 
 
 DerivativeSplicedCostFn = DerivativeSplicedOptFn[ScalarOrVectorNf64, Scalarf64]
-DerivativeSplicedConstraintsFn = DerivativeSplicedOptFn[
-    ScalarOrVectorNf64, ScalarOrVectorNf64
-]
+DerivativeSplicedConstraintsFn = DerivativeSplicedOptFn[ScalarOrVectorNf64, ScalarOrVectorNf64]

@@ -1,7 +1,7 @@
 import osqp
 from scipy.sparse import csc_matrix
 
-from common.optimization.constructs import QPInputs
+from atium.core.optimization.constructs import QPInputs
 
 OSQP_SOLVED_STATUS_STR = "solved"
 

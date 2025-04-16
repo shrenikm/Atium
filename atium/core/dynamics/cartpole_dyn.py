@@ -1,10 +1,10 @@
 import attr
 import numpy as np
 
-from common.constants import ACC_GRAVITY
-from common.custom_types import ControlInputVector, StateDerivativeVector, StateVector
-from common.dynamics.constructs import IDynamics
-from common.geometry_utils import normalize_angle
+from atium.core.dynamics.constructs import IDynamics
+from atium.core.utils.constants import ACC_GRAVITY
+from atium.core.utils.custom_types import ControlInputVector, StateDerivativeVector, StateVector
+from atium.core.utils.geometry_utils import normalize_angle
 
 
 @attr.frozen
@@ -55,9 +55,7 @@ class CartpoleDynamics(IDynamics):
             f_x = 0.0
 
         k1 = self.params.m_c + self.params.m_p * st**2
-        k2 = (
-            self.params.m_p * st * (self.params.l * theta_dot**2 + self.params.g * ct)
-        )
+        k2 = self.params.m_p * st * (self.params.l * theta_dot**2 + self.params.g * ct)
         k3 = (
             -self.params.m_p * self.params.l * theta_dot**2 * ct * st
             - (self.params.m_c + self.params.m_p) * self.params.g * st

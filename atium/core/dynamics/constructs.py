@@ -1,10 +1,44 @@
 from abc import ABCMeta, abstractmethod
+from typing import Self
 
 import attr
 import numpy as np
 
-from common.custom_types import ControlInputVector, StateDerivativeVector, StateVector
-from common.dynamics.utils import ControlInputVectorLimits, StateVectorLimits
+from atium.core.utils.custom_types import ControlInputVector, StateDerivativeVector, StateVector
+
+
+@attr.frozen
+class StateVectorLimits:
+    lower: StateVector
+    upper: StateVector
+
+    @classmethod
+    def from_free(cls, size: int) -> Self:
+        """
+        Free limits <=> No limits.
+        -inf to inf.
+        """
+        return cls(
+            lower=np.full(size, -np.inf),
+            upper=np.full(size, np.inf),
+        )
+
+
+@attr.frozen
+class ControlInputVectorLimits:
+    lower: ControlInputVector
+    upper: ControlInputVector
+
+    @classmethod
+    def from_free(cls, size: int) -> Self:
+        """
+        Free limits <=> No limits.
+        -inf to inf.
+        """
+        return cls(
+            lower=np.full(size, -np.inf),
+            upper=np.full(size, np.inf),
+        )
 
 
 @attr.frozen
