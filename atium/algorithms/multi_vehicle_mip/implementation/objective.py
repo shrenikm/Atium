@@ -1,6 +1,7 @@
 from typing import Sequence, Tuple
 
 import numpy as np
+
 from atium.algorithms.multi_vehicle_mip.implementation.custom_types import (
     Solver,
     SolverObjective,
