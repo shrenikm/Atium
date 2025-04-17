@@ -2,22 +2,22 @@ from typing import Sequence, Tuple
 
 import numpy as np
 
-from atium.algorithms.multi_vehicle_mip.implementation.custom_types import (
+from atium.implementations.multi_vehicle_mip.implementation.custom_types import (
     Solver,
     SolverObjective,
     VehicleControlTrajectoryMap,
     VehicleStateTrajectoryMap,
 )
-from atium.algorithms.multi_vehicle_mip.implementation.definitions import (
+from atium.implementations.multi_vehicle_mip.implementation.definitions import (
     MVMIPObstacle,
     MVMIPOptimizationParams,
     MVMIPResult,
     MVMIPVehicle,
 )
-from atium.algorithms.multi_vehicle_mip.implementation.utils import control_slack_variable_str_from_ids as c_sv
-from atium.algorithms.multi_vehicle_mip.implementation.utils import control_variable_str_from_ids as c_v
-from atium.algorithms.multi_vehicle_mip.implementation.utils import state_slack_variable_str_from_ids as s_sv
-from atium.algorithms.multi_vehicle_mip.implementation.utils import state_variable_str_from_ids as s_v
+from atium.implementations.multi_vehicle_mip.implementation.utils import control_slack_variable_str_from_ids as c_sv
+from atium.implementations.multi_vehicle_mip.implementation.utils import control_variable_str_from_ids as c_v
+from atium.implementations.multi_vehicle_mip.implementation.utils import state_slack_variable_str_from_ids as s_sv
+from atium.implementations.multi_vehicle_mip.implementation.utils import state_variable_str_from_ids as s_v
 
 
 def construct_objective_for_mvmip(

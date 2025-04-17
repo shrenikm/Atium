@@ -4,10 +4,11 @@ import os
 from atium.core.utils.custom_types import FileName, FilePath
 
 RESULTS_DIR_NAME = "results"
-ALGORITHMS_DIR_NAME = "algorithms"
+IMPLEMENTATIONS_DIR_NAME = "implementations"
+EXPERIMENTS_DIR_NAME = "experiments"
 
 
-def get_file_path_in_results_dir(
+def get_file_path_in_implementations_results_dir(
     output_filename: FileName,
 ) -> FilePath:
     # We can't use __file__ as it gives us the path to the current file in common/
@@ -16,6 +17,6 @@ def get_file_path_in_results_dir(
     directory_path = os.path.dirname(os.path.realpath(inspect.stack()[1].filename))
     assert os.path.exists(directory_path), f"Directory {directory_path} does not exist!"
     assert (
-        ALGORITHMS_DIR_NAME in directory_path
-    ), f"Results must be stored under {ALGORITHMS_DIR_NAME}/**/{RESULTS_DIR_NAME}/"
+        IMPLEMENTATIONS_DIR_NAME in directory_path
+    ), f"Results must be stored under {IMPLEMENTATIONS_DIR_NAME}/**/{RESULTS_DIR_NAME}/"
     return os.path.join(directory_path, RESULTS_DIR_NAME, output_filename)

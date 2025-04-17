@@ -2,6 +2,5 @@
 
 Collection of robotics related stuff:
 
-* Algorithms
-* Paper implementations
+* Paper/algorithm implementations
 * Research ideas/exploration

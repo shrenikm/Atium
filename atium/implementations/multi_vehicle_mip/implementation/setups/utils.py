@@ -3,8 +3,9 @@ from typing import Sequence
 
 import attr
 
-from atium.algorithms.multi_vehicle_mip.implementation.custom_types import SetupYamlDict
-from atium.algorithms.multi_vehicle_mip.implementation.definitions import (
+from atium.core.utils.custom_types import FileName, FilePath
+from atium.implementations.multi_vehicle_mip.implementation.custom_types import SetupYamlDict
+from atium.implementations.multi_vehicle_mip.implementation.definitions import (
     MVMIPObstacle,
     MVMIPOptimizationParams,
     MVMIPRectangleObstacle,
@@ -12,8 +13,7 @@ from atium.algorithms.multi_vehicle_mip.implementation.definitions import (
     MVMIPVehicleDynamics,
     MVMIPVehicleOptimizationParams,
 )
-from atium.algorithms.multi_vehicle_mip.implementation.visualization import MVMIPAnimationParams
-from atium.core.utils.custom_types import FileName, FilePath
+from atium.implementations.multi_vehicle_mip.implementation.visualization import MVMIPAnimationParams
 
 SETUP_YAML_MVMIP_PARAMS_KEY = "mvmip_params"
 SETUP_YAML_MVMIP_PARAMS_DT_KEY = "dt"
