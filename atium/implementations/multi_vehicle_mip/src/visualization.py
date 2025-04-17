@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from atium.core.utils.file_utils import get_file_path_in_implementations_results_dir
-from atium.implementations.multi_vehicle_mip.implementation.definitions import (
+from atium.implementations.multi_vehicle_mip.src.definitions import (
     MVMIPObstacle,
     MVMIPOptimizationParams,
     MVMIPResult,

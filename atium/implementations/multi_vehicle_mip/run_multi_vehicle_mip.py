@@ -1,14 +1,14 @@
 import yaml
 
-from atium.implementations.multi_vehicle_mip.implementation.multi_vehicle_mip import solve_mvmip
-from atium.implementations.multi_vehicle_mip.implementation.setups.utils import (
+from atium.implementations.multi_vehicle_mip.src.multi_vehicle_mip import solve_mvmip
+from atium.implementations.multi_vehicle_mip.src.setups.utils import (
     animation_params_from_setup_yaml_dict,
     get_full_path_of_setup_yaml,
     mvmip_params_from_setup_yaml_dict,
     obstacles_from_setup_yaml_dict,
     vehicles_from_setup_yaml_dict,
 )
-from atium.implementations.multi_vehicle_mip.implementation.visualization import visualize_mvmip_result
+from atium.implementations.multi_vehicle_mip.src.visualization import visualize_mvmip_result
 
 if __name__ == "__main__":
     setup_yaml_filename = "mvmip_setup1.yaml"
