@@ -11,7 +11,6 @@ from typing import List, Optional
 import attr
 import numpy as np
 
-from atium.algorithms.trajopt.implementation.trajopt_utils import assert_gradient_sizes
 from atium.core.optimization.constructs import QPInputs
 from atium.core.optimization.derivative_splicer import DerivativeSplicedConstraintsFn, DerivativeSplicedCostFn
 from atium.core.optimization.qp_solver import is_qp_solved, solve_qp
@@ -19,6 +18,7 @@ from atium.core.utils.custom_exceptions import AtiumOptError
 from atium.core.utils.custom_types import VectorNf64
 from atium.core.utils.logging_utils import AtiumLogger
 from atium.core.utils.math_utils import assert_matrix_positive_semidefinite
+from atium.implementations.trajopt.implementation.trajopt_utils import assert_gradient_sizes
 
 
 # x_tol <= s_0, tau_plus > 1, etc.

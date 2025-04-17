@@ -6,13 +6,13 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 
-from atium.algorithms.multi_vehicle_mip.implementation.definitions import (
+from atium.core.utils.file_utils import get_file_path_in_implementations_results_dir
+from atium.implementations.multi_vehicle_mip.implementation.definitions import (
     MVMIPObstacle,
     MVMIPOptimizationParams,
     MVMIPResult,
     MVMIPVehicle,
 )
-from atium.core.utils.file_utils import get_file_path_in_results_dir
 
 # Visualization params. These could be parameterized later if need be.
 OBSTACLE_CLEARANCE_POLYGON_ALPHA = 0.5
@@ -313,7 +313,7 @@ def visualize_mvmip_result(
     # Save the animation if required.
     if animation_params.save_video:
         print("Saving the animation ...")
-        output_video_path = get_file_path_in_results_dir(
+        output_video_path = get_file_path_in_implementations_results_dir(
             output_filename=animation_params.output_video_filename,
         )
         animation.save(

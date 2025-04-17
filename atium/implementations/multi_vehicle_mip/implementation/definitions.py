@@ -4,10 +4,6 @@ from typing import Protocol, Sequence, Union
 import attr
 import numpy as np
 
-from atium.algorithms.multi_vehicle_mip.implementation.custom_types import (
-    VehicleControlTrajectoryMap,
-    VehicleStateTrajectoryMap,
-)
 from atium.core.utils.attrs_utils import AttrsConverters
 from atium.core.utils.custom_types import (
     AMatrix,
@@ -21,6 +17,10 @@ from atium.core.utils.custom_types import (
     StateVector,
     VelocityXYArray,
     VelocityXYVector,
+)
+from atium.implementations.multi_vehicle_mip.implementation.custom_types import (
+    VehicleControlTrajectoryMap,
+    VehicleStateTrajectoryMap,
 )
 
 

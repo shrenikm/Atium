@@ -7,11 +7,11 @@ import numpy as np
 from matplotlib import animation as anim
 from matplotlib import cm
 
-from atium.algorithms.trajopt.implementation.trajopt import TrajOpt, TrajOptParams, TrajOptResult
 from atium.core.optimization.derivative_splicer import DerivativeSplicedConstraintsFn, DerivativeSplicedCostFn
 from atium.core.optimization.standard_functions.rosenbrock import RosenbrockParams, rosenbrock_cost_fn, rosenbrock_fn
 from atium.core.utils.custom_types import VectorNf64
-from atium.core.utils.file_utils import get_file_path_in_results_dir
+from atium.core.utils.file_utils import get_file_path_in_implementations_results_dir
+from atium.implementations.trajopt.implementation.trajopt import TrajOpt, TrajOptParams, TrajOptResult
 
 
 def _visualize_trajopt_rosenbrock_result(
@@ -165,7 +165,7 @@ def _visualize_trajopt_rosenbrock_result(
         if plot_constraints:
             postfix_list.append("constraint")
         output_filename = f"trajopt_rosenbrock_{setup_num}_{'_'.join(postfix_list)}.gif"
-        output_video_path = get_file_path_in_results_dir(
+        output_video_path = get_file_path_in_implementations_results_dir(
             output_filename=output_filename,
         )
         animation.save(

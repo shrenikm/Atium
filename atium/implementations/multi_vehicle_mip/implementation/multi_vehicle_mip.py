@@ -3,19 +3,19 @@ from typing import Optional, Sequence
 
 from ortools.linear_solver import pywraplp
 
-from atium.algorithms.multi_vehicle_mip.implementation.constraints import construct_constraints_for_mvmip
-from atium.algorithms.multi_vehicle_mip.implementation.definitions import (
+from atium.core.utils.logging_utils import AtiumLogger
+from atium.implementations.multi_vehicle_mip.implementation.constraints import construct_constraints_for_mvmip
+from atium.implementations.multi_vehicle_mip.implementation.definitions import (
     MVMIPObstacle,
     MVMIPOptimizationParams,
     MVMIPResult,
     MVMIPVehicle,
 )
-from atium.algorithms.multi_vehicle_mip.implementation.objective import (
+from atium.implementations.multi_vehicle_mip.implementation.objective import (
     construct_objective_for_mvmip,
     mvmip_result_from_solver,
 )
-from atium.algorithms.multi_vehicle_mip.implementation.variables import construct_variables_for_mvmip
-from atium.core.utils.logging_utils import AtiumLogger
+from atium.implementations.multi_vehicle_mip.implementation.variables import construct_variables_for_mvmip
 
 
 def solve_mvmip(
