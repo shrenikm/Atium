@@ -18,7 +18,7 @@ from atium.core.utils.custom_types import (
     VelocityXYArray,
     VelocityXYVector,
 )
-from atium.implementations.multi_vehicle_mip.implementation.custom_types import (
+from atium.implementations.multi_vehicle_mip.src.custom_types import (
     VehicleControlTrajectoryMap,
     VehicleStateTrajectoryMap,
 )

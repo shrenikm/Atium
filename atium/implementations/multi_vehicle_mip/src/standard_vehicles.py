@@ -1,7 +1,7 @@
 import numpy as np
 
 from atium.core.utils.custom_types import StateVector
-from atium.implementations.multi_vehicle_mip.implementation.definitions import MVMIPVehicleDynamics
+from atium.implementations.multi_vehicle_mip.src.definitions import MVMIPVehicleDynamics
 
 
 def create_standard_omni_vehicle_dynamics(

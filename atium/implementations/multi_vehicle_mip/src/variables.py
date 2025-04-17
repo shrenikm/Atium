@@ -1,21 +1,21 @@
 from typing import Sequence
 
-from atium.implementations.multi_vehicle_mip.implementation.custom_types import Solver, SolverVariableMap
-from atium.implementations.multi_vehicle_mip.implementation.definitions import (
+from atium.implementations.multi_vehicle_mip.src.custom_types import Solver, SolverVariableMap
+from atium.implementations.multi_vehicle_mip.src.definitions import (
     MVMIPObstacle,
     MVMIPOptimizationParams,
     MVMIPRectangleObstacle,
     MVMIPVehicle,
 )
-from atium.implementations.multi_vehicle_mip.implementation.utils import assert_uniqueness_and_update_mvmip_map
-from atium.implementations.multi_vehicle_mip.implementation.utils import control_slack_variable_str_from_ids as c_sv
-from atium.implementations.multi_vehicle_mip.implementation.utils import control_variable_str_from_ids as c_v
-from atium.implementations.multi_vehicle_mip.implementation.utils import state_slack_variable_str_from_ids as s_sv
-from atium.implementations.multi_vehicle_mip.implementation.utils import state_variable_str_from_ids as s_v
-from atium.implementations.multi_vehicle_mip.implementation.utils import (
+from atium.implementations.multi_vehicle_mip.src.utils import assert_uniqueness_and_update_mvmip_map
+from atium.implementations.multi_vehicle_mip.src.utils import control_slack_variable_str_from_ids as c_sv
+from atium.implementations.multi_vehicle_mip.src.utils import control_variable_str_from_ids as c_v
+from atium.implementations.multi_vehicle_mip.src.utils import state_slack_variable_str_from_ids as s_sv
+from atium.implementations.multi_vehicle_mip.src.utils import state_variable_str_from_ids as s_v
+from atium.implementations.multi_vehicle_mip.src.utils import (
     vehicle_obstacle_collision_binary_slack_variable_str_from_ids as voc_bsv,
 )
-from atium.implementations.multi_vehicle_mip.implementation.utils import (
+from atium.implementations.multi_vehicle_mip.src.utils import (
     vehicle_vehicle_collision_binary_slack_variable_str_from_ids as vvc_bsv,
 )
 

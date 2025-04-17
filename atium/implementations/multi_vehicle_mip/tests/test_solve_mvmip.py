@@ -1,9 +1,9 @@
 import pytest
 import yaml
 
-from atium.implementations.multi_vehicle_mip.implementation.definitions import MVMIPResult
-from atium.implementations.multi_vehicle_mip.implementation.multi_vehicle_mip import solve_mvmip
-from atium.implementations.multi_vehicle_mip.implementation.setups.utils import (
+from atium.implementations.multi_vehicle_mip.src.definitions import MVMIPResult
+from atium.implementations.multi_vehicle_mip.src.multi_vehicle_mip import solve_mvmip
+from atium.implementations.multi_vehicle_mip.src.setups.utils import (
     get_full_path_of_setup_yaml,
     mvmip_params_from_setup_yaml_dict,
     obstacles_from_setup_yaml_dict,

@@ -18,7 +18,7 @@ from atium.core.utils.custom_exceptions import AtiumOptError
 from atium.core.utils.custom_types import VectorNf64
 from atium.core.utils.logging_utils import AtiumLogger
 from atium.core.utils.math_utils import assert_matrix_positive_semidefinite
-from atium.implementations.trajopt.implementation.trajopt_utils import assert_gradient_sizes
+from atium.implementations.trajopt.src.trajopt_utils import assert_gradient_sizes
 
 
 # x_tol <= s_0, tau_plus > 1, etc.

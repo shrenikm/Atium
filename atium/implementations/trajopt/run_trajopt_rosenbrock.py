@@ -11,7 +11,7 @@ from atium.core.optimization.derivative_splicer import DerivativeSplicedConstrai
 from atium.core.optimization.standard_functions.rosenbrock import RosenbrockParams, rosenbrock_cost_fn, rosenbrock_fn
 from atium.core.utils.custom_types import VectorNf64
 from atium.core.utils.file_utils import get_file_path_in_implementations_results_dir
-from atium.implementations.trajopt.implementation.trajopt import TrajOpt, TrajOptParams, TrajOptResult
+from atium.implementations.trajopt.src.trajopt import TrajOpt, TrajOptParams, TrajOptResult
 
 
 def _visualize_trajopt_rosenbrock_result(
