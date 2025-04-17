@@ -26,6 +26,7 @@ dependencies = [
   # TODO: Separate install for CPU and GPU versions.
   "jax==0.5.3",
   "osqp==1.0.3",
+  "drake==1.40.0",
 ]
 
 [tool.black]
