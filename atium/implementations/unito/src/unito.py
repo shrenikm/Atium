@@ -8,6 +8,7 @@ import numpy as np
 from pydrake.solvers import MathematicalProgram
 from pydrake.symbolic import Expression
 
+from atium.core.utils.attrs_utils import AttrsValidators
 from atium.core.utils.custom_types import NpMatrix22f64
 
 
@@ -19,14 +20,14 @@ class UnitoParams:
     """
 
     # Basis beta will be of degree 2*h-1
-    h: int
+    h: int = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=1))
     # Number of segments
-    M: int
+    M: int = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=1))
     # Number of sampling intervals
-    n: int
+    n: int = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=2))
 
     # Costs
-    epsilon_t: float
+    epsilon_t: float = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=0))
     W: NpMatrix22f64
 
 

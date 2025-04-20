@@ -28,14 +28,23 @@ class AttrsValidators:
     @classmethod
     def scalar_bounding_box_validator(
         cls,
-        min_value: float,
-        max_value: float,
+        min_value: float = -np.inf,
+        max_value: float = np.inf,
+        inclusive: bool = True,
     ) -> AttrsValidatorFunc:
         def _scalar_bounding_box_validator(instance, attribute, value) -> None:
-            if not isinstance(value, (int, float)):
+            if not isinstance(value, (int, float, np.ndarray)):
                 raise ValueError(f"Value for {attribute} must be a scalar. Got {type(value)}.")
-            if value < min_value or value > max_value:
-                raise ValueError(f"Value for {attribute} must be between {min_value} and {max_value}. Got {value}.")
+            if isinstance(value, np.ndarray):
+                if value.ndim != 0:
+                    raise ValueError(f"Value for {attribute} must be a scalar. Got {value}.")
+                value = value.item()
+            if inclusive:
+                if value < min_value or value > max_value:
+                    raise ValueError(f"Value for {attribute} must be between {min_value} and {max_value}. Got {value}.")
+            else:
+                if value <= min_value or value >= max_value:
+                    raise ValueError(f"Value for {attribute} must be between {min_value} and {max_value}. Got {value}.")
 
         return _scalar_bounding_box_validator
 
