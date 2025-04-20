@@ -26,6 +26,20 @@ class AttrsConverters:
 
 class AttrsValidators:
     @classmethod
+    def scalar_bounding_box_validator(
+        cls,
+        min_value: float,
+        max_value: float,
+    ) -> AttrsValidatorFunc:
+        def _scalar_bounding_box_validator(instance, attribute, value) -> None:
+            if not isinstance(value, (int, float)):
+                raise ValueError(f"Value for {attribute} must be a scalar. Got {type(value)}.")
+            if value < min_value or value > max_value:
+                raise ValueError(f"Value for {attribute} must be between {min_value} and {max_value}. Got {value}.")
+
+        return _scalar_bounding_box_validator
+
+    @classmethod
     def num_args_validator(
         cls,
         num_min_args: int,
@@ -38,7 +52,7 @@ class AttrsValidators:
 
             valid_num_args = num_min_args <= num_args <= num_max_args
             if not valid_num_args:
-                raise AtiumAttributeError(
+                raise ValueError(
                     f"Number of arguments to {attribute} needs to be between {num_min_args} and {num_max_args}"
                 )
 

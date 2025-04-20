@@ -76,18 +76,18 @@ class Unito:
         assert 0 <= j < self.params.n
         return self._var_t[i] * (j / (self.params.n - 1))
 
-    def basis_vector(self, i: int, j: int, degree: int = 0) -> np.ndarray:
+    def basis_vector(self, i: int, j: int, derivative: int = 0) -> np.ndarray:
         """
         Compute the derivative of the basis vector for the time corresponding to the ith segment and jth sample point.
         The derivative is a polynomial of degree 2*h-2.
         """
         assert 0 <= i < self.params.M
         assert 0 <= j < self.params.n
-        assert 0 <= degree < 2 * self.params.h - 1
+        assert 0 <= derivative < 2 * self.params.h - 1
         t = self.var_time(i, j)
         return np.array(
             [
-                np.prod(range(k - degree + 1, k + 1)) * t ** (k - degree) if k >= degree else 0
+                np.prod(range(k - derivative + 1, k + 1)) * t ** (k - derivative) if k >= derivative else 0
                 for k in range(2 * self.params.h)
             ]
         )
@@ -115,37 +115,51 @@ class Unito:
         assert 0 <= i < self.params.M
         return np.vstack((self.c_theta(i), self.c_s(i)))
 
-    def sigma(self, i: int, j: int, degree: int = 0) -> np.ndarray:
+    def sigma(self, i: int, j: int, derivative: int = 0) -> np.ndarray:
         """
         Compute the MS trajectory value for the time corresponding to the ith segment and jth sample point.
         """
         assert 0 <= i < self.params.M
         assert 0 <= j < self.params.n
 
-        beta = self.basis_vector(i, j, degree=degree)
+        beta = self.basis_vector(i, j, derivative=derivative)
         theta_i = beta @ self.c_theta(i)
         s_i = beta @ self.c_s(i)
         return np.array([theta_i, s_i])
 
-    def f(self, v):
-        """
-        Cost function.
-        """
-        return 0
+    def control_cost_expression(self) -> Expression:
+        cost = 0.0
+        # sigma(i, n-1) = sigma(i + 1, 0)
+        # So we only go up to n-2  so that we don't double count.
+        for i in range(self.params.M):
+            for j in range(self.params.n - 1):
+                sigma_i = self.sigma(i, j, derivative=self.params.h)
+                cost += sigma_i @ self.params.W @ sigma_i.T
+
+        return cost
+
+    def time_regularization_cost_expression(self) -> Expression:
+        return self.params.epsilon_t * np.sum(self._var_t)
 
     def setup_optimization_program(self):
         """
         Initialize the optimization problem.
         """
 
-        def f(x):
-            """
-            Cost function.
-            """
-            return 0
+        # Costs.
+        cost = self._prog.AddCost(self.control_cost_expression())
+        cost.evaluator().set_description("Control cost")
 
-        print(self._var_theta[0])
-        self._prog.AddCost(self.f, np.array([self._var_theta[0]]))
+        cost = self._prog.AddCost(self.time_regularization_cost_expression())
+        cost.evaluator().set_description("Time regularization cost")
+
+        # Constraints.
+
+        # Start constraints.
+
+        # End constraints.
+
+        print(self._prog)
 
 
 params = UnitoParams(
@@ -156,15 +170,16 @@ params = UnitoParams(
     W=np.ones((2, 2), dtype=np.float64) * 0.1,
 )
 unito = Unito(params)
-print(unito._var_theta)
-print(unito.basis_vector(1, 3))
-print(unito.basis_vector(1, 3, 1))
-for i in range(params.M):
-    print("===")
-    print(unito.c(i))
-    print("===")
 
-print(unito.sigma(1, 3))
-print(unito.sigma(1, 3, 1))
+# print(unito._var_theta)
+# print(unito.basis_vector(1, 3))
+# print(unito.basis_vector(1, 3, 1))
+# for i in range(params.M):
+#     print("===")
+#     print(unito.c(i))
+#     print("===")
+#
+# print(unito.sigma(1, 3))
+# print(unito.sigma(1, 3, 1))
 
 unito.setup_optimization_program()
