@@ -9,26 +9,7 @@ from pydrake.solvers import MathematicalProgram
 from pydrake.symbolic import Expression
 
 from atium.core.utils.attrs_utils import AttrsValidators
-from atium.core.utils.custom_types import NpMatrix22f64
-
-
-@attr.frozen
-class UnitoParams:
-    """
-    Parameters for Unito.
-    Includes problem formulation and optimization params.
-    """
-
-    # Basis beta will be of degree 2*h-1
-    h: int = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=1))
-    # Number of segments
-    M: int = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=1))
-    # Number of sampling intervals
-    n: int = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=2))
-
-    # Costs
-    epsilon_t: float = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=0))
-    W: NpMatrix22f64
+from atium.core.utils.custom_types import NpMatrix22f64, NpVector2f64, StateDerivativeVector, StateVector
 
 
 @attr.define
@@ -142,35 +123,32 @@ class Unito:
     def time_regularization_cost_expression(self) -> Expression:
         return self.params.epsilon_t * np.sum(self._var_t)
 
+    @staticmethod
+    def start_constraints_callable():
+        pass
+
     def setup_optimization_program(self):
         """
         Initialize the optimization problem.
         """
 
         # Costs.
-        cost = self._prog.AddCost(self.control_cost_expression())
-        cost.evaluator().set_description("Control cost")
+        control_cost = self._prog.AddCost(self.control_cost_expression())
+        control_cost.evaluator().set_description("Control cost")
 
-        cost = self._prog.AddCost(self.time_regularization_cost_expression())
-        cost.evaluator().set_description("Time regularization cost")
+        time_cost = self._prog.AddCost(self.time_regularization_cost_expression())
+        time_cost.evaluator().set_description("Time regularization cost")
 
         # Constraints.
 
         # Start constraints.
+        self._prog.AddConstraint
 
         # End constraints.
 
         print(self._prog)
 
 
-params = UnitoParams(
-    h=2,
-    M=3,
-    n=4,
-    epsilon_t=0.1,
-    W=np.ones((2, 2), dtype=np.float64) * 0.1,
-)
-unito = Unito(params)
 
 # print(unito._var_theta)
 # print(unito.basis_vector(1, 3))

@@ -8,7 +8,6 @@ x = prog.NewContinuousVariables(1, "x")
 y = prog.NewContinuousVariables(1, "y")
 c = prog.AddConstraint(x[0] + y[0] == 1)
 prog.AddCost(x[0] ** 2 + y[0] ** 2)
-print(prog)
 
 
 def f(x):
@@ -17,16 +16,13 @@ def f(x):
 
 def cc(vars):
     x, y = vars
-    if x > 0 and y > 0:
-        print("here!")
-        return x + y
-    print("not here!")
-    return x + y - 1
+    return x**2
 
 
 prog.AddVisualizationCallback(f, [x, y])
 prog.AddCost(cc, np.array([x, y]))
 
+print(prog)
 
 res = Solve(prog, [0, 0])
 print(res.is_success())
