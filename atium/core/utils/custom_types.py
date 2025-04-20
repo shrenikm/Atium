@@ -46,6 +46,7 @@ NpScalarOrVectorNf64 = Union[NpScalarf64, NpVectorNf64]
 NpMatrixMNf64 = Annotated[npt.NDArray[f64], Literal["M, N"]]
 NpMatrixNNf64 = Annotated[npt.NDArray[f64], Literal["N, N"]]
 NpMatrixN2f64 = Annotated[npt.NDArray[f64], Literal["N, 2"]]
+NpMatrix22f64 = Annotated[npt.NDArray[f64], Literal["2, 2"]]
 
 NpTensorLMNf64 = Annotated[npt.NDArray[f64], Literal["L, M, N"]]
 NpTensorMN3ui8 = Annotated[npt.NDArray[ui8], Literal["M, N, 3"]]

@@ -5,7 +5,6 @@ prog = MathematicalProgram()
 
 x = prog.NewContinuousVariables(1, "x")
 y = prog.NewContinuousVariables(1, "y")
-z = prog.NewContinuousVariables(2, "z")
 c = prog.AddConstraint(x[0] + y[0] == 1)
 prog.AddCost(x[0] ** 2 + y[0] ** 2)
 print(prog)
