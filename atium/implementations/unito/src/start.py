@@ -1,3 +1,4 @@
+import numpy as np
 from pydrake.solvers import MathematicalProgram, Solve
 
 prog = MathematicalProgram()
@@ -24,7 +25,7 @@ def cc(vars):
 
 
 prog.AddVisualizationCallback(f, [x, y])
-prog.AddCost(cc, [x, y])
+prog.AddCost(cc, np.array([x, y]))
 
 
 res = Solve(prog, [0, 0])
