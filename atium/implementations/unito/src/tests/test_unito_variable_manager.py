@@ -36,4 +36,40 @@ def test_create_decision_variables(
     assert prog.num_vars() == 4 * manager.params.h * manager.params.M + manager.params.M
 
 
+def test_get_vars_c_theta(
+    manager: UnitoVariableManager,
+    prog: MathematicalProgram,
+) -> None:
+    all_vars = prog.decision_variables()
+    vars_c_theta = manager.get_vars_c_theta(all_vars)
+    assert vars_c_theta.shape == (2 * manager.params.h * manager.params.M,)
+
+    for i in range(len(vars_c_theta)):
+        assert vars_c_theta[i].get_name() == f"{UnitoVariableManager.VARS_C_THETA_NAME}({i})"
+
+
+def test_get_vars_c_s(
+    manager: UnitoVariableManager,
+    prog: MathematicalProgram,
+) -> None:
+    all_vars = prog.decision_variables()
+    vars_c_s = manager.get_vars_c_s(all_vars)
+    assert vars_c_s.shape == (2 * manager.params.h * manager.params.M,)
+
+    for i in range(len(vars_c_s)):
+        assert vars_c_s[i].get_name() == f"{UnitoVariableManager.VARS_C_S_NAME}({i})"
+
+
+def test_get_vars_t(
+    manager: UnitoVariableManager,
+    prog: MathematicalProgram,
+) -> None:
+    all_vars = prog.decision_variables()
+    vars_t = manager.get_vars_t(all_vars)
+    assert vars_t.shape == (manager.params.M,)
+
+    for i in range(len(vars_t)):
+        assert vars_t[i].get_name() == f"{UnitoVariableManager.VARS_T_NAME}({i})"
+
+
 pytest.main(["-s", "-v", __file__])
