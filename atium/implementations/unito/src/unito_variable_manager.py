@@ -1,6 +1,7 @@
 import attr
 import numpy as np
 from pydrake.solvers import MathematicalProgram
+from pydrake.symbolic import Variable
 
 from atium.implementations.unito.src.unito_utils import UnitoParams
 
@@ -21,20 +22,49 @@ class UnitoVariableManager:
         prog.NewContinuousVariables(2 * self.params.h * self.params.M, self.VARS_C_S_NAME)
         prog.NewContinuousVariables(self.params.M, self.VARS_T_NAME)
 
-    def get_vars_c_theta(self, all_vars: np.ndarray) -> np.ndarray:
+    def get_c_theta_vars(self, all_vars: np.ndarray) -> np.ndarray:
         """
         Get the c_theta variables from the decision variables.
         """
         return all_vars[: 2 * self.params.h * self.params.M]
 
-    def get_vars_c_s(self, all_vars: np.ndarray) -> np.ndarray:
+    def get_c_s_vars(self, all_vars: np.ndarray) -> np.ndarray:
         """
         Get the c_s variables from the decision variables.
         """
         return all_vars[2 * self.params.h * self.params.M : 4 * self.params.h * self.params.M]
 
-    def get_vars_t(self, all_vars: np.ndarray) -> np.ndarray:
+    def get_t_vars(self, all_vars: np.ndarray) -> np.ndarray:
         """
         Get the t variables from the decision variables.
         """
         return all_vars[4 * self.params.h * self.params.M :]
+
+    def get_c_theta_i_vars(self, all_vars: np.ndarray, i: int) -> np.ndarray:
+        """
+        Get the c_theta variables corresponding to the ith segment.
+        Each segment has 2*h variables. The ith segment starts at index i*2*h and ends at i*2*h + 2*h = (i+1)*2*h.
+        """
+        assert 0 <= i < self.params.M
+        return all_vars[i * 2 * self.params.h : (i + 1) * 2 * self.params.h]
+
+    def get_c_s_i_vars(self, all_vars: np.ndarray, i: int) -> np.ndarray:
+        """
+        Get the c_s variables corresponding to the ith segment.
+        Each segment has 2*h variables. The ith segment starts at index i*2*h and ends at i*2*h + 2*h = (i+1)*2*h.
+        """
+        assert 0 <= i < self.params.M
+        offset = 2 * self.params.h * self.params.M
+        return all_vars[offset + i * 2 * self.params.h : offset + (i + 1) * 2 * self.params.h]
+
+    def get_t_i_var(self, all_vars: np.ndarray, i: int) -> Variable:
+        """
+        Get the value of t for the ith segment.
+        """
+        assert 0 <= i < self.params.M
+        offset = 4 * self.params.h * self.params.M
+        return all_vars[offset + i]
+
+    def get_t_ij_exp(self, all_vars: np.ndarray) -> np.ndarray:
+        pass
+

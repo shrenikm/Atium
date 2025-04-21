@@ -10,11 +10,13 @@ from pydrake.symbolic import Expression
 
 from atium.core.utils.attrs_utils import AttrsValidators
 from atium.core.utils.custom_types import NpMatrix22f64, NpVector2f64, StateDerivativeVector, StateVector
+from atium.implementations.unito.src.costs import compute_control_cost
+from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
 
 
 @attr.define
 class Unito:
-    params: UnitoParams
+    manager: UnitoVariableManager
 
     # Optimization variables
     _prog: MathematicalProgram = attr.ib(init=False)
@@ -131,6 +133,19 @@ class Unito:
         """
         Initialize the optimization problem.
         """
+        self._prog = MathematicalProgram()
+        self.manager.create_decision_variables(self._prog)
+
+        all_vars = self._prog.decision_variables()
+
+        self._prog.AddCost(
+            compute_control_cost,
+            vars=all_vars,
+            description="Control cost",
+        )
+        self._prog.AddCost(
+            compute_time_regularization_cost,
+            vars=
 
         # Costs.
         control_cost = self._prog.AddCost(self.control_cost_expression())
@@ -147,7 +162,6 @@ class Unito:
         # End constraints.
 
         print(self._prog)
-
 
 
 # print(unito._var_theta)
