@@ -7,7 +7,7 @@ from functools import cached_property, partial
 
 import attr
 import numpy as np
-from pydrake.solvers import MathematicalProgram, Solve
+from pydrake.solvers import CommonSolverOption, MathematicalProgram, SnoptSolverDetails, Solve, SolverOptions
 from pydrake.symbolic import Expression
 
 from atium.implementations.unito.src.constraints import (
@@ -147,15 +147,20 @@ class Unito:
         t_initial_guess = np.zeros(self.params.M)
 
         initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
+        solver_options = SolverOptions()
+        solver_options.SetOption(CommonSolverOption.kPrintToConsole, True)
         res = Solve(
             self._prog,
             initial_guess=initial_guess,
+            solver_options=solver_options,
         )
         print(res.GetInfeasibleConstraintNames(self._prog))
 
-        print("Solver used: ", res.get_solver_id().name())
-        print("Success: ", res.is_success())
-        print("Status: ", res.get_solution_result())
+        print("Solver used:", res.get_solver_id().name())
+        print("Success:", res.is_success())
+        print("Status:", res.get_solution_result())
+        print("SNOPT info:", res.get_solver_details().info)
+        print("SNOPT solve time:", res.get_solver_details().solve_time)
 
 
 if __name__ == "__main__":
