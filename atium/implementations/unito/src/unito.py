@@ -3,6 +3,8 @@ Implementation of the paper: Universal Trajectory Optimization Framework for  Di
 See: https://arxiv.org/abs/2409.07924
 """
 
+from functools import cached_property
+
 import attr
 import numpy as np
 from pydrake.solvers import MathematicalProgram
@@ -10,7 +12,8 @@ from pydrake.symbolic import Expression
 
 from atium.core.utils.attrs_utils import AttrsValidators
 from atium.core.utils.custom_types import NpMatrix22f64, NpVector2f64, StateDerivativeVector, StateVector
-from atium.implementations.unito.src.costs import compute_control_cost
+from atium.implementations.unito.src.costs import control_cost_func
+from atium.implementations.unito.src.unito_utils import UnitoInputs, UnitoParams
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
 
 
@@ -20,34 +23,17 @@ class Unito:
 
     # Optimization variables
     _prog: MathematicalProgram = attr.ib(init=False)
-    _var_theta: np.ndarray = attr.ib(init=False)
-    _var_s: np.ndarray = attr.ib(init=False)
-    _var_t: np.ndarray = attr.ib(init=False)
 
     @_prog.default
     def _init_prog(self):
         return MathematicalProgram()
 
-    @_var_theta.default
-    def _init_var_theta(self):
+    @cached_property
+    def params(self) -> UnitoParams:
         """
-        Initializes the c_theta variables for the MS trajectory as a 2D array of sze 2*h*M.
+        Get the parameters for the Unito problem.
         """
-        return self._prog.NewContinuousVariables(2 * self.params.h * self.params.M, "c_theta")
-
-    @_var_s.default
-    def _init_var_s(self):
-        """
-        Initializes the c_s variables for the MS trajectory as a 2D array of sze 2*h*M.
-        """
-        return self._prog.NewContinuousVariables(2 * self.params.h * self.params.M, "c_s")
-
-    @_var_t.default
-    def _init_var_t(self):
-        """
-        Initializes the time variables Ti as a 1D array of size M.
-        """
-        return self._prog.NewContinuousVariables(self.params.M, "t")
+        return self.manager.params
 
     def var_time(self, i: int, j: int) -> Expression:
         """
@@ -129,35 +115,41 @@ class Unito:
     def start_constraints_callable():
         pass
 
-    def setup_optimization_program(self):
+    def setup_optimization_program(self, inputs: UnitoInputs) -> None:
         """
         Initialize the optimization problem.
         """
-        self._prog = MathematicalProgram()
         self.manager.create_decision_variables(self._prog)
 
         all_vars = self._prog.decision_variables()
+        c_theta_vars = self.manager.get_c_theta_vars(all_vars)
+        c_s_vars = self.manager.get_c_s_vars(all_vars)
+        t_vars = self.manager.get_t_vars(all_vars)
 
+        # Costs.
         self._prog.AddCost(
-            compute_control_cost,
+            func=control_cost_func,
             vars=all_vars,
             description="Control cost",
         )
         self._prog.AddCost(
-            compute_time_regularization_cost,
-            vars=
-
-        # Costs.
-        control_cost = self._prog.AddCost(self.control_cost_expression())
-        control_cost.evaluator().set_description("Control cost")
-
-        time_cost = self._prog.AddCost(self.time_regularization_cost_expression())
-        time_cost.evaluator().set_description("Time regularization cost")
+            func=time_regularization_cost_func,
+            vars=t_vars,
+            description="Time regularization cost",
+        )
 
         # Constraints.
+        for derivative, initial_ms_state in inputs.start_inputs.ms_state_map.items():
+            # Get the initial state.
+            assert derivative <= 2 * self.params.h - 1
+            assert initial_ms_state.shape == (2,)
 
-        # Start constraints.
-        self._prog.AddConstraint
+            # Add the constraints.
+            self._prog.AddConstraint(
+                func=initial_state_constraint_func,
+                vars=c_0,
+                description=f"Initial state constraint for {derivative}",
+            )
 
         # End constraints.
 

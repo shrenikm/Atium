@@ -24,21 +24,22 @@ class UnitoParams:
 
 
 @attr.frozen
-class UnitoStartInputs:
-    ms_state_map: dict[int, StateVector | StateDerivativeVector]
+class UnitoInitialStateInputs:
+    initial_ms_map: dict[int, StateVector | StateDerivativeVector]
 
 
 @attr.frozen
-class UnitoEndInputs:
+class UnitoFinalStateInputs:
     """
-    End inputs are split into theta and s separately as there are some differences in how they're handled.
-    For example, we cannot have a constraint on the final s value as this isn't really known until the end of the optimization.
+    Note that this gets used a bit differently than the initial ms state.
+    For example, we cannot have a constraint on the final s value (0 derivative) as this isn't really known until the end of the optimization.
+    Final s constraints on non zero derivatives are fine as these correspond to velocities, accelerations, etc.
     But we can have a constraint on the final theta value.
+    So any constraint on the final (0 derivative) s value is ignored.
     """
 
-    theta_map: dict[int, float]
-    s_map: dict[int, float]
-    xy: NpVector2f64
+    final_ms_map: dict[int, StateVector | StateDerivativeVector]
+    final_xy: NpVector2f64
 
 
 @attr.frozen
