@@ -24,6 +24,7 @@ class UnitoParams:
 
     # Tolerances.
     initial_state_tolerance: float = 1e-3
+    final_state_tolerance: float = 1e-3
 
 
 @attr.frozen
