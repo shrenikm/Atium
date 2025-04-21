@@ -63,18 +63,18 @@ class Unito:
             description="Time regularization cost",
         )
 
-        # # Constraints.
-        # for derivative, initial_ms_state in inputs.start_inputs.ms_state_map.items():
-        #     # Get the initial state.
-        #     assert derivative <= 2 * self.params.h - 1
-        #     assert initial_ms_state.shape == (2,)
-        #
-        #     # Add the constraints.
-        #     self._prog.AddConstraint(
-        #         func=initial_state_constraint_func,
-        #         vars=c_0,
-        #         description=f"Initial state constraint for {derivative}",
-        #     )
+        # Constraints.
+        for derivative, initial_ms_state in inputs.start_inputs.ms_state_map.items():
+            # Get the initial state.
+            assert derivative <= 2 * self.params.h - 1
+            assert initial_ms_state.shape == (2,)
+
+            # Add the constraints.
+            self._prog.AddConstraint(
+                func=initial_ms_constraint_func,
+                vars=c_0,
+                description=f"Initial state constraint for {derivative}",
+            )
 
         # End constraints.
 

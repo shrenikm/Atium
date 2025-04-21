@@ -1,7 +1,9 @@
+import math
+
 import numpy as np
 import pytest
 from pydrake.solvers import MathematicalProgram
-from pydrake.symbolic import Variable
+from pydrake.symbolic import Expression, Variable
 
 from atium.implementations.unito.src.unito_utils import UnitoParams
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
@@ -111,6 +113,73 @@ def test_get_t_i_var(
         var_t_i = manager.get_t_i_var(all_vars, i)
         assert isinstance(var_t_i, Variable)
         assert var_t_i.get_name() == f"{UnitoVariableManager.VARS_T_NAME}({i})"
+
+
+def test_get_t_ij_exp(
+    manager: UnitoVariableManager,
+    prog: MathematicalProgram,
+) -> None:
+    all_vars = prog.decision_variables()
+    for i in range(manager.params.M):
+        for j in range(manager.params.n - 1):
+            t_ij_exp = manager.get_t_ij_exp(
+                t_vars=manager.get_t_vars(all_vars),
+                i=i,
+                j=j,
+            )
+            assert isinstance(t_ij_exp, (float, Expression))
+
+    # Actualy check with a regular float array.
+    t_vars = np.array([1.0, 2.0, 3.0], dtype=np.float64)
+
+    for i in range(len(t_vars)):
+        t_ij = manager.get_t_ij_exp(
+            t_vars=t_vars,
+            i=i,
+            j=0,
+        )
+        np.testing.assert_allclose(t_ij, 0.0, atol=1e-6)
+
+        t_ij = manager.get_t_ij_exp(
+            t_vars=t_vars,
+            i=i,
+            j=manager.params.n - 1,
+        )
+        np.testing.assert_allclose(t_ij, t_vars[i], atol=1e-6)
+
+    i, j = 1, 2
+    t_ij = manager.get_t_ij_exp(
+        t_vars=t_vars,
+        i=i,
+        j=j,
+    )
+    np.testing.assert_allclose(t_ij, t_vars[i] * j / (manager.params.n - 1), atol=1e-6)
+
+
+def test_get_basis_vector_ij_exp(
+    manager: UnitoVariableManager,
+    prog: MathematicalProgram,
+) -> None:
+    all_vars = prog.decision_variables()
+
+    t_ij_exp = manager.get_t_vars(all_vars)[0]
+    for derivative in range(manager.params.h):
+        basis_vector = manager.get_basis_vector_ij_exp(
+            t_ij_exp=t_ij_exp,
+            derivative=derivative,
+        )
+        assert isinstance(basis_vector, np.ndarray)
+        assert basis_vector.shape == (2 * manager.params.h,)
+
+    # Test with a regular float array.
+    for derivative in range(manager.params.h):
+        basis_vector = manager.get_basis_vector_ij_exp(
+            t_ij_exp=0.0,
+            derivative=derivative,
+        )
+        expected_basis_vector = np.zeros((2 * manager.params.h,), dtype=np.float64)
+        expected_basis_vector[derivative] = math.factorial(derivative)
+        np.testing.assert_allclose(basis_vector, expected_basis_vector, atol=1e-6)
 
 
 pytest.main(["-s", "-v", __file__])
