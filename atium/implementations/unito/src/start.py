@@ -16,6 +16,9 @@ def f(x):
 
 def cc(vars):
     x, y = vars
+    cost = 0.
+    cost += x**2
+    print("type", type(cost))
     return x**2
 
 
