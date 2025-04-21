@@ -142,11 +142,16 @@ class Unito:
         print(self._prog)
 
     def solve(self, inputs: UnitoInputs) -> None:
-        initial_guess = np.zeros(self._prog.num_vars())
+        c_theta_initial_guess = np.zeros(2 * self.params.h * self.params.M)
+        c_s_initial_guess = np.zeros(2 * self.params.h * self.params.M)
+        t_initial_guess = np.zeros(self.params.M)
+
+        initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
         res = Solve(
             self._prog,
             initial_guess=initial_guess,
         )
+        print(res.GetInfeasibleConstraintNames(self._prog))
 
         print("Solver used: ", res.get_solver_id().name())
         print("Success: ", res.is_success())
