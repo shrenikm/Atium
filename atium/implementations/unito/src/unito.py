@@ -133,6 +133,12 @@ class Unito:
                     description=f"Continuity constraint between segments {i} and {i + 1}, and derivative {derivative}",
                 )
 
+        self._prog.AddBoundingBoxConstraint(
+            0.0,
+            np.inf,
+            t_vars,
+        )
+
         print(self._prog)
 
     def solve(self, inputs: UnitoInputs) -> None:
