@@ -10,8 +10,6 @@ import numpy as np
 from pydrake.solvers import MathematicalProgram
 from pydrake.symbolic import Expression
 
-from atium.core.utils.attrs_utils import AttrsValidators
-from atium.core.utils.custom_types import NpMatrix22f64, NpVector2f64, StateDerivativeVector, StateVector
 from atium.implementations.unito.src.costs import control_cost_func, time_regularization_cost_func
 from atium.implementations.unito.src.unito_utils import UnitoInputs, UnitoParams
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
@@ -65,19 +63,32 @@ class Unito:
             description="Time regularization cost",
         )
 
-        # Constraints.
-        for derivative, initial_ms_state in inputs.start_inputs.ms_state_map.items():
-            # Get the initial state.
-            assert derivative <= 2 * self.params.h - 1
-            assert initial_ms_state.shape == (2,)
-
-            # Add the constraints.
-            self._prog.AddConstraint(
-                func=initial_state_constraint_func,
-                vars=c_0,
-                description=f"Initial state constraint for {derivative}",
-            )
+        # # Constraints.
+        # for derivative, initial_ms_state in inputs.start_inputs.ms_state_map.items():
+        #     # Get the initial state.
+        #     assert derivative <= 2 * self.params.h - 1
+        #     assert initial_ms_state.shape == (2,)
+        #
+        #     # Add the constraints.
+        #     self._prog.AddConstraint(
+        #         func=initial_state_constraint_func,
+        #         vars=c_0,
+        #         description=f"Initial state constraint for {derivative}",
+        #     )
 
         # End constraints.
 
         print(self._prog)
+
+
+if __name__ == "__main__":
+    params = UnitoParams(
+        h=5,
+        M=3,
+        n=4,
+        epsilon_t=0.1,
+        W=np.ones((2, 2), dtype=np.float64) * 0.1,
+    )
+    manager = UnitoVariableManager(params=params)
+    unito = Unito(manager=manager)
+    unito.setup_optimization_program(None)

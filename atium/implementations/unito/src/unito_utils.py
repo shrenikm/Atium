@@ -48,5 +48,5 @@ class UnitoInputs:
     Unito solve inputs.
     """
 
-    start_inputs: UnitoStartInputs
-    end_inputs: UnitoEndInputs
+    initial_state_inputs: UnitoInitialStateInputs
+    final_state_inputs: UnitoFinalStateInputs
