@@ -22,6 +22,7 @@ def control_cost_func(
                 c_theta_i_vars=manager.get_c_theta_i_vars(all_vars, i),
                 c_s_i_vars=manager.get_c_s_i_vars(all_vars, i),
                 t_ij_exp=t_ij_exp,
+                derivative=manager.params.h,
             )
             cost += sigma_i @ manager.params.W @ sigma_i.T
     return cost

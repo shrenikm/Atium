@@ -22,6 +22,9 @@ class UnitoParams:
     epsilon_t: float = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=0))
     W: NpMatrix22f64
 
+    # Tolerances.
+    initial_state_tolerance: float = 1e-3
+
 
 @attr.frozen
 class UnitoInitialStateInputs:

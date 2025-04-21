@@ -7,11 +7,12 @@ from functools import cached_property, partial
 
 import attr
 import numpy as np
-from pydrake.solvers import MathematicalProgram
+from pydrake.solvers import MathematicalProgram, Solve
 from pydrake.symbolic import Expression
 
+from atium.implementations.unito.src.constraints import initial_ms_constraint_func
 from atium.implementations.unito.src.costs import control_cost_func, time_regularization_cost_func
-from atium.implementations.unito.src.unito_utils import UnitoInputs, UnitoParams
+from atium.implementations.unito.src.unito_utils import UnitoInitialStateInputs, UnitoInputs, UnitoParams
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
 
 
@@ -64,26 +65,39 @@ class Unito:
         )
 
         # Constraints.
-        for derivative, initial_ms_state in inputs.start_inputs.ms_state_map.items():
+        c_theta_0 = manager.get_c_theta_i_vars(all_vars=all_vars, i=0)
+        c_s_0 = manager.get_c_s_i_vars(all_vars=all_vars, i=0)
+        for derivative, initial_ms_state in inputs.initial_state_inputs.initial_ms_map.items():
             # Get the initial state.
-            assert derivative <= 2 * self.params.h - 1
+            assert derivative <= self.params.h - 1
             assert initial_ms_state.shape == (2,)
 
             # Add the constraints.
             self._prog.AddConstraint(
-                func=initial_ms_constraint_func,
-                vars=c_0,
-                description=f"Initial state constraint for {derivative}",
+                func=partial(initial_ms_constraint_func, derivative=derivative, manager=self.manager),
+                lb=initial_ms_state - self.params.initial_state_tolerance,
+                ub=initial_ms_state + self.params.initial_state_tolerance,
+                vars=np.hstack((c_theta_0, c_s_0)),
+                description=f"Initial MS constraint for derivative: {derivative}",
             )
 
-        # End constraints.
-
         print(self._prog)
+
+    def solve(self, inputs: UnitoInputs) -> None:
+        initial_guess = np.zeros(self._prog.num_vars())
+        res = Solve(
+            self._prog,
+            initial_guess=initial_guess,
+        )
+
+        print("Solver used: ", res.get_solver_id().name())
+        print("Success: ", res.is_success())
+        print("Status: ", res.get_solution_result())
 
 
 if __name__ == "__main__":
     params = UnitoParams(
-        h=5,
+        h=3,
         M=3,
         n=4,
         epsilon_t=0.1,
@@ -91,4 +105,16 @@ if __name__ == "__main__":
     )
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)
-    unito.setup_optimization_program(None)
+    initial_state_inputs = UnitoInitialStateInputs(
+        initial_ms_map={
+            0: np.array([0.0, 0.0]),
+            # 1: np.array([0.0, 0.0]),
+        },
+    )
+    final_state_inputs = None
+    inputs = UnitoInputs(
+        initial_state_inputs=initial_state_inputs,
+        final_state_inputs=final_state_inputs,
+    )
+    unito.setup_optimization_program(inputs=inputs)
+    unito.solve(inputs=inputs)
