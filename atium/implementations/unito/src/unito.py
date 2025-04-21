@@ -7,7 +7,12 @@ from functools import cached_property, partial
 
 import attr
 import numpy as np
-from pydrake.solvers import CommonSolverOption, MathematicalProgram, SnoptSolverDetails, Solve, SolverOptions
+from pydrake.solvers import (
+    CommonSolverOption,
+    MathematicalProgram,
+    Solve,
+    SolverOptions,
+)
 from pydrake.symbolic import Expression
 
 from atium.implementations.unito.src.constraints import (
@@ -143,6 +148,7 @@ class Unito:
 
     def solve(self, inputs: UnitoInputs) -> None:
         c_theta_initial_guess = np.zeros(2 * self.params.h * self.params.M)
+        # c_s_initial_guess = np.linspace(0., inputs.final_state_inputs.final_xy[0], 2 * self.params.h * self.params.M)
         c_s_initial_guess = np.zeros(2 * self.params.h * self.params.M)
         t_initial_guess = np.zeros(self.params.M)
 
@@ -181,7 +187,7 @@ if __name__ == "__main__":
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
-            0: np.array([np.pi / 2.0, 1.0]),
+            0: np.array([np.pi / 4., 0.0]),
             # 1: np.array([0.0, 0.0]),
         },
         final_xy=np.array([5.0, 5.0]),
