@@ -10,7 +10,11 @@ import numpy as np
 from pydrake.solvers import MathematicalProgram, Solve
 from pydrake.symbolic import Expression
 
-from atium.implementations.unito.src.constraints import final_ms_constraint_func, initial_ms_constraint_func
+from atium.implementations.unito.src.constraints import (
+    continuity_constraint_func,
+    final_ms_constraint_func,
+    initial_ms_constraint_func,
+)
 from atium.implementations.unito.src.costs import control_cost_func, time_regularization_cost_func
 from atium.implementations.unito.src.unito_utils import (
     UnitoFinalStateInputs,
@@ -83,8 +87,8 @@ class Unito:
             # Add the constraints.
             self._prog.AddConstraint(
                 func=partial(initial_ms_constraint_func, derivative=derivative, manager=self.manager),
-                lb=initial_ms_state - self.params.initial_state_tolerance,
-                ub=initial_ms_state + self.params.initial_state_tolerance,
+                lb=initial_ms_state - self.params.initial_state_equality_tolerance,
+                ub=initial_ms_state + self.params.initial_state_equality_tolerance,
                 vars=np.hstack((c_theta_0_vars, c_s_0_vars)),
                 description=f"Initial MS constraint for derivative: {derivative}",
             )
@@ -94,8 +98,8 @@ class Unito:
             assert derivative <= self.params.h - 1
             assert final_ms_state.shape == (2,)
 
-            lb = final_ms_state - self.params.final_state_tolerance
-            ub = final_ms_state + self.params.final_state_tolerance
+            lb = final_ms_state - self.params.final_state_equality_tolerance
+            ub = final_ms_state + self.params.final_state_equality_tolerance
             if derivative == 0:
                 # For the 0th derivative, s constraints cannot be added.
                 lb[1] = -np.inf
@@ -109,6 +113,25 @@ class Unito:
                 vars=np.hstack((c_theta_f_vars, c_s_f_vars, t_vars[-1])),
                 description=f"Final MS constraint for derivative: {derivative}",
             )
+
+        for derivative in range(self.params.h):
+            for i in range(self.params.M - 1):
+                prev_c_theta_vars = manager.get_c_theta_i_vars(all_vars=all_vars, i=i)
+                prev_c_s_vars = manager.get_c_s_i_vars(all_vars=all_vars, i=i)
+                next_c_theta_vars = manager.get_c_theta_i_vars(all_vars=all_vars, i=i + 1)
+                next_c_s_vars = manager.get_c_s_i_vars(all_vars=all_vars, i=i + 1)
+                prev_t_var = t_vars[i]
+                self._prog.AddConstraint(
+                    func=partial(
+                        continuity_constraint_func,
+                        derivative=derivative,
+                        manager=self.manager,
+                    ),
+                    lb=np.zeros(2) - self.params.continuity_equality_tolerance,
+                    ub=np.zeros(2) + self.params.continuity_equality_tolerance,
+                    vars=np.hstack((prev_c_theta_vars, prev_c_s_vars, next_c_theta_vars, next_c_s_vars, prev_t_var)),
+                    description=f"Continuity constraint between segments {i} and {i + 1}, and derivative {derivative}",
+                )
 
         print(self._prog)
 

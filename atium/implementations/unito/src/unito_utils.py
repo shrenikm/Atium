@@ -23,8 +23,9 @@ class UnitoParams:
     W: NpMatrix22f64
 
     # Tolerances.
-    initial_state_tolerance: float = 1e-3
-    final_state_tolerance: float = 1e-3
+    continuity_equality_tolerance: float = 1e-3
+    initial_state_equality_tolerance: float = 1e-3
+    final_state_equality_tolerance: float = 1e-3
 
 
 @attr.frozen
