@@ -97,6 +97,7 @@ class Unito:
                 vars=np.hstack((c_theta_0_vars, c_s_0_vars)),
                 description=f"Initial MS constraint for derivative: {derivative}",
             )
+        return
 
         for derivative, final_ms_state in inputs.final_state_inputs.final_ms_map.items():
             # Get the final state.
@@ -167,6 +168,12 @@ class Unito:
         print("Status:", res.get_solution_result())
         print("SNOPT info:", res.get_solver_details().info)
         print("SNOPT solve time:", res.get_solver_details().solve_time)
+        print("c_theta:")
+        print(res.GetSolution(self.manager.get_c_theta_vars(self._prog.decision_variables())))
+        print("c_s:")
+        print(res.GetSolution(self.manager.get_c_s_vars(self._prog.decision_variables())))
+        print("t:")
+        print(res.GetSolution(self.manager.get_t_vars(self._prog.decision_variables())))
 
 
 if __name__ == "__main__":
@@ -175,19 +182,19 @@ if __name__ == "__main__":
         M=3,
         n=4,
         epsilon_t=0.1,
-        W=np.ones((2, 2), dtype=np.float64) * 0.1,
+        W=1e-1 * np.ones((2, 2), dtype=np.float64),
     )
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)
     initial_state_inputs = UnitoInitialStateInputs(
         initial_ms_map={
-            0: np.array([0.0, 0.0]),
-            # 1: np.array([0.0, 0.0]),
+            0: np.array([1.0, 2.0]),
+            1: np.array([3.0, -4.0]),
         },
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
-            0: np.array([np.pi / 4., 0.0]),
+            0: np.array([np.pi / 4.0, 0.0]),
             # 1: np.array([0.0, 0.0]),
         },
         final_xy=np.array([5.0, 5.0]),

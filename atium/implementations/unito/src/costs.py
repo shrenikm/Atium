@@ -25,6 +25,7 @@ def control_cost_func(
                 derivative=manager.params.h,
             )
             cost += sigma_i @ manager.params.W @ sigma_i.T
+            print(cost)
     return cost
 
 
