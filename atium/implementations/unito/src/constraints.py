@@ -1,10 +1,12 @@
 import numpy as np
 
+from atium.core.utils.custom_types import StateVector
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
 
 
 def initial_ms_constraint_func(
     func_vars: np.ndarray,
+    initial_ms_state: StateVector,
     derivative: int,
     manager: UnitoVariableManager,
 ) -> np.ndarray:
@@ -13,16 +15,19 @@ def initial_ms_constraint_func(
     c_theta_0_vars = func_vars[: 2 * manager.params.h]
     c_s_0_vars = func_vars[2 * manager.params.h :]
 
-    return manager.get_sigma_ij_exp(
+    sigma_ij = manager.get_sigma_ij_exp(
         c_theta_i_vars=c_theta_0_vars,
         c_s_i_vars=c_s_0_vars,
         t_ij_exp=0.0,
         derivative=derivative,
     )
+    print(sigma_ij, initial_ms_state)
+    return sigma_ij - initial_ms_state
 
 
 def final_ms_constraint_func(
     func_vars: np.ndarray,
+    final_ms_state: StateVector,
     derivative: int,
     manager: UnitoVariableManager,
 ) -> np.ndarray:
@@ -34,12 +39,13 @@ def final_ms_constraint_func(
     c_theta_f_vars = c_f_vars[: 2 * manager.params.h]
     c_s_f_vars = c_f_vars[2 * manager.params.h :]
 
-    return manager.get_sigma_ij_exp(
+    sigma_ij = manager.get_sigma_ij_exp(
         c_theta_i_vars=c_theta_f_vars,
         c_s_i_vars=c_s_f_vars,
         t_ij_exp=t_f_var,
         derivative=derivative,
     )
+    return sigma_ij - final_ms_state
 
 
 def continuity_constraint_func(

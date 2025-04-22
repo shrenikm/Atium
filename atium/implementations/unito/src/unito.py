@@ -91,13 +91,17 @@ class Unito:
 
             # Add the constraints.
             self._prog.AddConstraint(
-                func=partial(initial_ms_constraint_func, derivative=derivative, manager=self.manager),
-                lb=initial_ms_state - self.params.initial_state_equality_tolerance,
-                ub=initial_ms_state + self.params.initial_state_equality_tolerance,
+                func=partial(
+                    initial_ms_constraint_func,
+                    initial_ms_state=initial_ms_state,
+                    derivative=derivative,
+                    manager=self.manager,
+                ),
+                lb=np.full(2, -self.params.initial_state_equality_tolerance),
+                ub=np.full(2, self.params.initial_state_equality_tolerance),
                 vars=np.hstack((c_theta_0_vars, c_s_0_vars)),
                 description=f"Initial MS constraint for derivative: {derivative}",
             )
-        return
 
         for derivative, final_ms_state in inputs.final_state_inputs.final_ms_map.items():
             # Get the final state.
@@ -113,9 +117,14 @@ class Unito:
 
             # Add the constraints.
             self._prog.AddConstraint(
-                func=partial(final_ms_constraint_func, derivative=derivative, manager=self.manager),
-                lb=lb,
-                ub=ub,
+                func=partial(
+                    final_ms_constraint_func,
+                    final_ms_state=final_ms_state,
+                    derivative=derivative,
+                    manager=self.manager,
+                ),
+                lb=np.full(2, -self.params.final_state_equality_tolerance),
+                ub=np.full(2, self.params.final_state_equality_tolerance),
                 vars=np.hstack((c_theta_f_vars, c_s_f_vars, t_vars[-1])),
                 description=f"Final MS constraint for derivative: {derivative}",
             )
@@ -188,13 +197,13 @@ if __name__ == "__main__":
     unito = Unito(manager=manager)
     initial_state_inputs = UnitoInitialStateInputs(
         initial_ms_map={
-            0: np.array([1.0, -1.0]),
-            #1: np.array([3.0, -4.0]),
+            0: np.array([0.0, 0.0]),
+            1: np.array([-0.7, 1.1]),
         },
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
-            0: np.array([np.pi / 4.0, 0.0]),
+            # 0: np.array([np.pi / 4.0, 0.0]),
             # 1: np.array([0.0, 0.0]),
         },
         final_xy=np.array([5.0, 5.0]),
