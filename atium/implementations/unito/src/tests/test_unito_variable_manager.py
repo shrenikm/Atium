@@ -10,6 +10,11 @@ from atium.implementations.unito.src.unito_variable_manager import UnitoVariable
 
 
 @pytest.fixture(scope="module")
+def rng() -> np.random.RandomState:
+    return np.random.RandomState(7)
+
+
+@pytest.fixture(scope="module")
 def params() -> UnitoParams:
     return UnitoParams(
         h=3,
@@ -129,7 +134,7 @@ def test_get_t_ij_exp(
             )
             assert isinstance(t_ij_exp, (float, Expression))
 
-    # Actualy check with a regular float array.
+    # Test with actual values.
     t_vars = np.array([1.0, 2.0, 3.0], dtype=np.float64)
 
     for i in range(len(t_vars)):
@@ -138,14 +143,14 @@ def test_get_t_ij_exp(
             i=i,
             j=0,
         )
-        np.testing.assert_allclose(t_ij, 0.0, atol=1e-6)
+        np.testing.assert_allclose(t_ij, 0.0, atol=1e-12)
 
         t_ij = manager.get_t_ij_exp(
             t_vars=t_vars,
             i=i,
             j=manager.params.n - 1,
         )
-        np.testing.assert_allclose(t_ij, t_vars[i], atol=1e-6)
+        np.testing.assert_allclose(t_ij, t_vars[i], atol=1e-12)
 
     i, j = 1, 2
     t_ij = manager.get_t_ij_exp(
@@ -153,7 +158,7 @@ def test_get_t_ij_exp(
         i=i,
         j=j,
     )
-    np.testing.assert_allclose(t_ij, t_vars[i] * j / (manager.params.n - 1), atol=1e-6)
+    np.testing.assert_allclose(t_ij, t_vars[i] * j / (manager.params.n - 1), atol=1e-12)
 
 
 def test_get_basis_vector_ij_exp(
@@ -171,7 +176,7 @@ def test_get_basis_vector_ij_exp(
         assert isinstance(basis_vector, np.ndarray)
         assert basis_vector.shape == (2 * manager.params.h,)
 
-    # Test with a regular float array.
+    # Test with actual values.
     for derivative in range(manager.params.h):
         basis_vector = manager.get_basis_vector_ij_exp(
             t_ij_exp=0.0,
@@ -179,7 +184,58 @@ def test_get_basis_vector_ij_exp(
         )
         expected_basis_vector = np.zeros((2 * manager.params.h,), dtype=np.float64)
         expected_basis_vector[derivative] = math.factorial(derivative)
-        np.testing.assert_allclose(basis_vector, expected_basis_vector, atol=1e-6)
+        np.testing.assert_allclose(basis_vector, expected_basis_vector, atol=1e-12)
+
+
+def test_get_sigma_ij_exp(
+    rng: np.random.RandomState,
+    manager: UnitoVariableManager,
+    prog: MathematicalProgram,
+) -> None:
+    all_vars = prog.decision_variables()
+    for i in range(manager.params.M):
+        for j in range(manager.params.n - 1):
+            t_ij_exp = manager.get_t_ij_exp(
+                t_vars=manager.get_t_vars(all_vars),
+                i=i,
+                j=j,
+            )
+            sigma_ij = manager.get_sigma_ij_exp(
+                c_theta_i_vars=manager.get_c_theta_i_vars(all_vars, i),
+                c_s_i_vars=manager.get_c_s_i_vars(all_vars, i),
+                t_ij_exp=t_ij_exp,
+                derivative=0,
+            )
+            assert isinstance(sigma_ij, np.ndarray)
+            assert sigma_ij.shape == (2,)
+
+    # Test with actual values.
+    c_theta_i_vars = rng.rand(2 * manager.params.h)
+    c_s_i_vars = rng.rand(2 * manager.params.h)
+    t_ij_exp = 0.0
+
+    basis_vector = np.zeros((2 * manager.params.h,), dtype=np.float64)
+    basis_vector[0] = 1.0
+
+    sigma_ij = manager.get_sigma_ij_exp(
+        c_theta_i_vars=c_theta_i_vars,
+        c_s_i_vars=c_s_i_vars,
+        t_ij_exp=t_ij_exp,
+    )
+    np.testing.assert_allclose(sigma_ij[0], c_theta_i_vars @ basis_vector, atol=1e-12)
+    np.testing.assert_allclose(sigma_ij[1], c_s_i_vars @ basis_vector, atol=1e-12)
+
+    basis_vector = np.zeros((2 * manager.params.h,), dtype=np.float64)
+    basis_vector[1] = 1.0
+
+    sigma_ij = manager.get_sigma_ij_exp(
+        c_theta_i_vars=c_theta_i_vars,
+        c_s_i_vars=c_s_i_vars,
+        t_ij_exp=t_ij_exp,
+        derivative=1,
+    )
+    np.testing.assert_allclose(sigma_ij[0], c_theta_i_vars @ basis_vector, atol=1e-12)
+    np.testing.assert_allclose(sigma_ij[1], c_s_i_vars @ basis_vector, atol=1e-12)
 
 
 pytest.main(["-s", "-v", __file__])

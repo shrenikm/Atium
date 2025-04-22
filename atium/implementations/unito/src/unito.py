@@ -161,13 +161,13 @@ class Unito:
             initial_guess=initial_guess,
             solver_options=solver_options,
         )
-        print(res.GetInfeasibleConstraintNames(self._prog))
 
         print("Solver used:", res.get_solver_id().name())
         print("Success:", res.is_success())
         print("Status:", res.get_solution_result())
         print("SNOPT info:", res.get_solver_details().info)
         print("SNOPT solve time:", res.get_solver_details().solve_time)
+        print("Infeasible constraints:", res.GetInfeasibleConstraintNames(self._prog))
         print("c_theta:")
         print(res.GetSolution(self.manager.get_c_theta_vars(self._prog.decision_variables())))
         print("c_s:")
@@ -181,15 +181,15 @@ if __name__ == "__main__":
         h=3,
         M=3,
         n=4,
-        epsilon_t=0.1,
-        W=1e-1 * np.ones((2, 2), dtype=np.float64),
+        epsilon_t=1e-2,
+        W=1e-2 * np.ones((2, 2), dtype=np.float64),
     )
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)
     initial_state_inputs = UnitoInitialStateInputs(
         initial_ms_map={
-            0: np.array([1.0, 2.0]),
-            1: np.array([3.0, -4.0]),
+            0: np.array([1.0, -1.0]),
+            #1: np.array([3.0, -4.0]),
         },
     )
     final_state_inputs = UnitoFinalStateInputs(

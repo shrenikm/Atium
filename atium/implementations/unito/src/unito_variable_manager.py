@@ -1,5 +1,9 @@
+import math
+
 import attr
 import numpy as np
+import pydrake.math as dmath
+from pydrake.autodiffutils import AutoDiffXd
 from pydrake.solvers import MathematicalProgram
 from pydrake.symbolic import Expression, Variable
 
@@ -68,7 +72,7 @@ class UnitoVariableManager:
     def get_t_ij_exp(self, t_vars: np.ndarray, i: int, j: int) -> Expression | float:
         assert 0 <= i < self.params.M
         assert 0 <= j < self.params.n
-        return t_vars[i] * (j / (self.params.n - 1))
+        return j * t_vars[i] / (self.params.n - 1)
 
     def get_basis_vector_ij_exp(self, t_ij_exp: Expression | float, derivative: int = 0) -> np.ndarray:
         """
@@ -76,19 +80,23 @@ class UnitoVariableManager:
         The derivative is a polynomial of degree 2*h-2.
         """
         assert 0 <= derivative < 2 * self.params.h - 1
-        return np.array(
-            [
-                np.prod(range(k - derivative + 1, k + 1)) * t_ij_exp ** (k - derivative) if k >= derivative else 0
-                for k in range(2 * self.params.h)
-            ]
-        )
+        basis = np.zeros((2 * self.params.h,), dtype=type(t_ij_exp))
+        for k in range(2 * self.params.h):
+            scalar = np.prod(range(k - derivative + 1, k + 1))
+            if k == derivative:
+                basis[k] = scalar
+            elif k > derivative:
+                basis[k] = scalar * t_ij_exp ** (k - derivative)
+            else:
+                basis[k] = 0.0
+        return basis
 
     def get_sigma_ij_exp(
         self,
         c_theta_i_vars: np.ndarray,
         c_s_i_vars: np.ndarray,
         t_ij_exp: Expression | float,
-        derivative: int,
+        derivative: int = 0,
     ) -> np.ndarray:
         beta = self.get_basis_vector_ij_exp(t_ij_exp=t_ij_exp, derivative=derivative)
         theta_i = beta @ c_theta_i_vars
