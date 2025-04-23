@@ -15,6 +15,7 @@ from pydrake.solvers import (
 )
 from pydrake.symbolic import Expression
 
+from atium.core.utils.custom_types import VectorNf64
 from atium.implementations.unito.src.constraints import (
     continuity_constraint_func,
     final_ms_constraint_func,
@@ -81,8 +82,10 @@ class Unito:
         # Constraints.
         c_theta_0_vars = manager.get_c_theta_i_vars(all_vars=all_vars, i=0)
         c_s_0_vars = manager.get_c_s_i_vars(all_vars=all_vars, i=0)
+        t_0_var = t_vars[0]
         c_theta_f_vars = manager.get_c_theta_i_vars(all_vars=all_vars, i=self.params.M - 1)
         c_s_f_vars = manager.get_c_s_i_vars(all_vars=all_vars, i=self.params.M - 1)
+        t_f_var = t_vars[-1]
 
         for derivative, initial_ms_state in inputs.initial_state_inputs.initial_ms_map.items():
             # Get the initial state.
@@ -108,12 +111,17 @@ class Unito:
             assert derivative <= self.params.h - 1
             assert final_ms_state.shape == (2,)
 
-            lb = final_ms_state - self.params.final_state_equality_tolerance
-            ub = final_ms_state + self.params.final_state_equality_tolerance
             if derivative == 0:
-                # For the 0th derivative, s constraints cannot be added.
-                lb[1] = -np.inf
-                ub[1] = np.inf
+                # For the 0th derivative, Only theta constraints can be added.
+                self._prog.AddConstraint(
+                    manager.get_sigma_ij_exp(
+                        c_theta_i_vars=c_theta_f_vars,
+                        c_s_i_vars=c_s_f_vars,
+                        t_ij_exp=t_f_var,
+                    )[1],
+                    -self.params.final_state_equality_tolerance,
+                    self.params.final_state_equality_tolerance,
+                )
 
             # Add the constraints.
             self._prog.AddConstraint(
@@ -156,13 +164,7 @@ class Unito:
 
         print(self._prog)
 
-    def solve(self, inputs: UnitoInputs) -> None:
-        c_theta_initial_guess = np.zeros(2 * self.params.h * self.params.M)
-        # c_s_initial_guess = np.linspace(0., inputs.final_state_inputs.final_xy[0], 2 * self.params.h * self.params.M)
-        c_s_initial_guess = np.zeros(2 * self.params.h * self.params.M)
-        t_initial_guess = np.zeros(self.params.M)
-
-        initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
+    def solve(self, inputs: UnitoInputs, initial_guess: VectorNf64) -> None:
         solver_options = SolverOptions()
         solver_options.SetOption(CommonSolverOption.kPrintToConsole, True)
         res = Solve(
@@ -204,7 +206,7 @@ if __name__ == "__main__":
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
             # 0: np.array([np.pi / 4.0, 0.0]),
-            # 1: np.array([0.0, 0.0]),
+            # 1: np.array([0.0, 1.0]),
         },
         final_xy=np.array([5.0, 5.0]),
     )
@@ -213,4 +215,11 @@ if __name__ == "__main__":
         final_state_inputs=final_state_inputs,
     )
     unito.setup_optimization_program(inputs=inputs)
-    unito.solve(inputs=inputs)
+
+    c_theta_initial_guess = np.zeros(2 * params.h * params.M)
+    # c_s_initial_guess = np.linspace(0., inputs.final_state_inputs.final_xy[0], 2 * params.h * params.M)
+    c_s_initial_guess = np.zeros(2 * params.h * params.M)
+    t_initial_guess = np.zeros(params.M)
+
+    initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
+    unito.solve(inputs=inputs, initial_guess=initial_guess)

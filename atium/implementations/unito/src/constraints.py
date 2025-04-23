@@ -21,7 +21,6 @@ def initial_ms_constraint_func(
         t_ij_exp=0.0,
         derivative=derivative,
     )
-    print(sigma_ij, initial_ms_state)
     return sigma_ij - initial_ms_state
 
 
@@ -35,6 +34,8 @@ def final_ms_constraint_func(
 
     c_f_vars = func_vars[:-1]
     t_f_var = func_vars[-1]
+
+    assert c_f_vars.shape == (4 * manager.params.h,)
 
     c_theta_f_vars = c_f_vars[: 2 * manager.params.h]
     c_s_f_vars = c_f_vars[2 * manager.params.h :]
