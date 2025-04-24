@@ -1,7 +1,13 @@
 import attr
 
 from atium.core.utils.attrs_utils import AttrsValidators
-from atium.core.utils.custom_types import NpMatrix22f64, NpVector2f64, StateDerivativeVector, StateVector
+from atium.core.utils.custom_types import (
+    NpMatrix22f64,
+    NpVector2f64,
+    PositionXYVector,
+    StateDerivativeVector,
+    StateVector,
+)
 
 
 @attr.frozen
@@ -34,6 +40,7 @@ class UnitoParams:
 @attr.frozen
 class UnitoInitialStateInputs:
     initial_ms_map: dict[int, StateVector | StateDerivativeVector]
+    initial_xy: PositionXYVector
 
 
 @attr.frozen
@@ -47,7 +54,7 @@ class UnitoFinalStateInputs:
     """
 
     final_ms_map: dict[int, StateVector | StateDerivativeVector]
-    final_xy: NpVector2f64
+    final_xy: PositionXYVector
 
 
 @attr.frozen

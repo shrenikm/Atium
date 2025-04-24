@@ -15,10 +15,11 @@ from pydrake.solvers import (
 )
 from pydrake.symbolic import Expression
 
-from atium.core.utils.custom_types import VectorNf64
+from atium.core.utils.custom_types import NpVectorNf64
 from atium.implementations.unito.src.constraints import (
     continuity_constraint_func,
     final_ms_constraint_func,
+    final_xy_constraint_func,
     initial_ms_constraint_func,
 )
 from atium.implementations.unito.src.costs import control_cost_func, time_regularization_cost_func
@@ -156,6 +157,20 @@ class Unito:
                     description=f"Continuity constraint between segments {i} and {i + 1}, and derivative {derivative}",
                 )
 
+        # Add the final position constraint.
+        self._prog.AddConstraint(
+            func=partial(
+                final_xy_constraint_func,
+                final_xy=inputs.final_state_inputs.final_xy,
+                initial_xy=inputs.initial_state_inputs.initial_xy,
+                manager=self.manager,
+            ),
+            lb=np.full(2, -self.params.final_state_equality_tolerance),
+            ub=np.full(2, self.params.final_state_equality_tolerance),
+            vars=all_vars,
+            description="Final xy constraint",
+        )
+
         self._prog.AddBoundingBoxConstraint(
             0.0,
             np.inf,
@@ -164,7 +179,7 @@ class Unito:
 
         print(self._prog)
 
-    def solve(self, inputs: UnitoInputs, initial_guess: VectorNf64) -> None:
+    def solve(self, inputs: UnitoInputs, initial_guess: NpVectorNf64) -> None:
         solver_options = SolverOptions()
         solver_options.SetOption(CommonSolverOption.kPrintToConsole, True)
         res = Solve(
@@ -202,6 +217,7 @@ if __name__ == "__main__":
             0: np.array([0.0, 0.0]),
             1: np.array([-0.7, 1.1]),
         },
+        initial_xy=np.array([0.0, 0.0]),
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={

@@ -131,6 +131,7 @@ BMatrix = MatrixMNf64
 StateVector = VectorNf64
 StateDerivativeVector = VectorNf64
 ControlInputVector = VectorNf64
+PositionXYVector = Vector2f64
 VelocityXYVector = Vector2f64
 # State derivative: dx/dt = f(x, u). We dont' explicitly include t.
 StateDerivativeFn = Callable[[StateVector, ControlInputVector], StateDerivativeVector]

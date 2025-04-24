@@ -14,8 +14,7 @@ def control_cost_func(
     for i in range(manager.params.M):
         for j in range(manager.params.n - 1):
             t_ij_exp = manager.compute_t_ij_exp(
-                t_vars=manager.get_t_vars(all_vars),
-                i=i,
+                t_i_var=manager.get_t_i_var(all_vars, i=i),
                 j=j,
             )
             sigma_i = manager.compute_sigma_ij_exp(
@@ -25,7 +24,6 @@ def control_cost_func(
                 derivative=manager.params.h,
             )
             cost += sigma_i @ manager.params.W @ sigma_i.T
-            print(cost)
     return cost
 
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-from atium.core.utils.custom_types import StateVector
+from atium.core.utils.custom_types import PositionXYVector, StateVector
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
 
 
@@ -81,10 +81,30 @@ def continuity_constraint_func(
 
 def final_xy_constraint_func(
     func_vars: np.ndarray,
-    final_xy: StateVector,
+    final_xy: PositionXYVector,
+    initial_xy: PositionXYVector,
     manager: UnitoVariableManager,
 ) -> None:
     assert func_vars.shape == (4 * manager.params.h * manager.params.M + manager.params.M,)
 
+    xf = initial_xy[0]
+    yf = initial_xy[1]
+
     for i in range(manager.params.M):
-        x_bar = manager.compute
+        c_theta_i_vars = manager.get_c_theta_i_vars(func_vars, i)
+        c_s_i_vars = manager.get_c_s_i_vars(func_vars, i)
+        t_i_var = manager.get_t_i_var(func_vars, i)
+        x_bar = manager.compute_x_i_bar_exp(
+            c_theta_i_vars=c_theta_i_vars,
+            c_s_i_vars=c_s_i_vars,
+            t_i_var=t_i_var,
+        )
+        y_bar = manager.compute_y_i_bar_exp(
+            c_theta_i_vars=c_theta_i_vars,
+            c_s_i_vars=c_s_i_vars,
+            t_i_var=t_i_var,
+        )
+        xf += x_bar
+        yf += y_bar
+
+    return np.array([xf - final_xy[0], yf - final_xy[1]])
