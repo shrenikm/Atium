@@ -106,5 +106,6 @@ def final_xy_constraint_func(
         )
         xf += x_bar
         yf += y_bar
+    print(xf, yf)
 
     return np.array([xf - final_xy[0], yf - final_xy[1]])

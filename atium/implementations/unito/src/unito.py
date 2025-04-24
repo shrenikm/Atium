@@ -13,7 +13,6 @@ from pydrake.solvers import (
     Solve,
     SolverOptions,
 )
-from pydrake.symbolic import Expression
 
 from atium.core.utils.custom_types import NpVectorNf64
 from atium.implementations.unito.src.constraints import (
@@ -49,9 +48,6 @@ class Unito:
         Get the parameters for the Unito problem.
         """
         return self.manager.params
-
-    def time_regularization_cost_expression(self) -> Expression:
-        return self.params.epsilon_t * np.sum(self._var_t)
 
     @staticmethod
     def start_constraints_callable():
@@ -165,8 +161,8 @@ class Unito:
                 initial_xy=inputs.initial_state_inputs.initial_xy,
                 manager=self.manager,
             ),
-            lb=np.full(2, -self.params.final_state_equality_tolerance),
-            ub=np.full(2, self.params.final_state_equality_tolerance),
+            lb=np.full(2, -self.params.final_xy_equality_tolerance),
+            ub=np.full(2, self.params.final_xy_equality_tolerance),
             vars=all_vars,
             description="Final xy constraint",
         )
@@ -207,15 +203,15 @@ if __name__ == "__main__":
         h=3,
         M=3,
         n=4,
-        epsilon_t=1e-2,
-        W=1e-2 * np.ones((2, 2), dtype=np.float64),
+        epsilon_t=0,
+        W=1e-3 * np.ones((2, 2), dtype=np.float64),
     )
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)
     initial_state_inputs = UnitoInitialStateInputs(
         initial_ms_map={
-            0: np.array([0.0, 0.0]),
-            1: np.array([-0.7, 1.1]),
+            0: np.array([0.1, 0.0]),
+            # 1: np.array([-0.7, 1.1]),
         },
         initial_xy=np.array([0.0, 0.0]),
     )
@@ -235,7 +231,7 @@ if __name__ == "__main__":
     c_theta_initial_guess = np.zeros(2 * params.h * params.M)
     # c_s_initial_guess = np.linspace(0., inputs.final_state_inputs.final_xy[0], 2 * params.h * params.M)
     c_s_initial_guess = np.zeros(2 * params.h * params.M)
-    t_initial_guess = np.zeros(params.M)
+    t_initial_guess = 0.1 * np.ones(params.M)
 
     initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
     unito.solve(inputs=inputs, initial_guess=initial_guess)
