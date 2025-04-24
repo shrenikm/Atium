@@ -150,8 +150,8 @@ class Unito:
                         derivative=derivative,
                         manager=self.manager,
                     ),
-                    lb=np.zeros(2) - self.params.continuity_equality_tolerance,
-                    ub=np.zeros(2) + self.params.continuity_equality_tolerance,
+                    lb=np.full(2, -self.params.continuity_equality_tolerance),
+                    ub=np.full(2, self.params.continuity_equality_tolerance),
                     vars=np.hstack((prev_c_theta_vars, prev_c_s_vars, next_c_theta_vars, next_c_s_vars, prev_t_var)),
                     description=f"Continuity constraint between segments {i} and {i + 1}, and derivative {derivative}",
                 )
