@@ -116,6 +116,7 @@ def test_get_t_vars(
 def test_get_c_theta_i_vars(
     manager: UnitoVariableManager,
     prog: MathematicalProgram,
+    all_vars_values: DecisionVariablesVector,
 ) -> None:
     all_vars = prog.decision_variables()
     for i in range(manager.params.M):
@@ -128,10 +129,20 @@ def test_get_c_theta_i_vars(
                 == f"{UnitoVariableManager.VARS_C_THETA_NAME}({i * 2 * manager.params.h + j})"
             )
 
+    # Test with actual values.
+    for i in range(manager.params.M):
+        # Test with actual values.
+        vars_c_theta_i_values = manager.get_c_theta_i_vars(all_vars_values, i)
+        for j in range(manager.params.n):
+            value = vars_c_theta_i_values[j]
+            assert str(value)[0] == "1"
+            assert str(value)[1:].startswith(f"{i}{j}")
+
 
 def test_get_c_s_i_vars(
     manager: UnitoVariableManager,
     prog: MathematicalProgram,
+    all_vars_values: DecisionVariablesVector,
 ) -> None:
     all_vars = prog.decision_variables()
     for i in range(manager.params.M):
@@ -141,16 +152,33 @@ def test_get_c_s_i_vars(
         for j in range(len(vars_c_s_i)):
             assert vars_c_s_i[j].get_name() == f"{UnitoVariableManager.VARS_C_S_NAME}({i * 2 * manager.params.h + j})"
 
+    # Test with actual values.
+    for i in range(manager.params.M):
+        # Test with actual values.
+        vars_c_s_i_values = manager.get_c_s_i_vars(all_vars_values, i)
+        for j in range(manager.params.n):
+            value = vars_c_s_i_values[j]
+            assert str(value)[0] == "2"
+            assert str(value)[1:].startswith(f"{i}{j}")
+
 
 def test_get_t_i_var(
     manager: UnitoVariableManager,
     prog: MathematicalProgram,
+    all_vars_values: DecisionVariablesVector,
 ) -> None:
     all_vars = prog.decision_variables()
     for i in range(manager.params.M):
         var_t_i = manager.get_t_i_var(all_vars, i)
         assert isinstance(var_t_i, Variable)
         assert var_t_i.get_name() == f"{UnitoVariableManager.VARS_T_NAME}({i})"
+
+    # Test with actual values.
+    for i in range(manager.params.M):
+        # Test with actual values.
+        value = manager.get_t_i_var(all_vars_values, i)
+        assert str(value)[0] == "3"
+        assert str(value)[1:].startswith(f"{i}")
 
 
 def test_get_t_ij_exp(
