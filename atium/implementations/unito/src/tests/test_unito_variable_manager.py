@@ -5,6 +5,7 @@ import pytest
 from pydrake.solvers import MathematicalProgram
 from pydrake.symbolic import Expression, Variable
 
+from atium.core.utils.custom_types import DecisionVariablesVector
 from atium.implementations.unito.src.unito_utils import UnitoParams
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
 
@@ -23,6 +24,20 @@ def params() -> UnitoParams:
         epsilon_t=0.1,
         W=np.ones((2, 2), dtype=np.float64) * 0.1,
     )
+
+
+@pytest.fixture(scope="module")
+def all_vars_values(params: UnitoParams) -> DecisionVariablesVector:
+    """
+    Floating point decision variables for testing.
+    c_theta_i_j will be a number 1{i}{j} where i is the segment and j is the sample.
+    c_s_i_j will be a number 2{i}{j} where i is the segment and j is the sample.
+    theta_i  will be a number 3{i} where i is the segment.
+    """
+    c_theta = np.array([int(f"1{i}{j}") for i in range(params.M) for j in range(2 * params.h)], dtype=np.float64)
+    c_s = np.array([int(f"2{i}{j}") for i in range(params.M) for j in range(2 * params.h)], dtype=np.float64)
+    t = np.array([int(f"3{i}") for i in range(params.M)], dtype=np.float64)
+    return np.concatenate((c_theta, c_s, t), axis=0)
 
 
 @pytest.fixture(scope="module")
@@ -47,6 +62,7 @@ def test_create_decision_variables(
 def test_get_c_theta_vars(
     manager: UnitoVariableManager,
     prog: MathematicalProgram,
+    all_vars_values: DecisionVariablesVector,
 ) -> None:
     all_vars = prog.decision_variables()
     vars_c_theta = manager.get_c_theta_vars(all_vars)
@@ -55,10 +71,16 @@ def test_get_c_theta_vars(
     for i in range(len(vars_c_theta)):
         assert vars_c_theta[i].get_name() == f"{UnitoVariableManager.VARS_C_THETA_NAME}({i})"
 
+    # Test with actual values.
+    vars_c_theta_values = manager.get_c_theta_vars(all_vars_values)
+    for value in vars_c_theta_values:
+        assert str(value)[0] == "1"
+
 
 def test_get_c_s_vars(
     manager: UnitoVariableManager,
     prog: MathematicalProgram,
+    all_vars_values: DecisionVariablesVector,
 ) -> None:
     all_vars = prog.decision_variables()
     vars_c_s = manager.get_c_s_vars(all_vars)
@@ -67,10 +89,16 @@ def test_get_c_s_vars(
     for i in range(len(vars_c_s)):
         assert vars_c_s[i].get_name() == f"{UnitoVariableManager.VARS_C_S_NAME}({i})"
 
+    # Test with actual values.
+    vars_c_s_values = manager.get_c_s_vars(all_vars_values)
+    for value in vars_c_s_values:
+        assert str(value)[0] == "2"
+
 
 def test_get_t_vars(
     manager: UnitoVariableManager,
     prog: MathematicalProgram,
+    all_vars_values: DecisionVariablesVector,
 ) -> None:
     all_vars = prog.decision_variables()
     vars_t = manager.get_t_vars(all_vars)
@@ -78,6 +106,11 @@ def test_get_t_vars(
 
     for i in range(len(vars_t)):
         assert vars_t[i].get_name() == f"{UnitoVariableManager.VARS_T_NAME}({i})"
+
+    # Test with actual values.
+    vars_t_values = manager.get_t_vars(all_vars_values)
+    for value in vars_t_values:
+        assert str(value)[0] == "3"
 
 
 def test_get_c_theta_i_vars(

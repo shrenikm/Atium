@@ -141,6 +141,7 @@ StateTrajectoryArray = MatrixMNf64
 ControlTrajectoryArray = MatrixMNf64
 
 # Optimization
+DecisionVariablesVector = VectorNf64
 CostVector = VectorNf64
 CostMatrix = MatrixMNf64
 
