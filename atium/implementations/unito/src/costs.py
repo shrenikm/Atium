@@ -13,12 +13,12 @@ def control_cost_func(
     # So we only go up to n-2  so that we don't double count.
     for i in range(manager.params.M):
         for j in range(manager.params.n - 1):
-            t_ij_exp = manager.get_t_ij_exp(
+            t_ij_exp = manager.compute_t_ij_exp(
                 t_vars=manager.get_t_vars(all_vars),
                 i=i,
                 j=j,
             )
-            sigma_i = manager.get_sigma_ij_exp(
+            sigma_i = manager.compute_sigma_ij_exp(
                 c_theta_i_vars=manager.get_c_theta_i_vars(all_vars, i),
                 c_s_i_vars=manager.get_c_s_i_vars(all_vars, i),
                 t_ij_exp=t_ij_exp,

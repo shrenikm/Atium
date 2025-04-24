@@ -69,12 +69,12 @@ class UnitoVariableManager:
         offset = 4 * self.params.h * self.params.M
         return all_vars[offset + i]
 
-    def get_t_ij_exp(self, t_vars: np.ndarray, i: int, j: int) -> float | Expression:
+    def compute_t_ij_exp(self, t_vars: np.ndarray, i: int, j: int) -> float | Expression:
         assert 0 <= i < self.params.M
         assert 0 <= j < self.params.n
         return j * t_vars[i] / (self.params.n - 1)
 
-    def get_basis_vector_ij_exp(self, t_ij_exp: float | Expression, derivative: int = 0) -> np.ndarray:
+    def compute_basis_vector_ij_exp(self, t_ij_exp: float | Expression, derivative: int = 0) -> np.ndarray:
         """
         Compute the derivative of the basis vector for the time corresponding to the ith segment and jth sample point.
         The derivative is a polynomial of degree 2*h-2.
@@ -91,14 +91,14 @@ class UnitoVariableManager:
                 basis[k] = 0.0
         return basis
 
-    def get_sigma_ij_exp(
+    def compute_sigma_ij_exp(
         self,
         c_theta_i_vars: np.ndarray,
         c_s_i_vars: np.ndarray,
         t_ij_exp: float | Expression,
         derivative: int = 0,
     ) -> np.ndarray:
-        beta = self.get_basis_vector_ij_exp(t_ij_exp=t_ij_exp, derivative=derivative)
+        beta = self.compute_basis_vector_ij_exp(t_ij_exp=t_ij_exp, derivative=derivative)
         theta_i = beta @ c_theta_i_vars
         s_i = beta @ c_s_i_vars
         return np.array([theta_i, s_i])

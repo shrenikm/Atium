@@ -114,7 +114,7 @@ class Unito:
             if derivative == 0:
                 # For the 0th derivative, Only theta constraints can be added.
                 self._prog.AddConstraint(
-                    manager.get_sigma_ij_exp(
+                    manager.compute_sigma_ij_exp(
                         c_theta_i_vars=c_theta_f_vars,
                         c_s_i_vars=c_s_f_vars,
                         t_ij_exp=t_f_var,

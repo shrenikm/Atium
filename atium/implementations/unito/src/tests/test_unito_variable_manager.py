@@ -181,14 +181,14 @@ def test_get_t_i_var(
         assert str(value)[1:].startswith(f"{i}")
 
 
-def test_get_t_ij_exp(
+def test_compute_t_ij_exp(
     manager: UnitoVariableManager,
     prog: MathematicalProgram,
 ) -> None:
     all_vars = prog.decision_variables()
     for i in range(manager.params.M):
         for j in range(manager.params.n - 1):
-            t_ij_exp = manager.get_t_ij_exp(
+            t_ij_exp = manager.compute_t_ij_exp(
                 t_vars=manager.get_t_vars(all_vars),
                 i=i,
                 j=j,
@@ -199,14 +199,14 @@ def test_get_t_ij_exp(
     t_vars = np.array([1.0, 2.0, 3.0], dtype=np.float64)
 
     for i in range(len(t_vars)):
-        t_ij = manager.get_t_ij_exp(
+        t_ij = manager.compute_t_ij_exp(
             t_vars=t_vars,
             i=i,
             j=0,
         )
         np.testing.assert_allclose(t_ij, 0.0, atol=1e-12)
 
-        t_ij = manager.get_t_ij_exp(
+        t_ij = manager.compute_t_ij_exp(
             t_vars=t_vars,
             i=i,
             j=manager.params.n - 1,
@@ -214,7 +214,7 @@ def test_get_t_ij_exp(
         np.testing.assert_allclose(t_ij, t_vars[i], atol=1e-12)
 
     i, j = 1, 2
-    t_ij = manager.get_t_ij_exp(
+    t_ij = manager.compute_t_ij_exp(
         t_vars=t_vars,
         i=i,
         j=j,
@@ -222,7 +222,7 @@ def test_get_t_ij_exp(
     np.testing.assert_allclose(t_ij, t_vars[i] * j / (manager.params.n - 1), atol=1e-12)
 
 
-def test_get_basis_vector_ij_exp(
+def test_compute_basis_vector_ij_exp(
     manager: UnitoVariableManager,
     prog: MathematicalProgram,
 ) -> None:
@@ -230,7 +230,7 @@ def test_get_basis_vector_ij_exp(
 
     t_ij_exp = manager.get_t_vars(all_vars)[0]
     for derivative in range(manager.params.h):
-        basis_vector = manager.get_basis_vector_ij_exp(
+        basis_vector = manager.compute_basis_vector_ij_exp(
             t_ij_exp=t_ij_exp,
             derivative=derivative,
         )
@@ -239,7 +239,7 @@ def test_get_basis_vector_ij_exp(
 
     # Test with actual values.
     for derivative in range(manager.params.h):
-        basis_vector = manager.get_basis_vector_ij_exp(
+        basis_vector = manager.compute_basis_vector_ij_exp(
             t_ij_exp=0.0,
             derivative=derivative,
         )
@@ -248,7 +248,7 @@ def test_get_basis_vector_ij_exp(
         np.testing.assert_allclose(basis_vector, expected_basis_vector, atol=1e-12)
 
 
-def test_get_sigma_ij_exp(
+def test_compute_sigma_ij_exp(
     rng: np.random.RandomState,
     manager: UnitoVariableManager,
     prog: MathematicalProgram,
@@ -256,12 +256,12 @@ def test_get_sigma_ij_exp(
     all_vars = prog.decision_variables()
     for i in range(manager.params.M):
         for j in range(manager.params.n - 1):
-            t_ij_exp = manager.get_t_ij_exp(
+            t_ij_exp = manager.compute_t_ij_exp(
                 t_vars=manager.get_t_vars(all_vars),
                 i=i,
                 j=j,
             )
-            sigma_ij = manager.get_sigma_ij_exp(
+            sigma_ij = manager.compute_sigma_ij_exp(
                 c_theta_i_vars=manager.get_c_theta_i_vars(all_vars, i),
                 c_s_i_vars=manager.get_c_s_i_vars(all_vars, i),
                 t_ij_exp=t_ij_exp,
@@ -278,7 +278,7 @@ def test_get_sigma_ij_exp(
     basis_vector = np.zeros((2 * manager.params.h,), dtype=np.float64)
     basis_vector[0] = 1.0
 
-    sigma_ij = manager.get_sigma_ij_exp(
+    sigma_ij = manager.compute_sigma_ij_exp(
         c_theta_i_vars=c_theta_i_vars,
         c_s_i_vars=c_s_i_vars,
         t_ij_exp=t_ij_exp,
@@ -289,7 +289,7 @@ def test_get_sigma_ij_exp(
     basis_vector = np.zeros((2 * manager.params.h,), dtype=np.float64)
     basis_vector[1] = 1.0
 
-    sigma_ij = manager.get_sigma_ij_exp(
+    sigma_ij = manager.compute_sigma_ij_exp(
         c_theta_i_vars=c_theta_i_vars,
         c_s_i_vars=c_s_i_vars,
         t_ij_exp=t_ij_exp,
