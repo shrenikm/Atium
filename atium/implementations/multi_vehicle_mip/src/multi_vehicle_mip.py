@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Sequence
+from typing import Sequence
 
 from ortools.linear_solver import pywraplp
 
@@ -22,7 +22,7 @@ def solve_mvmip(
     mvmip_params: MVMIPOptimizationParams,
     vehicles: Sequence[MVMIPVehicle],
     obstacles: Sequence[MVMIPObstacle],
-) -> Optional[MVMIPResult]:
+) -> MVMIPResult | None:
     # TODO: Check validity of vehicles and obstacles.
     mvmip_logger = AtiumLogger("MVMIPLogger")
     mvmip_logger.info("Starting MVMIP problem setup ...")

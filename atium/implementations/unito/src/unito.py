@@ -114,7 +114,7 @@ class Unito:
                     manager.compute_sigma_ij_exp(
                         c_theta_i_vars=c_theta_f_vars,
                         c_s_i_vars=c_s_f_vars,
-                        t_ij_exp=t_f_var,
+                        t_exp=t_f_var,
                     )[1],
                     -self.params.final_state_equality_tolerance,
                     self.params.final_state_equality_tolerance,

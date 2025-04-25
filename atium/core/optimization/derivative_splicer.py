@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Callable, Generic, Optional, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 
 import attr
 from jax import hessian, jacfwd, jit
@@ -54,7 +54,7 @@ class DerivativeSplicedOptFn(Generic[TOptInput, TOptOutput]):
     _hess_fn: OptimizationHessFn = attr.ib(
         validator=AttrsValidators.num_args_validator(num_min_args=1, num_max_args=2),
     )
-    _construct_params_fn: Optional[Callable[[ScalarOrVectorNf64], Any]] = attr.ib(
+    _construct_params_fn: Callable[[ScalarOrVectorNf64], Any] | None = attr.ib(
         default=None,
         validator=attr.validators.optional(AttrsValidators.num_args_validator(num_min_args=1, num_max_args=1)),
     )
@@ -100,7 +100,7 @@ class DerivativeSplicedOptFn(Generic[TOptInput, TOptOutput]):
         def _ccf(
             x: ScalarOrVectorNf64,
             new_x: ScalarOrVectorNf64,
-            params: Optional[Any] = None,
+            params: Any | None = None,
         ) -> Scalarf64:
             if params is None:
                 f0 = self.core_fn(x)

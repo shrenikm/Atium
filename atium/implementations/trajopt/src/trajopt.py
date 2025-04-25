@@ -6,7 +6,7 @@ See: https://rll.berkeley.edu/~sachin/papers/Schulman-IJRR2014.pdf
 
 import time
 from itertools import count
-from typing import List, Optional
+from typing import List
 
 import attr
 import numpy as np
@@ -78,7 +78,7 @@ class TrajOptEntry:
     improvement: bool
     trust_region_size_below_threshold: bool
     penalty_factor: float
-    updated_penalty_factor: Optional[float] = None
+    updated_penalty_factor: float | None = None
 
 
 @attr.define
@@ -107,10 +107,10 @@ class TrajOpt:
     params: TrajOptParams
 
     cost_fn: DerivativeSplicedCostFn
-    linear_inequality_constraints_fn: Optional[DerivativeSplicedConstraintsFn] = None
-    linear_equality_constraints_fn: Optional[DerivativeSplicedConstraintsFn] = None
-    non_linear_inequality_constraints_fn: Optional[DerivativeSplicedConstraintsFn] = None
-    non_linear_equality_constraints_fn: Optional[DerivativeSplicedConstraintsFn] = None
+    linear_inequality_constraints_fn: DerivativeSplicedConstraintsFn | None = None
+    linear_equality_constraints_fn: DerivativeSplicedConstraintsFn | None = None
+    non_linear_inequality_constraints_fn: DerivativeSplicedConstraintsFn | None = None
+    non_linear_equality_constraints_fn: DerivativeSplicedConstraintsFn | None = None
 
     _logger: AtiumLogger = attr.ib(init=False)
 

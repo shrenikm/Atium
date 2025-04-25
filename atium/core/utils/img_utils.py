@@ -1,4 +1,3 @@
-from typing import Optional
 
 import cv2
 import numpy as np
@@ -18,7 +17,7 @@ def paint_img_inplace(
 def create_canvas(
     img_width: int,
     img_height: int,
-    color: Optional[BGRColor] = None,
+    color: BGRColor | None = None,
 ) -> Img3Channel:
     img = np.zeros((img_height, img_width, 3), dtype=np.uint8)
     if color is not None:

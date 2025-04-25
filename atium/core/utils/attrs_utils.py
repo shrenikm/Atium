@@ -1,9 +1,7 @@
 import inspect
-from typing import Optional
 
 import numpy as np
 
-from atium.core.utils.custom_exceptions import AtiumAttributeError
 from atium.core.utils.custom_types import AttrsConverterFunc, AttrsValidatorFunc, NpArrf64
 
 # TODO: Tests for these.
@@ -13,7 +11,7 @@ class AttrsConverters:
     @classmethod
     def np_f64_converter(
         cls,
-        precision: Optional[int] = None,
+        precision: int | None = None,
     ) -> AttrsConverterFunc:
         def _np_array_converter(value) -> NpArrf64:
             np_value = np.array(value, dtype=np.float64)

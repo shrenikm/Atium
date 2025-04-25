@@ -181,43 +181,6 @@ def test_get_t_i_var(
         assert str(value)[1:].startswith(f"{i}")
 
 
-def test_compute_t_ij_exp(
-    manager: UnitoVariableManager,
-    prog: MathematicalProgram,
-) -> None:
-    all_vars = prog.decision_variables()
-    for i in range(manager.params.M):
-        for j in range(manager.params.n - 1):
-            t_ij_exp = manager.compute_t_ij_exp(
-                t_i_var=manager.get_t_i_var(all_vars, i),
-                j=j,
-            )
-            assert isinstance(t_ij_exp, (float, Expression))
-
-    # Test with actual values.
-    t_vars = np.array([1.0, 2.0, 3.0], dtype=np.float64)
-
-    for i in range(len(t_vars)):
-        t_ij = manager.compute_t_ij_exp(
-            t_i_var=t_vars[i],
-            j=0,
-        )
-        np.testing.assert_allclose(t_ij, 0.0, atol=1e-12)
-
-        t_ij = manager.compute_t_ij_exp(
-            t_i_var=t_vars[i],
-            j=manager.params.n - 1,
-        )
-        np.testing.assert_allclose(t_ij, t_vars[i], atol=1e-12)
-
-    i, j = 1, 2
-    t_ij = manager.compute_t_ij_exp(
-        t_i_var=t_vars[i],
-        j=j,
-    )
-    np.testing.assert_allclose(t_ij, t_vars[i] * j / (manager.params.n - 1), atol=1e-12)
-
-
 def test_compute_basis_vector_exp(
     manager: UnitoVariableManager,
     prog: MathematicalProgram,
@@ -252,14 +215,15 @@ def test_compute_sigma_ij_exp(
     all_vars = prog.decision_variables()
     for i in range(manager.params.M):
         for j in range(manager.params.n - 1):
-            t_ij_exp = manager.compute_t_ij_exp(
+            t_ijl_exp = manager.compute_t_ijl_exp(
                 t_i_var=manager.get_t_i_var(all_vars, i),
                 j=j,
+                l=0,
             )
             sigma_ij = manager.compute_sigma_ij_exp(
                 c_theta_i_vars=manager.get_c_theta_i_vars(all_vars, i),
                 c_s_i_vars=manager.get_c_s_i_vars(all_vars, i),
-                t_ij_exp=t_ij_exp,
+                t_exp=t_ijl_exp,
                 derivative=0,
             )
             assert isinstance(sigma_ij, np.ndarray)
@@ -268,7 +232,7 @@ def test_compute_sigma_ij_exp(
     # Test with actual values.
     c_theta_i_vars = rng.rand(2 * manager.params.h)
     c_s_i_vars = rng.rand(2 * manager.params.h)
-    t_ij_exp = 0.0
+    t_exp = 0.0
 
     basis_vector = np.zeros((2 * manager.params.h,), dtype=np.float64)
     basis_vector[0] = 1.0
@@ -276,7 +240,7 @@ def test_compute_sigma_ij_exp(
     sigma_ij = manager.compute_sigma_ij_exp(
         c_theta_i_vars=c_theta_i_vars,
         c_s_i_vars=c_s_i_vars,
-        t_ij_exp=t_ij_exp,
+        t_exp=t_exp,
     )
     np.testing.assert_allclose(sigma_ij[0], c_theta_i_vars @ basis_vector, atol=1e-12)
     np.testing.assert_allclose(sigma_ij[1], c_s_i_vars @ basis_vector, atol=1e-12)
@@ -287,7 +251,7 @@ def test_compute_sigma_ij_exp(
     sigma_ij = manager.compute_sigma_ij_exp(
         c_theta_i_vars=c_theta_i_vars,
         c_s_i_vars=c_s_i_vars,
-        t_ij_exp=t_ij_exp,
+        t_exp=t_exp,
         derivative=1,
     )
     np.testing.assert_allclose(sigma_ij[0], c_theta_i_vars @ basis_vector, atol=1e-12)
