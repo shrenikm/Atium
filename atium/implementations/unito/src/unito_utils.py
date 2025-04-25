@@ -21,7 +21,8 @@ class UnitoParams:
     h: int = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=1))
     # Number of segments
     M: int = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=1))
-    # Number of sampling intervals
+    # Number of sampling intervals (Note: this is not the number of points in each segment)
+    # Each segment has n intervals = n + 1 points (including the endpoints)
     n: int = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=2))
 
     # Costs
