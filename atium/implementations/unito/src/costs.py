@@ -11,7 +11,7 @@ def control_cost_func(
     cost = 0.0
     for i in range(manager.params.M):
         t_i_var = manager.get_t_i_var(all_vars, i=i)
-        sigma_i = manager.compute_sigma_ij_exp(
+        sigma_i = manager.compute_sigma_i_exp(
             c_theta_i_vars=manager.get_c_theta_i_vars(all_vars, i),
             c_s_i_vars=manager.get_c_s_i_vars(all_vars, i),
             t_exp=t_i_var,

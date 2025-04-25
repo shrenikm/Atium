@@ -15,13 +15,13 @@ def initial_ms_constraint_func(
     c_theta_0_vars = func_vars[: 2 * manager.params.h]
     c_s_0_vars = func_vars[2 * manager.params.h :]
 
-    sigma_ij = manager.compute_sigma_ij_exp(
+    sigma_0 = manager.compute_sigma_i_exp(
         c_theta_i_vars=c_theta_0_vars,
         c_s_i_vars=c_s_0_vars,
         t_exp=0.0,
         derivative=derivative,
     )
-    return sigma_ij - initial_ms_state
+    return sigma_0 - initial_ms_state
 
 
 def final_ms_constraint_func(
@@ -40,13 +40,13 @@ def final_ms_constraint_func(
     c_theta_f_vars = c_f_vars[: 2 * manager.params.h]
     c_s_f_vars = c_f_vars[2 * manager.params.h :]
 
-    sigma_ij = manager.compute_sigma_ij_exp(
+    sigma_f = manager.compute_sigma_i_exp(
         c_theta_i_vars=c_theta_f_vars,
         c_s_i_vars=c_s_f_vars,
         t_exp=t_f_var,
         derivative=derivative,
     )
-    return sigma_ij - final_ms_state
+    return sigma_f - final_ms_state
 
 
 def continuity_constraint_func(
@@ -64,13 +64,13 @@ def continuity_constraint_func(
     next_c_theta_vars = next_c_vars[: 2 * manager.params.h]
     next_c_s_vars = next_c_vars[2 * manager.params.h :]
 
-    prev_sigma = manager.compute_sigma_ij_exp(
+    prev_sigma = manager.compute_sigma_i_exp(
         c_theta_i_vars=prev_c_theta_vars,
         c_s_i_vars=prev_c_s_vars,
         t_exp=prev_t_var,
         derivative=derivative,
     )
-    next_sigma = manager.compute_sigma_ij_exp(
+    next_sigma = manager.compute_sigma_i_exp(
         c_theta_i_vars=next_c_theta_vars,
         c_s_i_vars=next_c_s_vars,
         t_exp=0.0,

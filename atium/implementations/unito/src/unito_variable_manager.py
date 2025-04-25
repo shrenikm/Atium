@@ -97,7 +97,7 @@ class UnitoVariableManager:
                 basis[k] = 0.0
         return basis
 
-    def compute_sigma_ij_exp(
+    def compute_sigma_i_exp(
         self,
         c_theta_i_vars: np.ndarray,
         c_s_i_vars: np.ndarray,

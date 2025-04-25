@@ -238,7 +238,7 @@ def test_compute_basis_vector_exp(
         np.testing.assert_allclose(basis_vector, expected_basis_vector, atol=1e-12)
 
 
-def test_compute_sigma_ij_exp(
+def test_compute_sigma_i_exp(
     rng: np.random.RandomState,
     manager: UnitoVariableManager,
     prog: MathematicalProgram,
@@ -251,14 +251,14 @@ def test_compute_sigma_ij_exp(
                 j=j,
                 l=0,
             )
-            sigma_ij = manager.compute_sigma_ij_exp(
+            sigma_i = manager.compute_sigma_i_exp(
                 c_theta_i_vars=manager.get_c_theta_i_vars(all_vars, i),
                 c_s_i_vars=manager.get_c_s_i_vars(all_vars, i),
                 t_exp=t_ijl_exp,
                 derivative=0,
             )
-            assert isinstance(sigma_ij, np.ndarray)
-            assert sigma_ij.shape == (2,)
+            assert isinstance(sigma_i, np.ndarray)
+            assert sigma_i.shape == (2,)
 
     # Test with actual values.
     c_theta_i_vars = rng.rand(2 * manager.params.h)
@@ -268,25 +268,25 @@ def test_compute_sigma_ij_exp(
     basis_vector = np.zeros((2 * manager.params.h,), dtype=np.float64)
     basis_vector[0] = 1.0
 
-    sigma_ij = manager.compute_sigma_ij_exp(
+    sigma_i = manager.compute_sigma_i_exp(
         c_theta_i_vars=c_theta_i_vars,
         c_s_i_vars=c_s_i_vars,
         t_exp=t_exp,
     )
-    np.testing.assert_allclose(sigma_ij[0], c_theta_i_vars @ basis_vector, atol=1e-12)
-    np.testing.assert_allclose(sigma_ij[1], c_s_i_vars @ basis_vector, atol=1e-12)
+    np.testing.assert_allclose(sigma_i[0], c_theta_i_vars @ basis_vector, atol=1e-12)
+    np.testing.assert_allclose(sigma_i[1], c_s_i_vars @ basis_vector, atol=1e-12)
 
     basis_vector = np.zeros((2 * manager.params.h,), dtype=np.float64)
     basis_vector[1] = 1.0
 
-    sigma_ij = manager.compute_sigma_ij_exp(
+    sigma_i = manager.compute_sigma_i_exp(
         c_theta_i_vars=c_theta_i_vars,
         c_s_i_vars=c_s_i_vars,
         t_exp=t_exp,
         derivative=1,
     )
-    np.testing.assert_allclose(sigma_ij[0], c_theta_i_vars @ basis_vector, atol=1e-12)
-    np.testing.assert_allclose(sigma_ij[1], c_s_i_vars @ basis_vector, atol=1e-12)
+    np.testing.assert_allclose(sigma_i[0], c_theta_i_vars @ basis_vector, atol=1e-12)
+    np.testing.assert_allclose(sigma_i[1], c_s_i_vars @ basis_vector, atol=1e-12)
 
 
 if __name__ == "__main__":
