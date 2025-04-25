@@ -181,6 +181,37 @@ def test_get_t_i_var(
         assert str(value)[1:].startswith(f"{i}")
 
 
+def test_compute_t_ijl_exp(
+    manager: UnitoVariableManager,
+    prog: MathematicalProgram,
+    all_vars_values: DecisionVariablesVector,
+) -> None:
+    all_vars = prog.decision_variables()
+    for i in range(manager.params.M):
+        t_i_var = manager.get_t_i_var(all_vars, i)
+        for j in range(manager.params.n):
+            for l in [0, 1, 2]:  # noqa: E741
+                t_ijl_exp = manager.compute_t_ijl_exp(
+                    t_i_var=t_i_var,
+                    j=j,
+                    l=l,
+                )
+                assert isinstance(t_ijl_exp, Expression)
+
+    # Test with actual values.
+    for i in range(manager.params.M):
+        t_i_value = manager.get_t_i_var(all_vars_values, i)
+        for j in range(manager.params.n):
+            for l in [0, 1, 2]:  # noqa: E741
+                t_ijl_value = manager.compute_t_ijl_exp(
+                    t_i_var=t_i_value,
+                    j=j,
+                    l=l,
+                )
+                expected_t_ijl_value = (j + 0.5 * l) * t_i_value / manager.params.n
+                np.testing.assert_allclose(t_ijl_value, expected_t_ijl_value, atol=1e-12)
+
+
 def test_compute_basis_vector_exp(
     manager: UnitoVariableManager,
     prog: MathematicalProgram,

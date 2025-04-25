@@ -68,17 +68,17 @@ class UnitoVariableManager:
         offset = 4 * self.params.h * self.params.M
         return all_vars[offset + i]
 
-    def compute_t_ijl_exp(self, t_i_var: np.ndarray, j: int, l: int) -> float | Expression:  # noqa: E741
+    def compute_t_ijl_exp(self, t_i_var: Variable, j: int, l: int) -> float | Expression:  # noqa: E741
         assert 0 <= j < self.params.n
         # Currently we only allow l to be 0, 1, or 2 for the 3 Simpson points.
         assert l in (0, 1, 2)
 
         if l == 0:
-            return j * t_i_var / (self.params.n - 1)
+            return j * t_i_var / (self.params.n)
         elif l == 1:
-            return (j + 0.5) * t_i_var / (self.params.n - 1)
+            return (j + 0.5) * t_i_var / (self.params.n)
         else:
-            return (j + 1) * t_i_var / (self.params.n - 1)
+            return (j + 1) * t_i_var / (self.params.n)
 
     def compute_basis_vector_exp(self, t_exp: float | Expression, derivative: int = 0) -> np.ndarray:
         """
