@@ -29,6 +29,7 @@ from atium.implementations.unito.src.unito_utils import (
     UnitoParams,
 )
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
+from atium.implementations.unito.src.visualization import visualize_unito_result
 
 
 @attr.define
@@ -197,6 +198,12 @@ class Unito:
         print("t:")
         print(res.GetSolution(self.manager.get_t_vars(self._prog.decision_variables())))
 
+        visualize_unito_result(
+            manager=self.manager,
+            unito_inputs=inputs,
+            all_vars_solution=res.GetSolution(self._prog.decision_variables()),
+        )
+
 
 if __name__ == "__main__":
     params = UnitoParams(
@@ -210,17 +217,17 @@ if __name__ == "__main__":
     unito = Unito(manager=manager)
     initial_state_inputs = UnitoInitialStateInputs(
         initial_ms_map={
-            0: np.array([0.1, 0.0]),
+            0: np.array([0.0, 0.0]),
             # 1: np.array([-0.7, 1.1]),
         },
-        initial_xy=np.array([0.0, 0.0]),
+        initial_xy=np.array([1.0, 0.0]),
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
             # 0: np.array([np.pi / 4.0, 0.0]),
             # 1: np.array([0.0, 1.0]),
         },
-        final_xy=np.array([5.0, 5.0]),
+        final_xy=np.array([4.0, 3.0]),
     )
     inputs = UnitoInputs(
         initial_state_inputs=initial_state_inputs,
