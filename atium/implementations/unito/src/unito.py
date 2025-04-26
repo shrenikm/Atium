@@ -211,7 +211,7 @@ if __name__ == "__main__":
         M=3,
         n=4,
         epsilon_t=0,
-        W=1e-3 * np.ones((2, 2), dtype=np.float64),
+        W=1e-2 * np.ones((2, 2), dtype=np.float64),
     )
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)
@@ -225,9 +225,9 @@ if __name__ == "__main__":
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
             # 0: np.array([np.pi / 4.0, 0.0]),
-            # 1: np.array([0.0, 1.0]),
+            1: np.array([0.0, 1.0]),
         },
-        final_xy=np.array([4.0, 3.0]),
+        final_xy=np.array([5.0, 3.0]),
     )
     inputs = UnitoInputs(
         initial_state_inputs=initial_state_inputs,
@@ -235,10 +235,14 @@ if __name__ == "__main__":
     )
     unito.setup_optimization_program(inputs=inputs)
 
+    # Computing the initial guess.
+    # For s, we interpolate from 0 to the distance between initial and final xy (straight line path)
+    distance = np.linalg.norm(inputs.final_state_inputs.final_xy - inputs.initial_state_inputs.initial_xy)
     c_theta_initial_guess = np.zeros(2 * params.h * params.M)
     # c_s_initial_guess = np.linspace(0., inputs.final_state_inputs.final_xy[0], 2 * params.h * params.M)
-    c_s_initial_guess = np.zeros(2 * params.h * params.M)
-    t_initial_guess = 0.1 * np.ones(params.M)
+    c_s_initial_guess = np.linspace(0.0, distance, 2 * params.h * params.M)
+    # For t, we initialize them by a constant value.
+    t_initial_guess = 1 * np.ones(params.M)
 
     initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
     unito.solve(inputs=inputs, initial_guess=initial_guess)

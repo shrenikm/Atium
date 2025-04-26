@@ -12,6 +12,8 @@ def visualize_unito_result(
     all_vars_solution: DecisionVariablesVector,
 ) -> None:
     fix, (ax1, ax2, ax3) = plt.subplots(1, 3)
+
+    # Prep the axes for plotting.
     ax1.set_xlabel("t (s)")
     ax1.set_ylabel("theta (rad)")
     ax1.set_title("Theta")
@@ -23,20 +25,24 @@ def visualize_unito_result(
     ax3.set_title("XY")
     ax3.set_aspect("equal")
 
-    # Plot the theta and s curves.
-    # Each successive curve is plotted using a different color.
+    # For the theta and s curves, each successive curve is plotted using a different color.
 
     ms_colors = ["lightcoral", "mediumseagreen", "turquoise"]
     xy_color = "slateblue"
 
     x_values = []
     y_values = []
+    t_values = []
 
     for i in range(manager.params.M):
         ms_color = ms_colors[i % len(ms_colors)]
         c_theta_i_values = manager.get_c_theta_i_vars(all_vars_solution, i)
         c_s_i_values = manager.get_c_s_i_vars(all_vars_solution, i)
         t_i_value = manager.get_t_i_var(all_vars_solution, i)
+        # Each segment resets t to 0 and goes through T_i
+        # If we don't add the value up until T_{i-1} to the current t_sample,
+        # the plot will be discontinuous in x.
+        t_offset = np.sum(manager.get_t_vars(all_vars_solution)[:i])
 
         theta_values, s_values, t_values = [], [], []
         for t_sample in np.linspace(0, t_i_value, 10):
@@ -48,7 +54,7 @@ def visualize_unito_result(
             )
             theta_values.append(sigma_i[0])
             s_values.append(sigma_i[1])
-            t_values.append(t_sample)
+            t_values.append(t_sample + t_offset)
 
         x_i = manager.compute_x_i_exp(
             all_vars=all_vars_solution,
