@@ -53,7 +53,7 @@ def continuity_constraint_func(
     func_vars: np.ndarray,
     derivative: int,
     manager: UnitoVariableManager,
-) -> None:
+) -> np.ndarray:
     assert func_vars.shape == (4 * 2 * manager.params.h + 1,)
 
     prev_c_vars = func_vars[: 4 * manager.params.h]
@@ -84,28 +84,20 @@ def final_xy_constraint_func(
     final_xy: PositionXYVector,
     initial_xy: PositionXYVector,
     manager: UnitoVariableManager,
-) -> None:
+) -> np.ndarray:
     assert func_vars.shape == (4 * manager.params.h * manager.params.M + manager.params.M,)
 
-    xf = initial_xy[0]
-    yf = initial_xy[1]
+    xf = manager.compute_x_i_exp(
+        all_vars=func_vars,
+        initial_x=initial_xy[0],
+        i=manager.params.M,
+    )
+    yf = manager.compute_y_i_exp(
+        all_vars=func_vars,
+        initial_y=initial_xy[1],
+        i=manager.params.M,
+    )
 
-    for i in range(manager.params.M):
-        c_theta_i_vars = manager.get_c_theta_i_vars(func_vars, i)
-        c_s_i_vars = manager.get_c_s_i_vars(func_vars, i)
-        t_i_var = manager.get_t_i_var(func_vars, i)
-        x_bar = manager.compute_x_i_bar_exp(
-            c_theta_i_vars=c_theta_i_vars,
-            c_s_i_vars=c_s_i_vars,
-            t_i_var=t_i_var,
-        )
-        y_bar = manager.compute_y_i_bar_exp(
-            c_theta_i_vars=c_theta_i_vars,
-            c_s_i_vars=c_s_i_vars,
-            t_i_var=t_i_var,
-        )
-        xf += x_bar
-        yf += y_bar
     print(xf, yf)
 
     return np.array([xf - final_xy[0], yf - final_xy[1]])

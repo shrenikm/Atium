@@ -212,3 +212,48 @@ class UnitoVariableManager:
             )
             simpsons_sum += y_ij0 + 4 * y_ij1 + y_ij2
         return (t_i_var / (6 * self.params.n)) * simpsons_sum
+
+    def compute_x_i_exp(
+        self,
+        all_vars: np.ndarray,
+        initial_x: float | Variable | Expression,
+        i: int,
+    ) -> float | Expression:
+        """
+        Finds the integrated value of x at the ith segment (Note: 0 indexed).
+        Integrates from x_0 to, applying Simpson's rule at each sampling interval
+        in each segment starting from the first segment.
+        """
+        xi = initial_x
+
+        for k in range(i):
+            c_theta_i_vars = self.get_c_theta_i_vars(all_vars, k)
+            c_s_i_vars = self.get_c_s_i_vars(all_vars, k)
+            t_i_var = self.get_t_i_var(all_vars, k)
+            x_bar = self.compute_x_i_bar_exp(
+                c_theta_i_vars=c_theta_i_vars,
+                c_s_i_vars=c_s_i_vars,
+                t_i_var=t_i_var,
+            )
+            xi += x_bar
+        return xi
+
+    def compute_y_i_exp(
+        self,
+        all_vars: np.ndarray,
+        initial_y: float | Variable | Expression,
+        i: int,
+    ) -> float | Expression:
+        yi = initial_y
+
+        for k in range(i):
+            c_theta_i_vars = self.get_c_theta_i_vars(all_vars, k)
+            c_s_i_vars = self.get_c_s_i_vars(all_vars, k)
+            t_i_var = self.get_t_i_var(all_vars, k)
+            y_bar = self.compute_y_i_bar_exp(
+                c_theta_i_vars=c_theta_i_vars,
+                c_s_i_vars=c_s_i_vars,
+                t_i_var=t_i_var,
+            )
+            yi += y_bar
+        return yi
