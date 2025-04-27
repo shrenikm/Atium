@@ -213,6 +213,16 @@ if __name__ == "__main__":
         epsilon_t=0,
         W=1e-3 * np.ones((2, 2), dtype=np.float64),
     )
+    footprint = np.array(
+        [
+            [-0.5, -0.5],
+            [0.5, -0.5],
+            [0.5, 0.5],
+            [-0.5, 0.5],
+        ]
+    )
+    obstacle_points = np.linspace([1.5, -1.], [1.5, 1.], 20)
+    print(obstacle_points); input()
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)
     initial_state_inputs = UnitoInitialStateInputs(
@@ -220,18 +230,20 @@ if __name__ == "__main__":
             0: np.array([0.4, 0.4]),
             # 1: np.array([-0.7, 1.1]),
         },
-        initial_xy=np.array([1.0, 0.0]),
+        initial_xy=np.array([0.0, 0.0]),
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
             # 0: np.array([np.pi / 4.0, 0.0]),
             # 1: np.array([0.0, 1.0]),
         },
-        final_xy=np.array([10.0, 30.0]),
+        final_xy=np.array([3.0, 0.0]),
     )
     inputs = UnitoInputs(
+        footprint=footprint,
         initial_state_inputs=initial_state_inputs,
         final_state_inputs=final_state_inputs,
+        obstacle_points=obstacle_points,
     )
     unito.setup_optimization_program(inputs=inputs)
 

@@ -4,6 +4,8 @@ from atium.core.utils.attrs_utils import AttrsValidators
 from atium.core.utils.custom_types import (
     NpMatrix22f64,
     NpVector2f64,
+    PointXYArray,
+    PolygonXYArray,
     PositionXYVector,
     StateDerivativeVector,
     StateVector,
@@ -65,5 +67,7 @@ class UnitoInputs:
     Unito solve inputs.
     """
 
+    footprint: PolygonXYArray
     initial_state_inputs: UnitoInitialStateInputs
     final_state_inputs: UnitoFinalStateInputs
+    obstacle_points: PointXYArray
