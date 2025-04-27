@@ -33,6 +33,11 @@ def visualize_unito_result(
     # All x and y values.
     x_values = [unito_inputs.initial_state_inputs.initial_xy[0]]
     y_values = [unito_inputs.initial_state_inputs.initial_xy[1]]
+    heading_values = [
+        unito_inputs.initial_state_inputs.initial_ms_map[0][0]
+        if unito_inputs.initial_state_inputs.initial_ms_map
+        else 0.0
+    ]
     # X and y values at the end of each segment.
     x_segment_values = []
     y_segment_values = []
@@ -75,6 +80,17 @@ def visualize_unito_result(
             )
             x_values.append(x_ij)
             y_values.append(y_ij)
+            heading_values.append(
+                manager.compute_sigma_i_exp(
+                    c_theta_i_vars=c_theta_i_values,
+                    c_s_i_vars=c_s_i_values,
+                    t_exp=manager.compute_t_ijl_exp(
+                        t_i_var=t_i_value,
+                        j=j,
+                        l=0,
+                    ),
+                )[0]
+            )
             if j == manager.params.n - 1:
                 x_segment_values.append(x_ij)
                 y_segment_values.append(y_ij)
@@ -84,9 +100,22 @@ def visualize_unito_result(
         ax1.plot(t_values[-1], theta_values[-1], "o", color=ms_color)
         ax2.plot(t_values[-1], s_values[-1], "o", color=ms_color)
 
+    # Plot xy
     ax3.plot(x_values, y_values, color=xy_color, label="xy")
     for k in range(len(x_segment_values)):
         ax3.plot(x_segment_values[k], y_segment_values[k], "o", color=xy_color)
+
+    # Plot theta.
+    ax3.quiver(
+        x_values,
+        y_values,
+        np.cos(heading_values),
+        np.sin(heading_values),
+        angles="xy",
+        scale_units="xy",
+        scale=1,
+        color=xy_color,
+    )
 
     ax1.legend()
     ax2.legend()
