@@ -149,6 +149,68 @@ class UnitoVariableManager:
         theta_exp = beta @ c_theta_i_vars
         return s_dot_exp * np.sin(theta_exp)
 
+    def compute_x_ij_bar_exp(
+        self,
+        c_theta_i_vars: np.ndarray,
+        c_s_i_vars: np.ndarray,
+        t_i_var: float | Variable,
+        j: int,
+    ) -> float | Expression:
+        """
+        Computes x_ij_bar = (Ti / 6n) * sum_j(x_ij0 + 4x_ij1 + x_ij2)
+        where x_ij0, x_ij1, x_ij2 are the three sampling points of the nth interval of the
+        ith sampling point.
+        """
+        simpsons_sum = 0.0
+        x_ij0 = self.compute_x_ijl_exp(
+            c_theta_i_vars=c_theta_i_vars,
+            c_s_i_vars=c_s_i_vars,
+            t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=j, l=0),
+        )
+        x_ij1 = self.compute_x_ijl_exp(
+            c_theta_i_vars=c_theta_i_vars,
+            c_s_i_vars=c_s_i_vars,
+            t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=j, l=1),
+        )
+        x_ij2 = self.compute_x_ijl_exp(
+            c_theta_i_vars=c_theta_i_vars,
+            c_s_i_vars=c_s_i_vars,
+            t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=2, l=2),
+        )
+        simpsons_sum += x_ij0 + 4 * x_ij1 + x_ij2
+        return (t_i_var / (6 * self.params.n)) * simpsons_sum
+
+    def compute_y_ij_bar_exp(
+        self,
+        c_theta_i_vars: np.ndarray,
+        c_s_i_vars: np.ndarray,
+        t_i_var: float | Variable,
+        j: int,
+    ) -> float | Expression:
+        """
+        Computes y_ij_bar = (Ti / 6n) * sum_j(y_ij0 + 4y_ij1 + y_ij2)
+        where y_ij0, y_ij1, y_ij2 are the three sampling points of the nth interval of the
+        ith sampling point.
+        """
+        simpsons_sum = 0.0
+        y_ij0 = self.compute_y_ijl_exp(
+            c_theta_i_vars=c_theta_i_vars,
+            c_s_i_vars=c_s_i_vars,
+            t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=j, l=0),
+        )
+        y_ij1 = self.compute_y_ijl_exp(
+            c_theta_i_vars=c_theta_i_vars,
+            c_s_i_vars=c_s_i_vars,
+            t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=j, l=1),
+        )
+        y_ij2 = self.compute_y_ijl_exp(
+            c_theta_i_vars=c_theta_i_vars,
+            c_s_i_vars=c_s_i_vars,
+            t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=2, l=2),
+        )
+        simpsons_sum += y_ij0 + 4 * y_ij1 + y_ij2
+        return (t_i_var / (6 * self.params.n)) * simpsons_sum
+
     def compute_x_i_bar_exp(
         self,
         c_theta_i_vars: np.ndarray,
@@ -163,23 +225,13 @@ class UnitoVariableManager:
         """
         simpsons_sum = 0.0
         for j in range(self.params.n):
-            x_ij0 = self.compute_x_ijl_exp(
+            simpsons_sum += self.compute_x_ij_bar_exp(
                 c_theta_i_vars=c_theta_i_vars,
                 c_s_i_vars=c_s_i_vars,
-                t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=j, l=0),
+                t_i_var=t_i_var,
+                j=j,
             )
-            x_ij1 = self.compute_x_ijl_exp(
-                c_theta_i_vars=c_theta_i_vars,
-                c_s_i_vars=c_s_i_vars,
-                t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=j, l=1),
-            )
-            x_ij2 = self.compute_x_ijl_exp(
-                c_theta_i_vars=c_theta_i_vars,
-                c_s_i_vars=c_s_i_vars,
-                t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=2, l=2),
-            )
-            simpsons_sum += x_ij0 + 4 * x_ij1 + x_ij2
-        return (t_i_var / (6 * self.params.n)) * simpsons_sum
+        return simpsons_sum
 
     def compute_y_i_bar_exp(
         self,
@@ -195,23 +247,13 @@ class UnitoVariableManager:
         """
         simpsons_sum = 0.0
         for j in range(self.params.n):
-            y_ij0 = self.compute_y_ijl_exp(
+            simpsons_sum += self.compute_y_ij_bar_exp(
                 c_theta_i_vars=c_theta_i_vars,
                 c_s_i_vars=c_s_i_vars,
-                t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=j, l=0),
+                t_i_var=t_i_var,
+                j=j,
             )
-            y_ij1 = self.compute_y_ijl_exp(
-                c_theta_i_vars=c_theta_i_vars,
-                c_s_i_vars=c_s_i_vars,
-                t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=j, l=1),
-            )
-            y_ij2 = self.compute_y_ijl_exp(
-                c_theta_i_vars=c_theta_i_vars,
-                c_s_i_vars=c_s_i_vars,
-                t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=j, l=2),
-            )
-            simpsons_sum += y_ij0 + 4 * y_ij1 + y_ij2
-        return (t_i_var / (6 * self.params.n)) * simpsons_sum
+        return simpsons_sum
 
     def compute_x_i_exp(
         self,
