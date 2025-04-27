@@ -161,6 +161,8 @@ class UnitoVariableManager:
         where x_ij0, x_ij1, x_ij2 are the three sampling points of the nth interval of the
         ith sampling point.
         """
+        assert j < self.params.n, f"Intervals must go from 0 to {self.params.n - 1}"
+
         simpsons_sum = 0.0
         x_ij0 = self.compute_x_ijl_exp(
             c_theta_i_vars=c_theta_i_vars,
@@ -175,7 +177,7 @@ class UnitoVariableManager:
         x_ij2 = self.compute_x_ijl_exp(
             c_theta_i_vars=c_theta_i_vars,
             c_s_i_vars=c_s_i_vars,
-            t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=2, l=2),
+            t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=j, l=2),
         )
         simpsons_sum += x_ij0 + 4 * x_ij1 + x_ij2
         return (t_i_var / (6 * self.params.n)) * simpsons_sum
@@ -192,6 +194,8 @@ class UnitoVariableManager:
         where y_ij0, y_ij1, y_ij2 are the three sampling points of the nth interval of the
         ith sampling point.
         """
+        assert j < self.params.n, f"Intervals must go from 0 to {self.params.n - 1}"
+
         simpsons_sum = 0.0
         y_ij0 = self.compute_y_ijl_exp(
             c_theta_i_vars=c_theta_i_vars,
@@ -206,7 +210,7 @@ class UnitoVariableManager:
         y_ij2 = self.compute_y_ijl_exp(
             c_theta_i_vars=c_theta_i_vars,
             c_s_i_vars=c_s_i_vars,
-            t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=2, l=2),
+            t_ijl_exp=self.compute_t_ijl_exp(t_i_var=t_i_var, j=j, l=2),
         )
         simpsons_sum += y_ij0 + 4 * y_ij1 + y_ij2
         return (t_i_var / (6 * self.params.n)) * simpsons_sum
@@ -255,47 +259,87 @@ class UnitoVariableManager:
             )
         return simpsons_sum
 
-    def compute_x_i_exp(
+    def compute_x_ij_exp(
         self,
         all_vars: np.ndarray,
         initial_x: float | Variable | Expression,
         i: int,
+        j: int,
     ) -> float | Expression:
         """
-        Finds the integrated value of x at the ith segment (Note: 0 indexed).
+        Finds the integrated value of x at the ith segment and jth sample point.
         Integrates from x_0 to, applying Simpson's rule at each sampling interval
         in each segment starting from the first segment.
         """
-        xi = initial_x
+        assert i < self.params.M, f"Segments must go from 0 to {self.params.M - 1}"
+        assert j < self.params.n, f"Intervals must go from 0 to {self.params.n - 1}"
 
-        for k in range(i):
-            c_theta_i_vars = self.get_c_theta_i_vars(all_vars, k)
-            c_s_i_vars = self.get_c_s_i_vars(all_vars, k)
-            t_i_var = self.get_t_i_var(all_vars, k)
-            x_bar = self.compute_x_i_bar_exp(
+        x_ij = initial_x
+
+        # Add the contribution of all previous segments.
+        for ii in range(i):
+            c_theta_i_vars = self.get_c_theta_i_vars(all_vars, ii)
+            c_s_i_vars = self.get_c_s_i_vars(all_vars, ii)
+            t_i_var = self.get_t_i_var(all_vars, ii)
+            x_ij += self.compute_x_i_bar_exp(
                 c_theta_i_vars=c_theta_i_vars,
                 c_s_i_vars=c_s_i_vars,
                 t_i_var=t_i_var,
             )
-            xi += x_bar
-        return xi
 
-    def compute_y_i_exp(
+        # Add the contribution of the current segment.
+        c_theta_i_vars = self.get_c_theta_i_vars(all_vars, i)
+        c_s_i_vars = self.get_c_s_i_vars(all_vars, i)
+        t_i_var = self.get_t_i_var(all_vars, i)
+        for jj in range(j + 1):
+            x_bar = self.compute_x_ij_bar_exp(
+                c_theta_i_vars=c_theta_i_vars,
+                c_s_i_vars=c_s_i_vars,
+                t_i_var=t_i_var,
+                j=jj,
+            )
+            x_ij += x_bar
+        return x_ij
+
+    def compute_y_ij_exp(
         self,
         all_vars: np.ndarray,
         initial_y: float | Variable | Expression,
         i: int,
+        j: int,
     ) -> float | Expression:
-        yi = initial_y
+        """
+        Finds the integrated value of y at the ith segment and jth sample point.
+        Integrates from y_0 to, applying Simpson's rule at each sampling interval
+        in each segment starting from the first segment.
+        """
+        assert i < self.params.M, f"Segments must go from 0 to {self.params.M - 1}"
+        assert j < self.params.n, f"Intervals must go from 0 to {self.params.n - 1}"
 
-        for k in range(i):
-            c_theta_i_vars = self.get_c_theta_i_vars(all_vars, k)
-            c_s_i_vars = self.get_c_s_i_vars(all_vars, k)
-            t_i_var = self.get_t_i_var(all_vars, k)
-            y_bar = self.compute_y_i_bar_exp(
+        y_ij = initial_y
+
+        # Add the contribution of all previous segments.
+        for ii in range(i):
+            c_theta_i_vars = self.get_c_theta_i_vars(all_vars, ii)
+            c_s_i_vars = self.get_c_s_i_vars(all_vars, ii)
+            t_i_var = self.get_t_i_var(all_vars, ii)
+            y_ij += self.compute_y_i_bar_exp(
                 c_theta_i_vars=c_theta_i_vars,
                 c_s_i_vars=c_s_i_vars,
                 t_i_var=t_i_var,
             )
-            yi += y_bar
-        return yi
+
+        # Add the contribution of the current segment.
+        c_theta_i_vars = self.get_c_theta_i_vars(all_vars, i)
+        c_s_i_vars = self.get_c_s_i_vars(all_vars, i)
+        t_i_var = self.get_t_i_var(all_vars, i)
+        for jj in range(j + 1):
+            y_bar = self.compute_y_ij_bar_exp(
+                c_theta_i_vars=c_theta_i_vars,
+                c_s_i_vars=c_s_i_vars,
+                t_i_var=t_i_var,
+                j=jj,
+            )
+            y_ij += y_bar
+        return y_ij
+

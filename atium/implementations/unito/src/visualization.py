@@ -30,8 +30,12 @@ def visualize_unito_result(
     ms_colors = ["lightcoral", "mediumseagreen", "turquoise"]
     xy_color = "slateblue"
 
-    x_values = []
-    y_values = []
+    # All x and y values.
+    x_values = [unito_inputs.initial_state_inputs.initial_xy[0]]
+    y_values = [unito_inputs.initial_state_inputs.initial_xy[1]]
+    # X and y values at the end of each segment.
+    x_segment_values = []
+    y_segment_values = []
     t_values = []
 
     for i in range(manager.params.M):
@@ -56,38 +60,33 @@ def visualize_unito_result(
             s_values.append(sigma_i[1])
             t_values.append(t_sample + t_offset)
 
-        x_i = manager.compute_x_i_exp(
-            all_vars=all_vars_solution,
-            initial_x=unito_inputs.initial_state_inputs.initial_xy[0],
-            i=i,
-        )
-        y_i = manager.compute_y_i_exp(
-            all_vars=all_vars_solution,
-            initial_y=unito_inputs.initial_state_inputs.initial_xy[1],
-            i=i,
-        )
-        x_values.append(x_i)
-        y_values.append(y_i)
+        for j in range(manager.params.n):
+            x_ij = manager.compute_x_ij_exp(
+                all_vars=all_vars_solution,
+                initial_x=unito_inputs.initial_state_inputs.initial_xy[0],
+                i=i,
+                j=j,
+            )
+            y_ij = manager.compute_y_ij_exp(
+                all_vars=all_vars_solution,
+                initial_y=unito_inputs.initial_state_inputs.initial_xy[1],
+                i=i,
+                j=j,
+            )
+            x_values.append(x_ij)
+            y_values.append(y_ij)
+            if j == manager.params.n - 1:
+                x_segment_values.append(x_ij)
+                y_segment_values.append(y_ij)
 
         ax1.plot(t_values, theta_values, color=ms_color, label=f"Segment {i}: theta")
         ax2.plot(t_values, s_values, color=ms_color, label=f"Segment {i}: s")
-
-    xf = manager.compute_x_i_exp(
-        all_vars=all_vars_solution,
-        initial_x=unito_inputs.initial_state_inputs.initial_xy[0],
-        i=manager.params.M,
-    )
-    yf = manager.compute_y_i_exp(
-        all_vars=all_vars_solution,
-        initial_y=unito_inputs.initial_state_inputs.initial_xy[1],
-        i=manager.params.M,
-    )
-    x_values.append(xf)
-    y_values.append(yf)
+        ax1.plot(t_values[-1], theta_values[-1], "o", color=ms_color)
+        ax2.plot(t_values[-1], s_values[-1], "o", color=ms_color)
 
     ax3.plot(x_values, y_values, color=xy_color, label="xy")
-    for k in range(len(x_values)):
-        ax3.plot(x_values[k], y_values[k], "o", color=xy_color)
+    for k in range(len(x_segment_values)):
+        ax3.plot(x_segment_values[k], y_segment_values[k], "o", color=xy_color)
 
     ax1.legend()
     ax2.legend()

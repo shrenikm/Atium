@@ -87,15 +87,17 @@ def final_xy_constraint_func(
 ) -> np.ndarray:
     assert func_vars.shape == (4 * manager.params.h * manager.params.M + manager.params.M,)
 
-    xf = manager.compute_x_i_exp(
+    xf = manager.compute_x_ij_exp(
         all_vars=func_vars,
         initial_x=initial_xy[0],
-        i=manager.params.M,
+        i=manager.params.M - 1,
+        j=manager.params.n - 1,
     )
-    yf = manager.compute_y_i_exp(
+    yf = manager.compute_y_ij_exp(
         all_vars=func_vars,
         initial_y=initial_xy[1],
-        i=manager.params.M,
+        i=manager.params.M - 1,
+        j=manager.params.n - 1,
     )
 
     print(xf, yf)
