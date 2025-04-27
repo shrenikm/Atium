@@ -10,6 +10,7 @@ def visualize_unito_result(
     manager: UnitoVariableManager,
     unito_inputs: UnitoInputs,
     all_vars_solution: DecisionVariablesVector,
+    draw_heading: bool = False,
 ) -> None:
     fix, (ax1, ax2, ax3) = plt.subplots(1, 3)
 
@@ -100,22 +101,43 @@ def visualize_unito_result(
         ax1.plot(t_values[-1], theta_values[-1], "o", color=ms_color)
         ax2.plot(t_values[-1], s_values[-1], "o", color=ms_color)
 
+    # The trajectory plots need some additional padding.
+    ax3.set_xlim(
+        min(x_values) - 0.5,
+        max(x_values) + 0.5,
+    )
+    ax3.set_ylim(
+        min(y_values) - 0.5,
+        max(y_values) + 0.5,
+    )
+
+    # Draw obstacles.
+    for obstacle in unito_inputs.obstacle_points:
+        ax3.plot(
+            obstacle[0],
+            obstacle[1],
+            "o",
+            color="black",
+            markersize=2,
+        )
+
     # Plot xy
     ax3.plot(x_values, y_values, color=xy_color, label="xy")
     for k in range(len(x_segment_values)):
         ax3.plot(x_segment_values[k], y_segment_values[k], "o", color=xy_color)
 
-    # Plot theta.
-    ax3.quiver(
-        x_values,
-        y_values,
-        np.cos(heading_values),
-        np.sin(heading_values),
-        angles="xy",
-        scale_units="xy",
-        scale=1,
-        color=xy_color,
-    )
+    # Plot heading.
+    if draw_heading:
+        ax3.quiver(
+            x_values,
+            y_values,
+            np.cos(heading_values),
+            np.sin(heading_values),
+            angles="xy",
+            scale_units="xy",
+            scale=1,
+            color=xy_color,
+        )
 
     ax1.legend()
     ax2.legend()

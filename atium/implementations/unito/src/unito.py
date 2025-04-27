@@ -221,8 +221,7 @@ if __name__ == "__main__":
             [-0.5, 0.5],
         ]
     )
-    obstacle_points = np.linspace([1.5, -1.], [1.5, 1.], 20)
-    print(obstacle_points); input()
+    obstacle_points = np.linspace([1.5, -0.5], [1.5, 0.5], 20)
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)
     initial_state_inputs = UnitoInitialStateInputs(
