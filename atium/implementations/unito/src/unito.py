@@ -227,7 +227,7 @@ if __name__ == "__main__":
             # 0: np.array([np.pi / 4.0, 0.0]),
             # 1: np.array([0.0, 1.0]),
         },
-        final_xy=np.array([5.0, 3.0]),
+        final_xy=np.array([10.0, 30.0]),
     )
     inputs = UnitoInputs(
         initial_state_inputs=initial_state_inputs,
@@ -243,7 +243,13 @@ if __name__ == "__main__":
         c_theta_initial_guess[0] = inputs.initial_state_inputs.initial_ms_map[0][0]
 
     # If the start s value is given, we set c_i_s[0] to that value.
-    c_s_initial_guess = np.zeros(2 * params.h * params.M)
+    # c_s_initial_guess = np.zeros(2 * params.h * params.M)
+    distance = np.linalg.norm(inputs.final_state_inputs.final_xy - inputs.initial_state_inputs.initial_xy)
+    c_s_initial_guess = np.linspace(
+        0.0,
+        distance,
+        num=2 * params.h * params.M,
+    )
     if 0 in inputs.initial_state_inputs.initial_ms_map:
         c_s_initial_guess[0] = inputs.initial_state_inputs.initial_ms_map[0][1]
 
