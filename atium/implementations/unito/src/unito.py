@@ -243,7 +243,7 @@ if __name__ == "__main__":
     unito = Unito(manager=manager)
     initial_state_inputs = UnitoInitialStateInputs(
         initial_ms_map={
-            0: np.array([0.4, 0.4]),
+            0: np.array([0.0, 0.0]),
             # 1: np.array([-0.7, 1.1]),
         },
         initial_xy=np.array([0.0, 0.0]),
