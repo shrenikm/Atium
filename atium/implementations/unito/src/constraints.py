@@ -100,6 +100,34 @@ def final_xy_constraint_func(
         j=manager.params.n - 1,
     )
 
-    print(xf, yf)
-
     return np.array([xf - final_xy[0], yf - final_xy[1]])
+
+
+def obstacle_constraint_func(
+    func_vars: np.ndarray,
+    obstacle_points: PositionXYVector,
+    obstacle_clearance: float,
+    initial_xy: PositionXYVector,
+    manager: UnitoVariableManager,
+) -> np.ndarray:
+    assert func_vars.shape == (4 * manager.params.h * manager.params.M + manager.params.M,)
+
+    y_values = []
+
+    for i in range(manager.params.M):
+        for j in range(manager.params.n):
+            x_ij = manager.compute_x_ij_exp(
+                all_vars=func_vars,
+                initial_x=initial_xy[0],
+                i=i,
+                j=j,
+            )
+            y_ij = manager.compute_y_ij_exp(
+                all_vars=func_vars,
+                initial_y=initial_xy[1],
+                i=i,
+                j=j,
+            )
+            y_values.append(y_ij + 0.5 + obstacle_clearance)
+
+    return np.array(y_values)

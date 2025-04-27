@@ -71,3 +71,4 @@ class UnitoInputs:
     initial_state_inputs: UnitoInitialStateInputs
     final_state_inputs: UnitoFinalStateInputs
     obstacle_points: PointXYArray
+    obstacle_clearance: float

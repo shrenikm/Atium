@@ -20,6 +20,7 @@ from atium.implementations.unito.src.constraints import (
     final_ms_constraint_func,
     final_xy_constraint_func,
     initial_ms_constraint_func,
+    obstacle_constraint_func,
 )
 from atium.implementations.unito.src.costs import control_cost_func, time_regularization_cost_func
 from atium.implementations.unito.src.unito_utils import (
@@ -168,6 +169,21 @@ class Unito:
             description="Final xy constraint",
         )
 
+        # Obstacle avoidance constraints.
+        self._prog.AddConstraint(
+            func=partial(
+                obstacle_constraint_func,
+                obstacle_points=inputs.obstacle_points,
+                obstacle_clearance=inputs.obstacle_clearance,
+                initial_xy=inputs.initial_state_inputs.initial_xy,
+                manager=self.manager,
+            ),
+            lb=np.full(self.params.M * self.params.n, -np.inf),
+            ub=np.full(self.params.M * self.params.n, 0.0),
+            vars=all_vars,
+            description="Obstacle avoidance constraint",
+        )
+
         self._prog.AddBoundingBoxConstraint(
             0.0,
             np.inf,
@@ -222,6 +238,7 @@ if __name__ == "__main__":
         ]
     )
     obstacle_points = np.linspace([1.5, -0.5], [1.5, 0.5], 20)
+    obstacle_clearance = 0.2
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)
     initial_state_inputs = UnitoInitialStateInputs(
@@ -243,6 +260,7 @@ if __name__ == "__main__":
         initial_state_inputs=initial_state_inputs,
         final_state_inputs=final_state_inputs,
         obstacle_points=obstacle_points,
+        obstacle_clearance=obstacle_clearance,
     )
     unito.setup_optimization_program(inputs=inputs)
 
