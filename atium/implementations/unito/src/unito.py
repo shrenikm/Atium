@@ -173,13 +173,14 @@ class Unito:
         self._prog.AddConstraint(
             func=partial(
                 obstacle_constraint_func,
+                footprint=inputs.footprint,
                 obstacle_points=inputs.obstacle_points,
                 obstacle_clearance=inputs.obstacle_clearance,
                 initial_xy=inputs.initial_state_inputs.initial_xy,
                 manager=self.manager,
             ),
-            lb=np.full(self.params.M * self.params.n, -np.inf),
-            ub=np.full(self.params.M * self.params.n, 0.0),
+            lb=np.full(self.params.M * self.params.n, 0.0),
+            ub=np.full(self.params.M * self.params.n, np.inf),
             vars=all_vars,
             description="Obstacle avoidance constraint",
         )
@@ -229,14 +230,16 @@ if __name__ == "__main__":
         epsilon_t=0,
         W=1e-3 * np.ones((2, 2), dtype=np.float64),
     )
+    footprint_spacing = 0.1
     footprint = np.array(
         [
-            [-0.5, -0.5],
-            [0.5, -0.5],
-            [0.5, 0.5],
-            [-0.5, 0.5],
+            np.linspace([-0.5, -0.5], [0.5, -0.5], int(1. / footprint_spacing)),
+            np.linspace([0.5, -0.5], [0.5, 0.5], int(1. / footprint_spacing)),
+            np.linspace([0.5, 0.5], [-0.5, 0.5], int(1. / footprint_spacing)),
+            np.linspace([-0.5, 0.5], [-0.5, -0.5], int(1. / footprint_spacing)),
         ]
     )
+    print(footprint); input()
     obstacle_points = np.linspace([1.5, -0.5], [1.5, 0.5], 20)
     obstacle_clearance = 0.2
     manager = UnitoVariableManager(params=params)

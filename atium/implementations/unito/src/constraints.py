@@ -1,6 +1,6 @@
 import numpy as np
 
-from atium.core.utils.custom_types import PositionXYVector, StateVector
+from atium.core.utils.custom_types import PolygonXYArray, PositionXYVector, StateVector
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
 
 
@@ -105,6 +105,7 @@ def final_xy_constraint_func(
 
 def obstacle_constraint_func(
     func_vars: np.ndarray,
+    footprint: PolygonXYArray,
     obstacle_points: PositionXYVector,
     obstacle_clearance: float,
     initial_xy: PositionXYVector,
@@ -112,7 +113,7 @@ def obstacle_constraint_func(
 ) -> np.ndarray:
     assert func_vars.shape == (4 * manager.params.h * manager.params.M + manager.params.M,)
 
-    y_values = []
+    constraint_vector = []
 
     for i in range(manager.params.M):
         for j in range(manager.params.n):
@@ -128,6 +129,23 @@ def obstacle_constraint_func(
                 i=i,
                 j=j,
             )
-            y_values.append(y_ij + 0.5 + obstacle_clearance)
+            theta_ij = manager.compute_t_ijl_exp(
+                t_i_var=manager.get_t_i_var(func_vars, i),
+                j=j,
+                l=0,
+            )
+            rotation_matrix = np.array(
+                [
+                    [np.cos(theta_ij), -np.sin(theta_ij)],
+                    [np.sin(theta_ij), np.cos(theta_ij)],
+                ]
+            )
+            transformed_footprint = rotation_matrix @ footprint.T + np.array([[x_ij], [y_ij]])
+            transformed_footprint = transformed_footprint.T
 
-    return np.array(y_values)
+            for footprint_i in range(transformed_footprint.shape[0]):
+                for obstacle_i in range(obstacle_points.shape[0]):
+                    obstacle_distance = np.linalg.norm(transformed_footprint[footprint_i] - obstacle_points[obstacle_i])
+                    constraint_vector.append(obstacle_distance - obstacle_clearance)
+
+    return np.array(constraint_vector)
