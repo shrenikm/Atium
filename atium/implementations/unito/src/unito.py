@@ -179,8 +179,8 @@ class Unito:
                 initial_xy=inputs.initial_state_inputs.initial_xy,
                 manager=self.manager,
             ),
-            lb=np.full(self.params.M * self.params.n, 0.0),
-            ub=np.full(self.params.M * self.params.n, np.inf),
+            lb=np.full(self.params.M * self.params.n * inputs.footprint.shape[0] * obstacle_points.shape[0], 0.0),
+            ub=np.full(self.params.M * self.params.n * inputs.footprint.shape[0] * obstacle_points.shape[0], np.inf),
             vars=all_vars,
             description="Obstacle avoidance constraint",
         )
@@ -230,18 +230,18 @@ if __name__ == "__main__":
         epsilon_t=0,
         W=1e-3 * np.ones((2, 2), dtype=np.float64),
     )
-    footprint_spacing = 0.1
-    footprint = np.array(
+    footprint_spacing = 0.5
+    footprint = np.vstack(
         [
-            np.linspace([-0.5, -0.5], [0.5, -0.5], int(1. / footprint_spacing)),
-            np.linspace([0.5, -0.5], [0.5, 0.5], int(1. / footprint_spacing)),
-            np.linspace([0.5, 0.5], [-0.5, 0.5], int(1. / footprint_spacing)),
-            np.linspace([-0.5, 0.5], [-0.5, -0.5], int(1. / footprint_spacing)),
+            np.linspace([-0.5, -0.5], [0.5, -0.5], int(1.0 / footprint_spacing) + 1),
+            np.linspace([0.5, -0.5], [0.5, 0.5], int(1.0 / footprint_spacing) + 1),
+            np.linspace([0.5, 0.5], [-0.5, 0.5], int(1.0 / footprint_spacing) + 1),
+            np.linspace([-0.5, 0.5], [-0.5, -0.5], int(1.0 / footprint_spacing) + 1),
         ]
     )
-    print(footprint); input()
-    obstacle_points = np.linspace([1.5, -0.5], [1.5, 0.5], 20)
-    obstacle_clearance = 0.2
+    # obstacle_points = np.linspace([1.5, -0.5], [1.5, 0.5], 5)
+    obstacle_points = np.array([[1.5, 0.0]])
+    obstacle_clearance = 0.5
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)
     initial_state_inputs = UnitoInitialStateInputs(
