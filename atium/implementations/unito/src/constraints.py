@@ -144,8 +144,10 @@ def obstacle_constraint_func(
             transformed_footprint = transformed_footprint.T
 
             for footprint_i in range(transformed_footprint.shape[0]):
+                min_obstacle_dist = np.inf
                 for obstacle_i in range(obstacle_points.shape[0]):
                     obstacle_distance = np.linalg.norm(transformed_footprint[footprint_i] - obstacle_points[obstacle_i])
-                    constraint_vector.append(obstacle_distance - obstacle_clearance)
+                    min_obstacle_dist = min(min_obstacle_dist, obstacle_distance)
+                constraint_vector.append(min_obstacle_dist - obstacle_clearance)
 
     return np.array(constraint_vector)

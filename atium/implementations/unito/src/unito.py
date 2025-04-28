@@ -179,8 +179,8 @@ class Unito:
                 initial_xy=inputs.initial_state_inputs.initial_xy,
                 manager=self.manager,
             ),
-            lb=np.full(self.params.M * self.params.n * inputs.footprint.shape[0] * obstacle_points.shape[0], 0.0),
-            ub=np.full(self.params.M * self.params.n * inputs.footprint.shape[0] * obstacle_points.shape[0], np.inf),
+            lb=np.full(self.params.M * self.params.n * inputs.footprint.shape[0], 0.0),
+            ub=np.full(self.params.M * self.params.n * inputs.footprint.shape[0], np.inf),
             vars=all_vars,
             description="Obstacle avoidance constraint",
         )
