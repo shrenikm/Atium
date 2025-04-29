@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Callable, List, Literal, Tuple, TypeVar, Union
+from typing import Annotated, Any, Callable, Literal, TypeVar, Union
 
 import jax
 import numpy as np
@@ -19,10 +19,12 @@ AttrsConverterFunc = Callable[[Any], Any]
 AttrsValidatorFunc = Callable
 
 # Indices
-Index2D = Tuple[int, int]
-Indices2D = List[Index2D]
-Index3D = Tuple[int, int, int]
-Indices3D = List[Index3D]
+Shape2D = tuple[int, int]
+Index2D = tuple[int, int]
+Indices2D = list[Index2D]
+Shape3D = tuple[int, int, int]
+Index3D = tuple[int, int, int]
+Indices3D = list[Index3D]
 
 # General Array stuff
 f64 = np.float64
@@ -125,8 +127,8 @@ PointXYVector = Vector2f64
 PolygonXYArray = MatrixN2f64
 PointXYArray = MatrixN2f64
 SizeXYVector = Vector2f64
-SizeXY = Tuple[float, float]
-CoordinateXY = Tuple[float, float]
+SizeXY = tuple[float, float]
+CoordinateXY = tuple[float, float]
 
 
 # Kinematics/dynamics/control
@@ -151,6 +153,6 @@ CostVector = VectorNf64
 CostMatrix = MatrixMNf64
 
 # Visualization
-BGRColor = Tuple[int, int, int]
+BGRColor = tuple[int, int, int]
 EnvironmentArray2D = TensorMN2ui8
 ImgArray3D = TensorMN3ui8
