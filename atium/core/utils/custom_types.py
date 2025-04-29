@@ -1,5 +1,6 @@
 from typing import Annotated, Any, Callable, Literal, TypeVar, Union
 
+import attr
 import jax
 import numpy as np
 import numpy.typing as npt
@@ -16,7 +17,7 @@ OutputVideoPath = str
 
 # Attrs stuff
 AttrsConverterFunc = Callable[[Any], Any]
-AttrsValidatorFunc = Callable
+AttrsValidatorFunc = Callable[[Any, attr.Attribute, Any], None]
 
 # Indices
 Shape2D = tuple[int, int]

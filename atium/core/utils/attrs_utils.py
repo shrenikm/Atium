@@ -1,6 +1,8 @@
 import inspect
+from typing import Optional
 
 import numpy as np
+import numpy.typing as npt
 
 from atium.core.utils.custom_types import AttrsConverterFunc, AttrsValidatorFunc, NpArrf64
 
@@ -64,3 +66,18 @@ class AttrsValidators:
                 )
 
         return _num_args_validator
+
+    @classmethod
+    def array_2d_validator(
+        cls,
+        desired_dtype: Optional[npt.DTypeLike] = None,
+    ) -> AttrsValidatorFunc:
+        def _2d_array_validator(instance, attribute, value) -> None:
+            if not isinstance(value, np.ndarray):
+                raise ValueError(f"Value for {attribute} must be a 2D numpy array. Got {type(value)}.")
+            if value.ndim != 2:
+                raise ValueError(f"Value for {attribute} must be a 2D numpy array. Got {value}.")
+            if desired_dtype is not None and value.dtype != desired_dtype:
+                raise ValueError(f"Value for {attribute} must be of dtype {desired_dtype}. Got {value.dtype}.")
+
+        return _2d_array_validator
