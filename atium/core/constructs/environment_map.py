@@ -6,6 +6,7 @@ import attr
 import cv2
 import numpy as np
 
+from atium.core.utils.attrs_utils import AttrsValidators
 from atium.core.utils.custom_types import CoordinateXY, EnvironmentArray2D, Index2D, Shape2D, SizeXY
 
 
@@ -20,8 +21,12 @@ class EnvironmentMap2D:
     A map of obstacles in the environment represented as a numpy array.
     """
 
-    array: EnvironmentArray2D
-    resolution: float
+    array: EnvironmentArray2D = attr.ib(
+        validator=AttrsValidators.array_2d_validator(
+            desired_dtype=np.uint8,
+        )
+    )
+    resolution: float = attr.ib(validator=AttrsValidators.scalar_bounding_box_validator(min_value=0.0, inclusive=False))
 
     @cached_property
     def size_px(self) -> Shape2D:
