@@ -49,6 +49,7 @@ NpMatrixN2f64 = Annotated[npt.NDArray[f64], Literal["N, 2"]]
 NpMatrix22f64 = Annotated[npt.NDArray[f64], Literal["2, 2"]]
 
 NpTensorLMNf64 = Annotated[npt.NDArray[f64], Literal["L, M, N"]]
+NpTensorMN2ui8 = Annotated[npt.NDArray[ui8], Literal["M, N, 2"]]
 NpTensorMN3ui8 = Annotated[npt.NDArray[ui8], Literal["M, N, 3"]]
 
 # JAX types.
@@ -65,6 +66,7 @@ JpMatrixNNf64 = Annotated[jax.Array, Literal["N, N"]]
 JpMatrixN2f64 = Annotated[jax.Array, Literal["N, 2"]]
 
 JpTensorLMNf64 = Annotated[jax.Array, Literal["L, M, N"]]
+JpTensorMN2ui8 = Annotated[jax.Array, Literal["M, N, 2"]]
 JpTensorMN3ui8 = Annotated[jax.Array, Literal["M, N, 3"]]
 
 # Combined types.
@@ -83,6 +85,7 @@ MatrixN2f64 = Union[NpMatrixN2f64, JpMatrixN2f64]
 VectorOrMatrixNf64 = Union[VectorNf64, MatrixMNf64]
 
 TensorLMNf64 = Union[NpTensorLMNf64, JpTensorLMNf64]
+TensorMN2ui8 = Union[NpTensorMN2ui8, JpTensorMN2ui8]
 TensorMN3ui8 = Union[NpTensorMN3ui8, JpTensorMN3ui8]
 
 
@@ -122,6 +125,7 @@ PointXYVector = Vector2f64
 PolygonXYArray = MatrixN2f64
 PointXYArray = MatrixN2f64
 SizeXYVector = Vector2f64
+SizeXY = Tuple[float, float]
 CoordinateXY = Tuple[float, float]
 
 
@@ -148,4 +152,5 @@ CostMatrix = MatrixMNf64
 
 # Visualization
 BGRColor = Tuple[int, int, int]
-Img3Channel = TensorMN3ui8
+EnvironmentArray2D = TensorMN2ui8
+ImgArray3D = TensorMN3ui8
