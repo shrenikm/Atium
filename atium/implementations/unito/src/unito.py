@@ -14,6 +14,7 @@ from pydrake.solvers import (
     SolverOptions,
 )
 
+from atium.core.constructs.environment_map import EnvironmentLabels, EnvironmentMap2D
 from atium.core.utils.custom_types import NpVectorNf64
 from atium.implementations.unito.src.constraints import (
     continuity_constraint_func,
@@ -170,11 +171,12 @@ class Unito:
         )
 
         # Obstacle avoidance constraints.
+        signed_distance_map = emap2d.compute_signed_distance_transform()
         self._prog.AddConstraint(
             func=partial(
                 obstacle_constraint_func,
                 footprint=inputs.footprint,
-                obstacle_points=inputs.obstacle_points,
+                signed_distance_map=signed_distance_map,
                 obstacle_clearance=inputs.obstacle_clearance,
                 initial_xy=inputs.initial_state_inputs.initial_xy,
                 manager=self.manager,
@@ -239,8 +241,20 @@ if __name__ == "__main__":
             np.linspace([-0.5, 0.5], [-0.5, -0.5], int(1.0 / footprint_spacing) + 1),
         ]
     )
-    # obstacle_points = np.linspace([1.5, -0.5], [1.5, 0.5], 5)
-    obstacle_points = np.array([[1.5, 0.0]])
+    emap2d = EnvironmentMap2D.from_empty(
+        size_xy=(5.0, 5.0),
+        resolution=0.1,
+    )
+    emap2d.add_rectangular_obstacle(
+        center_xy=(2.5, 2.5),
+        size_xy=(0.1, 1.0),
+        label=EnvironmentLabels.STATIC_OBSTACLE,
+    )
+    import matplotlib.pyplot as plt
+
+    # plt.imshow(emap2d.array, cmap="gray")
+    plt.imshow(emap2d.compute_signed_distance_transform(), cmap="gray")
+    plt.show()
     obstacle_clearance = 0.5
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)
@@ -249,21 +263,21 @@ if __name__ == "__main__":
             0: np.array([0.0, 0.0]),
             # 1: np.array([-0.7, 1.1]),
         },
-        initial_xy=np.array([0.0, 0.0]),
+        initial_xy=np.array([1.0, 1.5]),
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
             # 0: np.array([np.pi / 4.0, 0.0]),
             # 1: np.array([0.0, 1.0]),
         },
-        final_xy=np.array([3.0, 0.0]),
+        final_xy=np.array([4.0, 1.5]),
     )
     inputs = UnitoInputs(
         footprint=footprint,
+        emap2d=emap2d,
+        obstacle_clearance=obstacle_clearance,
         initial_state_inputs=initial_state_inputs,
         final_state_inputs=final_state_inputs,
-        obstacle_points=obstacle_points,
-        obstacle_clearance=obstacle_clearance,
     )
     unito.setup_optimization_program(inputs=inputs)
 

@@ -119,4 +119,4 @@ class EnvironmentMap2D:
             maskSize=cv2.DIST_MASK_PRECISE,
             dstType=cv2.CV_32F,
         )
-        return dtf_free_map - dtf_obstacle_map
+        return self.resolution * (dtf_free_map - dtf_obstacle_map)

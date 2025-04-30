@@ -1,5 +1,6 @@
 import attr
 
+from atium.core.constructs.environment_map import EnvironmentMap2D
 from atium.core.utils.attrs_utils import AttrsValidators
 from atium.core.utils.custom_types import (
     NpMatrix22f64,
@@ -68,7 +69,7 @@ class UnitoInputs:
     """
 
     footprint: PolygonXYArray
+    emap2d: EnvironmentMap2D
+    obstacle_clearance: float
     initial_state_inputs: UnitoInitialStateInputs
     final_state_inputs: UnitoFinalStateInputs
-    obstacle_points: PointXYArray
-    obstacle_clearance: float

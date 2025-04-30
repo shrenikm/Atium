@@ -1,6 +1,6 @@
 import numpy as np
 
-from atium.core.utils.custom_types import PolygonXYArray, PositionXYVector, StateVector
+from atium.core.utils.custom_types import MatrixMNf32, PolygonXYArray, PositionXYVector, StateVector
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
 
 
@@ -106,7 +106,7 @@ def final_xy_constraint_func(
 def obstacle_constraint_func(
     func_vars: np.ndarray,
     footprint: PolygonXYArray,
-    obstacle_points: PositionXYVector,
+    signed_distance_map: MatrixMNf32,
     obstacle_clearance: float,
     initial_xy: PositionXYVector,
     manager: UnitoVariableManager,
@@ -142,6 +142,8 @@ def obstacle_constraint_func(
             )
             transformed_footprint = rotation_matrix @ footprint.T + np.array([[x_ij], [y_ij]])
             transformed_footprint = transformed_footprint.T
+
+            # Bilinear interpolation.
 
             for footprint_i in range(transformed_footprint.shape[0]):
                 min_obstacle_dist = np.inf

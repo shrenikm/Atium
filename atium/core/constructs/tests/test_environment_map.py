@@ -113,7 +113,6 @@ def test_emap2d_compute_signed_distance_transform() -> None:
         resolution=0.1,
     )
     signed_dtf = emap2d.compute_signed_distance_transform()
-    d = np.sqrt(2.0)
     expected_signed_dtf = np.zeros_like(signed_dtf)
     for i in range(3):
         # Closest obstacle is the top left corner at (3, 3).
@@ -154,6 +153,7 @@ def test_emap2d_compute_signed_distance_transform() -> None:
         for j in range(8, 10):
             expected_signed_dtf[i, j] = np.hypot(7 - i, j - 7)
 
+    expected_signed_dtf = emap2d.resolution * expected_signed_dtf
     np.testing.assert_allclose(
         signed_dtf,
         expected_signed_dtf,
