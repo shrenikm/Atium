@@ -88,7 +88,7 @@ def test_emap2d_get_cv2_coordinates(emap2d: EnvironmentMap2D) -> None:
 def test_emap2d_add_rectangular_obstacle(
     emap2d: EnvironmentMap2D,
     thickness: int,
-    debug: bool = True,
+    debug: bool = False,
 ) -> None:
     # Test adding a rectangular obstacle to the environment map.
     emap2d.add_rectangular_obstacle(
@@ -103,6 +103,62 @@ def test_emap2d_add_rectangular_obstacle(
             emap2d.array,
         )
         cv2.waitKey(0)
+
+
+def test_emap2d_compute_signed_distance_transform() -> None:
+    array = np.zeros((10, 10), dtype=np.uint8)
+    array[3:8, 3:8] = EnvironmentLabels.STATIC_OBSTACLE
+    emap2d = EnvironmentMap2D(
+        array=array,
+        resolution=0.1,
+    )
+    signed_dtf = emap2d.compute_signed_distance_transform()
+    d = np.sqrt(2.0)
+    expected_signed_dtf = np.zeros_like(signed_dtf)
+    for i in range(3):
+        # Closest obstacle is the top left corner at (3, 3).
+        for j in range(3):
+            expected_signed_dtf[i, j] = np.hypot(3 - i, 3 - j)
+
+        # Closest obstacle is vertically below at (3, j).
+        for j in range(3, 8):
+            expected_signed_dtf[i, j] = 3 - i
+
+        # Closest obstacle is the top right corner (3, 7)
+        for j in range(8, 10):
+            expected_signed_dtf[i, j] = np.hypot(3 - i, j - 7)
+
+    for i in range(3, 8):
+        # Closest obstacle is horizontally to the right at (i, 3).
+        for j in range(3):
+            expected_signed_dtf[i, j] = 3 - j
+
+        # Closest obstacle is in the middle at (5, 5).
+        for j in range(3, 8):
+            expected_signed_dtf[i, j] = max(abs(5 - i), abs(5 - j)) - 3
+
+        # Closest obstacle is horizontally to the left at (i, 7).
+        for j in range(8, 10):
+            expected_signed_dtf[i, j] = j - 7
+
+    for i in range(8, 10):
+        # Closest obstacle is the bottom left corner at (7, 3).
+        for j in range(3):
+            expected_signed_dtf[i, j] = np.hypot(7 - i, 3 - j)
+
+        # Closest obstacle is vertically above at (7, j).
+        for j in range(3, 8):
+            expected_signed_dtf[i, j] = i - 7
+
+        # Closest obstacle is the bottom right corner (7, 7)
+        for j in range(8, 10):
+            expected_signed_dtf[i, j] = np.hypot(7 - i, j - 7)
+
+    np.testing.assert_allclose(
+        signed_dtf,
+        expected_signed_dtf,
+        atol=1e-6,
+    )
 
 
 if __name__ == "__main__":

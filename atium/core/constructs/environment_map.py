@@ -101,12 +101,22 @@ class EnvironmentMap2D:
         Compute the signed distance transform of the map.
         The signed distance transform is a map where each pixel value is the distance to the nearest obstacle.
         The distance is positive if the pixel is inside an obstacle and negative if it is outside.
+        To compute this, we subtract two distance transforms:
+        1. The distance transform of the free space to obstacles.
+        2. The distance transform of the obstacles to free space.
         """
         dtf_input = np.zeros_like(self.array, dtype=np.uint8)
         dtf_input[self.array == EnvironmentLabels.FREE] = 1
-        dtf_map = cv2.distanceTransform(
+        dtf_free_map = cv2.distanceTransform(
             src=dtf_input,
             distanceType=cv2.DIST_L2,
             maskSize=cv2.DIST_MASK_PRECISE,
             dstType=cv2.CV_32F,
         )
+        dtf_obstacle_map = cv2.distanceTransform(
+            src=1 - dtf_input,
+            distanceType=cv2.DIST_L2,
+            maskSize=cv2.DIST_MASK_PRECISE,
+            dstType=cv2.CV_32F,
+        )
+        return dtf_free_map - dtf_obstacle_map
