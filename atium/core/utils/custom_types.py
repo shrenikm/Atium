@@ -28,6 +28,7 @@ Index3D = tuple[int, int, int]
 Indices3D = list[Index3D]
 
 # General Array stuff
+f32 = np.float32
 f64 = np.float64
 i64 = np.int64
 ui8 = np.uint8
@@ -46,6 +47,7 @@ NpScalarf64 = Union[NpVector1f64, float]
 
 NpScalarOrVectorNf64 = Union[NpScalarf64, NpVectorNf64]
 
+NpMatrixMNf32 = Annotated[npt.NDArray[f32], Literal["M, N"]]
 NpMatrixMNf64 = Annotated[npt.NDArray[f64], Literal["M, N"]]
 NpMatrixNNf64 = Annotated[npt.NDArray[f64], Literal["N, N"]]
 NpMatrixN2f64 = Annotated[npt.NDArray[f64], Literal["N, 2"]]
@@ -64,6 +66,7 @@ JpScalarf64 = JpVector1f64
 
 JpScalarOrVectorNf64 = Union[JpScalarf64, JpVectorNf64]
 
+JpMatrixMNf32 = Annotated[jax.Array, Literal["M, N"]]
 JpMatrixMNf64 = Annotated[jax.Array, Literal["M, N"]]
 JpMatrixNNf64 = Annotated[jax.Array, Literal["N, N"]]
 JpMatrixN2f64 = Annotated[jax.Array, Literal["N, 2"]]
@@ -81,6 +84,7 @@ Scalarf64 = Union[NpScalarf64, JpScalarf64]
 
 ScalarOrVectorNf64 = Union[Scalarf64, VectorNf64]
 
+MatrixMNf32 = Union[NpMatrixMNf32, JpMatrixMNf32]
 MatrixMNf64 = Union[NpMatrixMNf64, JpMatrixMNf64]
 MatrixNNf64 = Union[NpMatrixNNf64, JpMatrixNNf64]
 MatrixN2f64 = Union[NpMatrixN2f64, JpMatrixN2f64]
@@ -153,7 +157,10 @@ DecisionVariablesVector = VectorNf64
 CostVector = VectorNf64
 CostMatrix = MatrixMNf64
 
-# Visualization
-BGRColor = tuple[int, int, int]
+# Images/2d arrays
+DistanceMap2D = MatrixMNf32
 EnvironmentArray2D = TensorMN2ui8
 ImgArray3D = TensorMN3ui8
+
+# Visualization
+BGRColor = tuple[int, int, int]

@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 
 from atium.core.utils.attrs_utils import AttrsValidators
-from atium.core.utils.custom_types import CoordinateXY, EnvironmentArray2D, Index2D, Shape2D, SizeXY
+from atium.core.utils.custom_types import CoordinateXY, DistanceMap2D, EnvironmentArray2D, Index2D, Shape2D, SizeXY
 
 
 class EnvironmentLabels(IntEnum):
@@ -94,4 +94,19 @@ class EnvironmentMap2D:
             self.get_cv2_coordinates(bottom_right),
             color=label,
             thickness=thickness,
+        )
+
+    def compute_signed_distance_transform(self) -> DistanceMap2D:
+        """
+        Compute the signed distance transform of the map.
+        The signed distance transform is a map where each pixel value is the distance to the nearest obstacle.
+        The distance is positive if the pixel is inside an obstacle and negative if it is outside.
+        """
+        dtf_input = np.zeros_like(self.array, dtype=np.uint8)
+        dtf_input[self.array == EnvironmentLabels.FREE] = 1
+        dtf_map = cv2.distanceTransform(
+            src=dtf_input,
+            distanceType=cv2.DIST_L2,
+            maskSize=cv2.DIST_MASK_PRECISE,
+            dstType=cv2.CV_32F,
         )
