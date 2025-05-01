@@ -62,10 +62,17 @@ def test_emap2d_size_xy(emap2d: EnvironmentMap2D) -> None:
 
 def test_emap2d_xy_to_px(emap2d: EnvironmentMap2D) -> None:
     # Test the conversion from world coordinates to pixel coordinates.
+    # Int output (also the default)
     x, y = 1.0, 0.5
     px_x, px_y = emap2d.xy_to_px((x, y))
     assert px_x == 10
     assert px_y == 5
+
+    # Float output
+    x, y = 1.11, 0.55
+    px_x, px_y = emap2d.xy_to_px((x, y), output_as_float=True)
+    np.testing.assert_allclose(px_x, 11.1, atol=1e-6)
+    np.testing.assert_allclose(px_y, 5.5, atol=1e-6)
 
 
 def test_emap2d_px_to_xy(emap2d: EnvironmentMap2D) -> None:

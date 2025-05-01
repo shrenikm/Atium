@@ -176,6 +176,7 @@ class Unito:
             func=partial(
                 obstacle_constraint_func,
                 footprint=inputs.footprint,
+                emap2d=emap2d,
                 signed_distance_map=signed_distance_map,
                 obstacle_clearance=inputs.obstacle_clearance,
                 initial_xy=inputs.initial_state_inputs.initial_xy,
@@ -253,8 +254,8 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     # plt.imshow(emap2d.array, cmap="gray")
-    plt.imshow(emap2d.compute_signed_distance_transform(), cmap="gray")
-    plt.show()
+    #plt.imshow(emap2d.compute_signed_distance_transform(), cmap="gray")
+    #plt.show()
     obstacle_clearance = 0.5
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)

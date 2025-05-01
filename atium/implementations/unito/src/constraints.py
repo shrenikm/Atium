@@ -1,5 +1,6 @@
 import numpy as np
 
+from atium.core.constructs.environment_map import EnvironmentMap2D
 from atium.core.utils.custom_types import MatrixMNf32, PolygonXYArray, PositionXYVector, StateVector
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
 
@@ -106,6 +107,9 @@ def final_xy_constraint_func(
 def obstacle_constraint_func(
     func_vars: np.ndarray,
     footprint: PolygonXYArray,
+    emap2d: EnvironmentMap2D,
+    # Signed distance can be computed from the emap, but we have a separate argument
+    # in order to avoid recomputing it each time the constraint is evaluated.
     signed_distance_map: MatrixMNf32,
     obstacle_clearance: float,
     initial_xy: PositionXYVector,
@@ -143,13 +147,31 @@ def obstacle_constraint_func(
             transformed_footprint = rotation_matrix @ footprint.T + np.array([[x_ij], [y_ij]])
             transformed_footprint = transformed_footprint.T
 
-            # Bilinear interpolation.
-
             for footprint_i in range(transformed_footprint.shape[0]):
-                min_obstacle_dist = np.inf
-                for obstacle_i in range(obstacle_points.shape[0]):
-                    obstacle_distance = np.linalg.norm(transformed_footprint[footprint_i] - obstacle_points[obstacle_i])
-                    min_obstacle_dist = min(min_obstacle_dist, obstacle_distance)
-                constraint_vector.append(min_obstacle_dist - obstacle_clearance)
+                # Bilinear interpolation.
+                fx = transformed_footprint[footprint_i][0]
+                fy = transformed_footprint[footprint_i][1]
+
+                px_x, px_y = emap2d.xy_to_px(
+                    xy=(fx, fy),
+                    output_as_float=True,
+                )
+
+                px_x0, px_y0 = int(np.floor(px_x)), int(np.floor(px_y))
+                px_x1, px_y1 = px_x0 + 1, px_y0 + 1
+
+                sd1 = signed_distance_map[px_y0, px_x0]
+                sd2 = signed_distance_map[px_y0, px_x1]
+                sd3 = signed_distance_map[px_y1, px_x0]
+                sd4 = signed_distance_map[px_y1, px_x1]
+
+                dx = px_x - px_x0
+                dy = px_y - px_y0
+
+                sd5 = sd1 * (1 - dx) + sd2 * dx
+                sd6 = sd3 * (1 - dx) + sd4 * dx
+                sd = sd5 * (1 - dy) + sd6 * dy
+
+                constraint_vector.append(sd - obstacle_clearance)
 
     return np.array(constraint_vector)

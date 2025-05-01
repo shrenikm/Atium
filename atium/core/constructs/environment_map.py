@@ -44,10 +44,15 @@ class EnvironmentMap2D:
     def size_xy(self) -> SizeXY:
         return (self.size_px[1] * self.resolution, self.size_px[0] * self.resolution)
 
-    def xy_to_px(self, xy: tuple[float, float]) -> tuple[int, int]:
+    def xy_to_px(self, xy: tuple[float, float], output_as_float: bool = False) -> tuple[int, int] | tuple[float, float]:
         """
         Convert a tuple (can be size, coordinates, etc) in meters to a tuple in pixels.
         """
+        if output_as_float:
+            return (
+                xy[0] / self.resolution,
+                xy[1] / self.resolution,
+            )
         return (
             int(xy[0] / self.resolution),
             int(xy[1] / self.resolution),
