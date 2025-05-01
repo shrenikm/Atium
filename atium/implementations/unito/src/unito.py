@@ -231,15 +231,33 @@ if __name__ == "__main__":
         M=3,
         n=4,
         epsilon_t=0,
-        W=1e-3 * np.ones((2, 2), dtype=np.float64),
+        W=1e-1 * np.ones((2, 2), dtype=np.float64),
     )
     footprint_spacing = 0.5
+    footprint_size_x = 1.0
+    footprint_size_y = 0.4
     footprint = np.vstack(
         [
-            np.linspace([-0.5, -0.5], [0.5, -0.5], int(1.0 / footprint_spacing) + 1),
-            np.linspace([0.5, -0.5], [0.5, 0.5], int(1.0 / footprint_spacing) + 1),
-            np.linspace([0.5, 0.5], [-0.5, 0.5], int(1.0 / footprint_spacing) + 1),
-            np.linspace([-0.5, 0.5], [-0.5, -0.5], int(1.0 / footprint_spacing) + 1),
+            np.linspace(
+                [-0.5 * footprint_size_x, -0.5 * footprint_size_y],
+                [0.5 * footprint_size_x, -0.5 * footprint_size_y],
+                int(1.0 / footprint_spacing) + 1,
+            ),
+            np.linspace(
+                [0.5 * footprint_size_x, -0.5 * footprint_size_y],
+                [0.5 * footprint_size_x, 0.5 * footprint_size_y],
+                int(1.0 / footprint_spacing) + 1,
+            ),
+            np.linspace(
+                [0.5 * footprint_size_x, 0.5 * footprint_size_y],
+                [-0.5 * footprint_size_x, 0.5 * footprint_size_y],
+                int(1.0 / footprint_spacing) + 1,
+            ),
+            np.linspace(
+                [-0.5 * footprint_size_x, 0.5 * footprint_size_y],
+                [-0.5 * footprint_size_x, -0.5 * footprint_size_y],
+                int(1.0 / footprint_spacing) + 1,
+            ),
         ]
     )
     emap2d = EnvironmentMap2D.from_empty(
@@ -254,8 +272,8 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     # plt.imshow(emap2d.array, cmap="gray")
-    #plt.imshow(emap2d.compute_signed_distance_transform(), cmap="gray")
-    #plt.show()
+    # plt.imshow(emap2d.compute_signed_distance_transform(), cmap="gray")
+    # plt.show()
     obstacle_clearance = 0.5
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)

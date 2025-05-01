@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import Polygon
 
 from atium.core.utils.color_utils import ColorType
 from atium.core.utils.custom_types import DecisionVariablesVector
@@ -31,6 +32,12 @@ def visualize_unito_result(
 
     ms_colors = ["lightcoral", "mediumseagreen", "turquoise"]
     xy_color = "slateblue"
+
+    # Initial pose
+    initial_pose = np.zeros(3)
+    initial_pose[:2] = unito_inputs.initial_state_inputs.initial_xy
+    if 0 in unito_inputs.initial_state_inputs.initial_ms_map:
+        initial_pose[2] = unito_inputs.initial_state_inputs.initial_ms_map[0][0]
 
     # All x and y values.
     x_values = [unito_inputs.initial_state_inputs.initial_xy[0]]
@@ -109,6 +116,26 @@ def visualize_unito_result(
         extent=[0, emap_size_xy[0], 0, emap_size_xy[1]],
         origin="lower",
     )
+
+    # Draw the footprint at the initial position.
+    # TODO: Tf utils.
+    rotation_matrix = np.array(
+        [
+            [np.cos(initial_pose[2]), -np.sin(initial_pose[2])],
+            [np.sin(initial_pose[2]), np.cos(initial_pose[2])],
+        ]
+    )
+    transformed_footprint = rotation_matrix @ unito_inputs.footprint.T + initial_pose[:2].reshape(2, 1)
+    transformed_footprint = transformed_footprint.T
+
+    polygon = Polygon(
+        transformed_footprint,
+        closed=True,
+        edgecolor="brown",
+        fill=False,
+        linewidth=2,
+    )
+    ax3.add_patch(polygon)
 
     # Plot xy
     ax3.plot(x_values, y_values, color=xy_color, label="xy")
