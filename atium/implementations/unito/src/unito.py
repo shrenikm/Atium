@@ -231,8 +231,9 @@ if __name__ == "__main__":
         M=3,
         n=4,
         epsilon_t=0,
-        W=1e-1 * np.ones((2, 2), dtype=np.float64),
+        W=1e-2 * np.ones((2, 2), dtype=np.float64),
     )
+    # TODO: Utils for this.
     footprint_spacing = 0.5
     footprint_size_x = 1.0
     footprint_size_y = 0.4
@@ -282,14 +283,14 @@ if __name__ == "__main__":
             0: np.array([0.0, 0.0]),
             # 1: np.array([-0.7, 1.1]),
         },
-        initial_xy=np.array([1.0, 1.5]),
+        initial_xy=np.array([1.0, 2.0]),
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
             # 0: np.array([np.pi / 4.0, 0.0]),
             # 1: np.array([0.0, 1.0]),
         },
-        final_xy=np.array([4.0, 1.5]),
+        final_xy=np.array([4.0, 2.0]),
     )
     inputs = UnitoInputs(
         footprint=footprint,

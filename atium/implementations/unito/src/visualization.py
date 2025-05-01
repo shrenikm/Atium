@@ -133,7 +133,7 @@ def visualize_unito_result(
         closed=True,
         edgecolor="brown",
         fill=False,
-        linewidth=2,
+        linewidth=1,
     )
     ax3.add_patch(polygon)
 
