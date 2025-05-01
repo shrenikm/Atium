@@ -1,4 +1,11 @@
+from enum import StrEnum
+
 import attr
+
+
+class ColorType(StrEnum):
+    RGB = "RGB"
+    BGR = "BGR"
 
 
 @attr.frozen

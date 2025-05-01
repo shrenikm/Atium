@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 
 from atium.core.utils.attrs_utils import AttrsValidators
-from atium.core.utils.color_utils import AtiumColorsBGR
+from atium.core.utils.color_utils import AtiumColorsBGR, ColorType
 from atium.core.utils.custom_types import (
     BGRColor,
     CoordinateXY,
@@ -24,11 +24,14 @@ class EnvironmentLabels(IntEnum):
     FREE = 0
     STATIC_OBSTACLE = 1
 
-    def get_viz_color(self) -> BGRColor:
-        return {
+    def get_viz_color(self, color_type: ColorType = ColorType.BGR) -> BGRColor:
+        bgr_color = {
             EnvironmentLabels.FREE: AtiumColorsBGR.WHITE,
             EnvironmentLabels.STATIC_OBSTACLE: AtiumColorsBGR.PUMPKIN,
         }[self]
+        if color_type == ColorType.RGB:
+            return bgr_color[::-1]
+        return bgr_color
 
 
 @attr.define
@@ -159,6 +162,7 @@ class EnvironmentMap2D:
 
     def create_rgb_viz(
         self,
+        color_type: ColorType = ColorType.BGR,
     ) -> ImageArray3D:
         """
         Returns an RGB image represenatiion of the environment map.
@@ -172,6 +176,8 @@ class EnvironmentMap2D:
             dtype=np.uint8,
         )
         for label in EnvironmentLabels:
-            rgb_img[self.array == label] = label.get_viz_color()
+            rgb_img[self.array == label] = label.get_viz_color(
+                color_type=color_type,
+            )
 
         return rgb_img

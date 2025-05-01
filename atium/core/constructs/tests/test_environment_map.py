@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 from atium.core.constructs.environment_map import EnvironmentLabels, EnvironmentMap2D
+from atium.core.utils.color_utils import ColorType
 
 
 @pytest.fixture(scope="function")
@@ -168,7 +169,11 @@ def test_emap2d_compute_signed_distance_transform() -> None:
     )
 
 
-def test_create_rgb_viz(debug: bool = True) -> None:
+@pytest.mark.parametrize("color_type", [ColorType.RGB, ColorType.BGR])
+def test_create_rgb_viz(
+    color_type: ColorType,
+    debug: bool = False,
+) -> None:
     # Test the creation of an RGB visualization of the environment map.
     emap2d = EnvironmentMap2D.from_empty(
         size_xy=(20.0, 10.0),
@@ -179,7 +184,7 @@ def test_create_rgb_viz(debug: bool = True) -> None:
         size_xy=(1.0, 3.0),
         label=EnvironmentLabels.STATIC_OBSTACLE,
     )
-    rgb_viz = emap2d.create_rgb_viz()
+    rgb_viz = emap2d.create_rgb_viz(color_type=color_type)
     if debug:
         cv2.imshow("RGB Visualization", rgb_viz)
         cv2.waitKey(0)
