@@ -111,15 +111,14 @@ def visualize_unito_result(
         max(y_values) + 0.5,
     )
 
-    # Draw obstacles.
-    for obstacle in unito_inputs.obstacle_points:
-        ax3.plot(
-            obstacle[0],
-            obstacle[1],
-            "o",
-            color="black",
-            markersize=2,
-        )
+    # Draw the environment map.
+    emap_size_xy = unito_inputs.emap2d.size_xy
+    ax3.imshow(
+        255 - unito_inputs.emap2d.array,
+        extent=[0, emap_size_xy[0], 0, emap_size_xy[1]],
+        origin="lower",
+        cmap="gray",
+    )
 
     # Plot xy
     ax3.plot(x_values, y_values, color=xy_color, label="xy")

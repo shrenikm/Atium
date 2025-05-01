@@ -118,6 +118,7 @@ def obstacle_constraint_func(
     assert func_vars.shape == (4 * manager.params.h * manager.params.M + manager.params.M,)
 
     constraint_vector = []
+    h, w = signed_distance_map.shape
 
     for i in range(manager.params.M):
         for j in range(manager.params.n):
@@ -159,6 +160,12 @@ def obstacle_constraint_func(
 
                 px_x0, px_y0 = int(np.floor(px_x)), int(np.floor(px_y))
                 px_x1, px_y1 = px_x0 + 1, px_y0 + 1
+
+                # TODO: Maybe make this an emap2d function.
+                px_x0 = np.clip(px_x0, 0, w - 1)
+                px_x1 = np.clip(px_x1, 0, w - 1)
+                px_y0 = np.clip(px_y0, 0, h - 1)
+                px_y1 = np.clip(px_y1, 0, h - 1)
 
                 sd1 = signed_distance_map[px_y0, px_x0]
                 sd2 = signed_distance_map[px_y0, px_x1]
