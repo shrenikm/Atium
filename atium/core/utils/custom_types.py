@@ -160,7 +160,7 @@ CostMatrix = MatrixMNf64
 # Images/2d arrays
 DistanceMap2D = MatrixMNf32
 EnvironmentArray2D = TensorMN2ui8
-ImgArray3D = TensorMN3ui8
+ImageArray3D = TensorMN3ui8
 
 # Visualization
 BGRColor = tuple[int, int, int]

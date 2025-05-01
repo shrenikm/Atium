@@ -2,11 +2,11 @@
 import cv2
 import numpy as np
 
-from atium.core.utils.custom_types import BGRColor, CoordinateXY, ImgArray3D, Index2D
+from atium.core.utils.custom_types import BGRColor, CoordinateXY, ImageArray3D, Index2D
 
 
 def paint_img_inplace(
-    img: ImgArray3D,
+    img: ImageArray3D,
     color: BGRColor,
 ) -> None:
     img[:, :, 0] = color[0]
@@ -18,7 +18,7 @@ def create_canvas(
     img_width: int,
     img_height: int,
     color: BGRColor | None = None,
-) -> ImgArray3D:
+) -> ImageArray3D:
     img = np.zeros((img_height, img_width, 3), dtype=np.uint8)
     if color is not None:
         paint_img_inplace(
@@ -29,7 +29,7 @@ def create_canvas(
 
 
 def world_coordinate_to_px_coordinate(
-    canvas: ImgArray3D,
+    canvas: ImageArray3D,
     world_xy: CoordinateXY,
     resolution: float,
 ) -> Index2D:
@@ -40,7 +40,7 @@ def world_coordinate_to_px_coordinate(
 
 
 def draw_line_on_canvas(
-    canvas: ImgArray3D,
+    canvas: ImageArray3D,
     start_xy: CoordinateXY,
     end_xy: CoordinateXY,
     color: BGRColor,
@@ -73,7 +73,7 @@ def draw_line_on_canvas(
 
 
 def draw_rectangle_on_canvas(
-    canvas: ImgArray3D,
+    canvas: ImageArray3D,
     center_xy: CoordinateXY,
     length: float,
     width: float,
@@ -113,7 +113,7 @@ def draw_rectangle_on_canvas(
 
 
 def draw_circle_on_canvas(
-    canvas: ImgArray3D,
+    canvas: ImageArray3D,
     center_xy: CoordinateXY,
     radius: float,
     color: BGRColor,

@@ -15,5 +15,7 @@ class AtiumColorsBGR:
     RED = (51, 51, 255)
     LIGHT_RED = (153, 153, 255)
 
+    PUMPKIN = (20, 109, 252)
+
     GRAY = (128, 128, 128)
     LIGHT_GRAY = (192, 192, 192)

@@ -7,12 +7,28 @@ import cv2
 import numpy as np
 
 from atium.core.utils.attrs_utils import AttrsValidators
-from atium.core.utils.custom_types import CoordinateXY, DistanceMap2D, EnvironmentArray2D, Index2D, Shape2D, SizeXY
+from atium.core.utils.color_utils import AtiumColorsBGR
+from atium.core.utils.custom_types import (
+    BGRColor,
+    CoordinateXY,
+    DistanceMap2D,
+    EnvironmentArray2D,
+    ImageArray3D,
+    Index2D,
+    Shape2D,
+    SizeXY,
+)
 
 
 class EnvironmentLabels(IntEnum):
     FREE = 0
     STATIC_OBSTACLE = 1
+
+    def get_viz_color(self) -> BGRColor:
+        return {
+            EnvironmentLabels.FREE: AtiumColorsBGR.WHITE,
+            EnvironmentLabels.STATIC_OBSTACLE: AtiumColorsBGR.PUMPKIN,
+        }[self]
 
 
 @attr.define
@@ -36,6 +52,9 @@ class EnvironmentMap2D:
             resolution=resolution,
         )
 
+    # Properties
+    # --------------------------------------------------
+
     @cached_property
     def size_px(self) -> Shape2D:
         return self.array.shape
@@ -43,6 +62,9 @@ class EnvironmentMap2D:
     @cached_property
     def size_xy(self) -> SizeXY:
         return (self.size_px[1] * self.resolution, self.size_px[0] * self.resolution)
+
+    # Coordinates/indices
+    # --------------------------------------------------
 
     def xy_to_px(self, xy: tuple[float, float], output_as_float: bool = False) -> tuple[int, int] | tuple[float, float]:
         """
@@ -74,6 +96,9 @@ class EnvironmentMap2D:
         """
         return (position_px[0], self.size_px[0] - position_px[1])
 
+    # Obstacles
+    # --------------------------------------------------
+
     def add_rectangular_obstacle(
         self,
         center_xy: CoordinateXY,
@@ -101,6 +126,9 @@ class EnvironmentMap2D:
             thickness=thickness,
         )
 
+    # Computation
+    # --------------------------------------------------
+
     def compute_signed_distance_transform(self) -> DistanceMap2D:
         """
         Compute the signed distance transform of the map.
@@ -125,3 +153,25 @@ class EnvironmentMap2D:
             dstType=cv2.CV_32F,
         )
         return self.resolution * (dtf_free_map - dtf_obstacle_map)
+
+    # Visualization
+    # --------------------------------------------------
+
+    def create_rgb_viz(
+        self,
+    ) -> ImageArray3D:
+        """
+        Returns an RGB image represenatiion of the environment map.
+        """
+        rgb_img = np.zeros(
+            shape=(
+                self.size_px[0],
+                self.size_px[1],
+                3,
+            ),
+            dtype=np.uint8,
+        )
+        for label in EnvironmentLabels:
+            rgb_img[self.array == label] = label.get_viz_color()
+
+        return rgb_img

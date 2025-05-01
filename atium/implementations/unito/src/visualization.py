@@ -102,22 +102,22 @@ def visualize_unito_result(
         ax2.plot(t_values[-1], s_values[-1], "o", color=ms_color)
 
     # The trajectory plots need some additional padding.
-    ax3.set_xlim(
-        min(x_values) - 0.5,
-        max(x_values) + 0.5,
-    )
-    ax3.set_ylim(
-        min(y_values) - 0.5,
-        max(y_values) + 0.5,
-    )
+    # ax3.set_xlim(
+    #     min(x_values) - 0.5,
+    #     max(x_values) + 0.5,
+    # )
+    # ax3.set_ylim(
+    #     min(y_values) - 0.5,
+    #     max(y_values) + 0.5,
+    # )
 
     # Draw the environment map.
     emap_size_xy = unito_inputs.emap2d.size_xy
     ax3.imshow(
-        255 - unito_inputs.emap2d.array,
+        unito_inputs.emap2d.create_rgb_viz(),
         extent=[0, emap_size_xy[0], 0, emap_size_xy[1]],
         origin="lower",
-        cmap="gray",
+        #cmap="gray",
     )
 
     # Plot xy

@@ -168,5 +168,22 @@ def test_emap2d_compute_signed_distance_transform() -> None:
     )
 
 
+def test_create_rgb_viz(debug: bool = True) -> None:
+    # Test the creation of an RGB visualization of the environment map.
+    emap2d = EnvironmentMap2D.from_empty(
+        size_xy=(20.0, 10.0),
+        resolution=0.1,
+    )
+    emap2d.add_rectangular_obstacle(
+        center_xy=(10.0, 5.0),
+        size_xy=(1.0, 3.0),
+        label=EnvironmentLabels.STATIC_OBSTACLE,
+    )
+    rgb_viz = emap2d.create_rgb_viz()
+    if debug:
+        cv2.imshow("RGB Visualization", rgb_viz)
+        cv2.waitKey(0)
+
+
 if __name__ == "__main__":
     pytest.main(["-s", "-v", __file__])
