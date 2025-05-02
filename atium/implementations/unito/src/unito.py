@@ -261,6 +261,15 @@ if __name__ == "__main__":
             ),
         ]
     )
+    footprint = np.array(
+        [
+            [-0.5 * footprint_size_x, -0.5 * footprint_size_y],
+            [0.5 * footprint_size_x, -0.5 * footprint_size_y],
+            [0.5 * footprint_size_x, 0.5 * footprint_size_y],
+            [-0.5 * footprint_size_x, 0.5 * footprint_size_y],
+        ]
+    )
+    print(footprint)
     emap2d = EnvironmentMap2D.from_empty(
         size_xy=(5.0, 5.0),
         resolution=0.1,
@@ -279,14 +288,14 @@ if __name__ == "__main__":
             0: np.array([0.0, 0.0]),
             # 1: np.array([-0.7, 1.1]),
         },
-        initial_xy=np.array([1.0, 1.7]),
+        initial_xy=np.array([1.0, 1.9]),
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
             # 0: np.array([np.pi / 4.0, 0.0]),
             # 1: np.array([0.0, 1.0]),
         },
-        final_xy=np.array([4.0, 1.7]),
+        final_xy=np.array([4.0, 1.9]),
     )
     inputs = UnitoInputs(
         footprint=footprint,

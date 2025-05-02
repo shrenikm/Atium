@@ -133,6 +133,23 @@ def visualize_unito_result(
     )
     ax3.add_patch(polygon)
 
+    # Draw the footprint at each sampling point.
+    for i in range(len(x_values)):
+        transformed_footprint = transform_points_2d(
+            points=unito_inputs.footprint,
+            translation=[x_values[i], y_values[i]],
+            rotation=heading_values[i],
+        )
+        polygon = Polygon(
+            transformed_footprint,
+            closed=True,
+            edgecolor="gray",
+            alpha=0.5,
+            fill=False,
+            linewidth=1,
+        )
+        ax3.add_patch(polygon)
+
     # Plot xy
     ax3.plot(x_values, y_values, color=xy_color, label="xy")
     for k in range(len(x_segment_values)):
