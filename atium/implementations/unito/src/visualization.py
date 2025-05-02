@@ -4,6 +4,7 @@ from matplotlib.patches import Polygon
 
 from atium.core.utils.color_utils import ColorType
 from atium.core.utils.custom_types import DecisionVariablesVector
+from atium.core.utils.transformation_utils import transform_points_2d
 from atium.implementations.unito.src.unito_utils import UnitoInputs
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
 
@@ -118,16 +119,11 @@ def visualize_unito_result(
     )
 
     # Draw the footprint at the initial position.
-    # TODO: Tf utils.
-    rotation_matrix = np.array(
-        [
-            [np.cos(initial_pose[2]), -np.sin(initial_pose[2])],
-            [np.sin(initial_pose[2]), np.cos(initial_pose[2])],
-        ]
+    transformed_footprint = transform_points_2d(
+        points=unito_inputs.footprint,
+        translation=initial_pose[:2],
+        rotation=initial_pose[2],
     )
-    transformed_footprint = rotation_matrix @ unito_inputs.footprint.T + initial_pose[:2].reshape(2, 1)
-    transformed_footprint = transformed_footprint.T
-
     polygon = Polygon(
         transformed_footprint,
         closed=True,

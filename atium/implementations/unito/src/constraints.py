@@ -139,6 +139,8 @@ def obstacle_constraint_func(
                 j=j,
                 l=0,
             )
+            # Need to spell this transform out so that we get gradient information.
+            # TODO: Support Autodiff in transform utils.
             rotation_matrix = np.array(
                 [
                     [np.cos(theta_ij), -np.sin(theta_ij)],

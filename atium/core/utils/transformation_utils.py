@@ -18,7 +18,9 @@ def transformation_matrix_2d(
     translation: PointXYVector | None = None,
     rotation: float | None = None,
 ) -> TransformationMatrix2D:
-    transformation_matrix = RotationMatrix.MakeZRotation(rotation).matrix() if rotation else np.eye(3, dtype=np.float64)
+    transformation_matrix = np.eye(3, dtype=np.float64)
+    if rotation is not None:
+        transformation_matrix[0:2, 0:2] = rotation_matrix_2d(rotation)
     if translation is not None:
         transformation_matrix[0:2, 2] = translation
     return transformation_matrix

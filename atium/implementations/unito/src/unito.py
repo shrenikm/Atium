@@ -270,12 +270,8 @@ if __name__ == "__main__":
         size_xy=(0.1, 1.0),
         label=EnvironmentLabels.STATIC_OBSTACLE,
     )
-    import matplotlib.pyplot as plt
 
-    # plt.imshow(emap2d.array, cmap="gray")
-    # plt.imshow(emap2d.compute_signed_distance_transform(), cmap="gray")
-    # plt.show()
-    obstacle_clearance = 0.5
+    obstacle_clearance = 0.2
     manager = UnitoVariableManager(params=params)
     unito = Unito(manager=manager)
     initial_state_inputs = UnitoInitialStateInputs(
@@ -283,14 +279,14 @@ if __name__ == "__main__":
             0: np.array([0.0, 0.0]),
             # 1: np.array([-0.7, 1.1]),
         },
-        initial_xy=np.array([1.0, 2.0]),
+        initial_xy=np.array([1.0, 1.7]),
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
             # 0: np.array([np.pi / 4.0, 0.0]),
             # 1: np.array([0.0, 1.0]),
         },
-        final_xy=np.array([4.0, 2.0]),
+        final_xy=np.array([4.0, 1.7]),
     )
     inputs = UnitoInputs(
         footprint=footprint,
