@@ -30,4 +30,4 @@ def transform_points_2d(
     rotation: float | None = None,
 ) -> PointXYArray:
     transformation_matrix = transformation_matrix_2d(translation, rotation)
-    return (transformation_matrix @ np.hstack((points, np.ones((points.shape[0], 1)))))[:, :2].T
+    return (np.hstack((points, np.ones((points.shape[0], 1)))) @ transformation_matrix.T)[:, :2]
