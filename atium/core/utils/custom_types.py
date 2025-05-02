@@ -52,6 +52,7 @@ NpMatrixMNf64 = Annotated[npt.NDArray[f64], Literal["M, N"]]
 NpMatrixNNf64 = Annotated[npt.NDArray[f64], Literal["N, N"]]
 NpMatrixN2f64 = Annotated[npt.NDArray[f64], Literal["N, 2"]]
 NpMatrix22f64 = Annotated[npt.NDArray[f64], Literal["2, 2"]]
+NpMatrix33f64 = Annotated[npt.NDArray[f64], Literal["3, 3"]]
 
 NpTensorLMNf64 = Annotated[npt.NDArray[f64], Literal["L, M, N"]]
 NpTensorMN2ui8 = Annotated[npt.NDArray[ui8], Literal["M, N, 2"]]
@@ -70,6 +71,8 @@ JpMatrixMNf32 = Annotated[jax.Array, Literal["M, N"]]
 JpMatrixMNf64 = Annotated[jax.Array, Literal["M, N"]]
 JpMatrixNNf64 = Annotated[jax.Array, Literal["N, N"]]
 JpMatrixN2f64 = Annotated[jax.Array, Literal["N, 2"]]
+JpMatrix22f64 = Annotated[jax.Array, Literal["2, 2"]]
+JpMatrix33f64 = Annotated[jax.Array, Literal["3, 3"]]
 
 JpTensorLMNf64 = Annotated[jax.Array, Literal["L, M, N"]]
 JpTensorMN2ui8 = Annotated[jax.Array, Literal["M, N, 2"]]
@@ -88,6 +91,8 @@ MatrixMNf32 = Union[NpMatrixMNf32, JpMatrixMNf32]
 MatrixMNf64 = Union[NpMatrixMNf64, JpMatrixMNf64]
 MatrixNNf64 = Union[NpMatrixNNf64, JpMatrixNNf64]
 MatrixN2f64 = Union[NpMatrixN2f64, JpMatrixN2f64]
+Matrix22f64 = Union[NpMatrix22f64, JpMatrix22f64]
+Matrix33f64 = Union[NpMatrix33f64, JpMatrix33f64]
 
 VectorOrMatrixNf64 = Union[VectorNf64, MatrixMNf64]
 
@@ -134,6 +139,8 @@ PointXYArray = MatrixN2f64
 SizeXYVector = Vector2f64
 SizeXY = tuple[float, float]
 CoordinateXY = tuple[float, float]
+RotationMatrix2D = Matrix22f64
+TransformationMatrix2D = Matrix33f64
 
 
 # Kinematics/dynamics/control

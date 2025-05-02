@@ -1,5 +1,4 @@
 import inspect
-from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -70,7 +69,7 @@ class AttrsValidators:
     @classmethod
     def array_2d_validator(
         cls,
-        desired_dtype: Optional[npt.DTypeLike] = None,
+        desired_dtype: npt.DTypeLike | None = None,
     ) -> AttrsValidatorFunc:
         def _2d_array_validator(instance, attribute, value) -> None:
             if not isinstance(value, np.ndarray):
