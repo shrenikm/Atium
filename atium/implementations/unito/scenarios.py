@@ -38,13 +38,13 @@ def scenario1() -> UnitoInputs:
         initial_ms_map={
             0: np.array([0.0, 0.0]),
         },
-        initial_xy=np.array([1.0, 1.9]),
+        initial_xy=np.array([1.0, 2.0]),
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
-            #0: np.array([0.0, 0.0]),
+            # 0: np.array([0.0, 0.0]),
         },
-        final_xy=np.array([4.0, 1.9]),
+        final_xy=np.array([4.0, 2.0]),
     )
     return UnitoInputs(
         footprint=footprint,

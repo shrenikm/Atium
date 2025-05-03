@@ -136,7 +136,7 @@ class Unito:
                 ),
                 lb=np.full(2, -self.params.final_state_equality_tolerance),
                 ub=np.full(2, self.params.final_state_equality_tolerance),
-                vars=np.hstack((c_theta_f_vars, c_s_f_vars, t_vars[-1])),
+                vars=np.hstack((c_theta_f_vars, c_s_f_vars, t_f_var)),
                 description=f"Final MS constraint for derivative: {derivative}",
             )
 
@@ -233,7 +233,7 @@ class Unito:
         c_theta_initial_guess = np.zeros(2 * self.params.h * self.params.M)
         c_s_initial_guess = np.zeros(2 * self.params.h * self.params.M)
         # For t, we initialize them by a constant value.
-        t_i_initial_guess = 1.0
+        t_i_initial_guess = 2.0
         t_initial_guess = t_i_initial_guess * np.ones(self.params.M)
 
         # If the start theta value is given, we the c_i_theta[0] to that value (for each segment)
