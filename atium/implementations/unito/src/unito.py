@@ -194,7 +194,33 @@ class Unito:
             t_vars,
         )
 
-        print(self._prog)
+    def compute_initial_guess(self, inputs: UnitoInputs) -> NpVectorNf64:
+        """
+        Compute the initial guess for the optimization problem.
+        """
+
+        # If the start theta value is given, we set c_i_theta[0] to that value.
+        c_theta_initial_guess = np.zeros(2 * self.params.h * params.M)
+        if 0 in inputs.initial_state_inputs.initial_ms_map:
+            c_theta_initial_guess[0] = inputs.initial_state_inputs.initial_ms_map[0][0]
+
+        # If the start s value is given, we set c_i_s[0] to that value.
+        # c_s_initial_guess = np.zeros(2 * params.h * params.M)
+        distance = np.linalg.norm(inputs.final_state_inputs.final_xy - inputs.initial_state_inputs.initial_xy)
+        c_s_initial_guess = np.linspace(
+            0.0,
+            distance,
+            num=2 * params.h * params.M,
+        )
+        if 0 in inputs.initial_state_inputs.initial_ms_map:
+            c_s_initial_guess[0] = inputs.initial_state_inputs.initial_ms_map[0][1]
+
+        # For t, we initialize them by a constant value.
+        t_initial_guess = 1 * np.ones(params.M)
+
+        initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
+
+        return initial_guess
 
     def solve(self, inputs: UnitoInputs, initial_guess: NpVectorNf64) -> None:
         solver_options = SolverOptions()
@@ -307,25 +333,5 @@ if __name__ == "__main__":
     unito.setup_optimization_program(inputs=inputs)
 
     # Computing the initial guess.
-
-    # If the start theta value is given, we set c_i_theta[0] to that value.
-    c_theta_initial_guess = np.zeros(2 * params.h * params.M)
-    if 0 in inputs.initial_state_inputs.initial_ms_map:
-        c_theta_initial_guess[0] = inputs.initial_state_inputs.initial_ms_map[0][0]
-
-    # If the start s value is given, we set c_i_s[0] to that value.
-    # c_s_initial_guess = np.zeros(2 * params.h * params.M)
-    distance = np.linalg.norm(inputs.final_state_inputs.final_xy - inputs.initial_state_inputs.initial_xy)
-    c_s_initial_guess = np.linspace(
-        0.0,
-        distance,
-        num=2 * params.h * params.M,
-    )
-    if 0 in inputs.initial_state_inputs.initial_ms_map:
-        c_s_initial_guess[0] = inputs.initial_state_inputs.initial_ms_map[0][1]
-
-    # For t, we initialize them by a constant value.
-    t_initial_guess = 1 * np.ones(params.M)
-
-    initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
+    initial_guess = unito.compute_initial_guess(inputs=inputs)
     unito.solve(inputs=inputs, initial_guess=initial_guess)
