@@ -197,7 +197,7 @@ class Unito:
             t_vars,
         )
 
-    def compute_initial_guess(self, inputs: UnitoInputs) -> NpVectorNf64:
+    def compute_initial_guess_old(self, inputs: UnitoInputs) -> NpVectorNf64:
         """
         Compute the initial guess for the optimization problem.
         """
@@ -220,6 +220,45 @@ class Unito:
 
         # For t, we initialize them by a constant value.
         t_initial_guess = 1 * np.ones(self.params.M)
+
+        initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
+
+        return initial_guess
+
+    def compute_initial_guess(self, inputs: UnitoInputs) -> NpVectorNf64:
+        """
+        Compute the initial guess for the optimization problem.
+        """
+
+        c_theta_initial_guess = np.zeros(2 * self.params.h * self.params.M)
+        c_s_initial_guess = np.zeros(2 * self.params.h * self.params.M)
+        # For t, we initialize them by a constant value.
+        t_i_initial_guess = 1.0
+        t_initial_guess = t_i_initial_guess * np.ones(self.params.M)
+
+        # If the start theta value is given, we the c_i_theta[0] to that value (for each segment)
+        if 0 in inputs.initial_state_inputs.initial_ms_map:
+            for i in range(self.params.M):
+                c_theta_initial_guess[i * 2 * self.params.h] = inputs.initial_state_inputs.initial_ms_map[0][0]
+
+        # We initialize s such that it forms a straight line between the start and end points.
+        # To do this, we divide the segments into equal lengths and set s_i[0] and s_i[1] so that it forms a straight line
+        #  within that segment.
+        distance = np.linalg.norm(inputs.final_state_inputs.final_xy - inputs.initial_state_inputs.initial_xy)
+        distance_per_segment = distance / self.params.M
+        current_s = 0.0
+        if 0 in inputs.initial_state_inputs.initial_ms_map:
+            current_s = inputs.initial_state_inputs.initial_ms_map[0][1]
+
+        for i in range(self.params.M):
+            c_s_initial_guess[i * 2 * self.params.h] = current_s
+            # The first two values correspond to the coefficients of 1 and t
+            # So c_s_i[0] + t * c_s_i[1] = distance up until the ith segment = (i + 1) * distance_per_segment
+            # => c_s_i[1] = ((i + 1) * distance_per_segment - c_s_i[0]) / t
+            c_s_initial_guess[i * 2 * self.params.h + 1] = (
+                (i + 1) * distance_per_segment - current_s
+            ) / t_i_initial_guess
+            current_s += (i + 1) * distance_per_segment
 
         initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
 
