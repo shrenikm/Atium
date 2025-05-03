@@ -263,9 +263,9 @@ class Unito:
             ) / nominal_t
 
         initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
-        print(c_theta_initial_guess)
-        print(c_s_initial_guess)
-        print(t_initial_guess)
+        print(f"Theta initial guess: {c_theta_initial_guess}")
+        print(f"S initial guess: {c_s_initial_guess}")
+        print(f"T initial guess: {t_initial_guess}")
 
         return initial_guess
 
