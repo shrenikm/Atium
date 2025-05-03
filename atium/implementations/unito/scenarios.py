@@ -7,7 +7,7 @@ from atium.implementations.unito.src.unito_utils import UnitoFinalStateInputs, U
 
 
 def get_scenario_footprint() -> PolygonXYArray:
-    footprint_spacing = 0.5
+    footprint_spacing = 0.1
     footprint_size_xy = (1.0, 0.4)
     return densify_polygon(
         polygon=construct_rectangle_polygon(

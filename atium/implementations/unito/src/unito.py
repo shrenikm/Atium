@@ -230,11 +230,16 @@ class Unito:
         Compute the initial guess for the optimization problem.
         """
 
+        distance = np.linalg.norm(inputs.final_state_inputs.final_xy - inputs.initial_state_inputs.initial_xy)
+        distance_per_segment = distance / self.params.M
+        nominal_v = 0.5
+        nominal_t = distance_per_segment / nominal_v
+        print(nominal_t)
+
         c_theta_initial_guess = np.zeros(2 * self.params.h * self.params.M)
         c_s_initial_guess = np.zeros(2 * self.params.h * self.params.M)
         # For t, we initialize them by a constant value.
-        t_i_initial_guess = 2.0
-        t_initial_guess = t_i_initial_guess * np.ones(self.params.M)
+        t_initial_guess = nominal_t * np.ones(self.params.M)
 
         # If the start theta value is given, we the c_i_theta[0] to that value (for each segment)
         if 0 in inputs.initial_state_inputs.initial_ms_map:
@@ -244,8 +249,6 @@ class Unito:
         # We initialize s such that it forms a straight line between the start and end points.
         # To do this, we divide the segments into equal lengths and set s_i[0] and s_i[1] so that it forms a straight line
         #  within that segment.
-        distance = np.linalg.norm(inputs.final_state_inputs.final_xy - inputs.initial_state_inputs.initial_xy)
-        distance_per_segment = distance / self.params.M
         current_s = 0.0
         if 0 in inputs.initial_state_inputs.initial_ms_map:
             current_s = inputs.initial_state_inputs.initial_ms_map[0][1]
@@ -257,7 +260,7 @@ class Unito:
             # => c_s_i[1] = ((i + 1) * distance_per_segment - c_s_i[0]) / t
             c_s_initial_guess[i * 2 * self.params.h + 1] = (
                 (i + 1) * distance_per_segment - current_s
-            ) / t_i_initial_guess
+            ) / nominal_t
             current_s += (i + 1) * distance_per_segment
 
         initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))

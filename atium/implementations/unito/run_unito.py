@@ -31,7 +31,7 @@ if __name__ == "__main__":
         M=3,
         n=4,
         epsilon_t=0,
-        W=1e-2 * np.ones((2, 2), dtype=np.float64),
+        W=1e-1 * np.ones((2, 2), dtype=np.float64),
     )
     unito_inputs = scenario1()
     debug_solver = True
