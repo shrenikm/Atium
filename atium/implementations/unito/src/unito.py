@@ -15,6 +15,7 @@ from pydrake.solvers import (
 )
 
 from atium.core.utils.custom_types import NpVectorNf64
+from atium.core.utils.logging_utils import AtiumLogger
 from atium.implementations.unito.src.constraints import (
     continuity_constraint_func,
     final_ms_constraint_func,
@@ -37,10 +38,15 @@ class Unito:
 
     # Optimization variables
     _prog: MathematicalProgram = attr.ib(init=False)
+    _logger: AtiumLogger = attr.ib(init=False)
 
     @_prog.default
     def _init_prog(self):
         return MathematicalProgram()
+
+    @_logger.default
+    def _init_logger(self):
+        return AtiumLogger(self.__class__.__name__)
 
     @cached_property
     def params(self) -> UnitoParams:
@@ -219,7 +225,13 @@ class Unito:
 
         return initial_guess
 
-    def solve(self, inputs: UnitoInputs, initial_guess: NpVectorNf64) -> None:
+    def solve(
+        self,
+        inputs: UnitoInputs,
+        initial_guess: NpVectorNf64,
+        debug_solver: bool = False,
+        visualize_solution: bool = False,
+    ) -> None:
         solver_options = SolverOptions()
         solver_options.SetOption(CommonSolverOption.kPrintToConsole, True)
         res = Solve(
@@ -228,21 +240,25 @@ class Unito:
             solver_options=solver_options,
         )
 
-        print("Solver used:", res.get_solver_id().name())
-        print("Success:", res.is_success())
-        print("Status:", res.get_solution_result())
-        print("SNOPT info:", res.get_solver_details().info)
-        print("SNOPT solve time:", res.get_solver_details().solve_time)
-        print("Infeasible constraints:", res.GetInfeasibleConstraintNames(self._prog))
-        print("c_theta:")
-        print(res.GetSolution(self.manager.get_c_theta_vars(self._prog.decision_variables())))
-        print("c_s:")
-        print(res.GetSolution(self.manager.get_c_s_vars(self._prog.decision_variables())))
-        print("t:")
-        print(res.GetSolution(self.manager.get_t_vars(self._prog.decision_variables())))
+        if debug_solver:
+            self._logger.info("=" * 20)
+            self._logger.info(f"Solver used: {res.get_solver_id().name()}")
+            self._logger.info(f"Success: {res.is_success()}")
+            self._logger.info(f"Status: {res.get_solution_result()}")
+            self._logger.info(f"Solver solve time: {res.get_solver_details().solve_time}")
+            self._logger.info(f"Infeasible constraints: {res.GetInfeasibleConstraintNames(self._prog)}")
+            self._logger.info("=" * 20)
+            self._logger.info("Solution:")
+            self._logger.info("=" * 20)
+            self._logger.info(
+                f"c_theta: {res.GetSolution(self.manager.get_c_theta_vars(self._prog.decision_variables()))}"
+            )
+            self._logger.info(f"c_s: {res.GetSolution(self.manager.get_c_s_vars(self._prog.decision_variables()))}")
+            self._logger.info(f"t: {res.GetSolution(self.manager.get_t_vars(self._prog.decision_variables()))}")
 
-        visualize_unito_result(
-            manager=self.manager,
-            unito_inputs=inputs,
-            all_vars_solution=res.GetSolution(self._prog.decision_variables()),
-        )
+        if visualize_solution:
+            visualize_unito_result(
+                manager=self.manager,
+                unito_inputs=inputs,
+                all_vars_solution=res.GetSolution(self._prog.decision_variables()),
+            )
