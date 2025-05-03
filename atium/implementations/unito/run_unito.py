@@ -1,6 +1,6 @@
 import numpy as np
 
-from atium.implementations.unito.scenarios import scenario1
+import atium.implementations.unito.scenarios as sc
 from atium.implementations.unito.src.unito import Unito
 from atium.implementations.unito.src.unito_utils import UnitoInputs, UnitoParams
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
@@ -31,9 +31,9 @@ if __name__ == "__main__":
         M=3,
         n=4,
         epsilon_t=0,
-        W=1e-1 * np.ones((2, 2), dtype=np.float64),
+        W=1e-2 * np.ones((2, 2), dtype=np.float64),
     )
-    unito_inputs = scenario1()
+    unito_inputs = sc.scenario1()
     debug_solver = True
     visualize_solution = True
 
