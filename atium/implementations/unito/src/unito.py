@@ -16,6 +16,7 @@ from pydrake.solvers import (
 
 from atium.core.constructs.environment_map import EnvironmentLabels, EnvironmentMap2D
 from atium.core.utils.custom_types import NpVectorNf64
+from atium.core.utils.geometry_utils import construct_rectangle_polygon, densify_polygon
 from atium.implementations.unito.src.constraints import (
     continuity_constraint_func,
     final_ms_constraint_func,
@@ -261,41 +262,15 @@ if __name__ == "__main__":
     )
     # TODO: Utils for this.
     footprint_spacing = 0.5
-    footprint_size_x = 1.0
-    footprint_size_y = 0.4
-    footprint = np.vstack(
-        [
-            np.linspace(
-                [-0.5 * footprint_size_x, -0.5 * footprint_size_y],
-                [0.5 * footprint_size_x, -0.5 * footprint_size_y],
-                int(1.0 / footprint_spacing) + 1,
-            ),
-            np.linspace(
-                [0.5 * footprint_size_x, -0.5 * footprint_size_y],
-                [0.5 * footprint_size_x, 0.5 * footprint_size_y],
-                int(1.0 / footprint_spacing) + 1,
-            ),
-            np.linspace(
-                [0.5 * footprint_size_x, 0.5 * footprint_size_y],
-                [-0.5 * footprint_size_x, 0.5 * footprint_size_y],
-                int(1.0 / footprint_spacing) + 1,
-            ),
-            np.linspace(
-                [-0.5 * footprint_size_x, 0.5 * footprint_size_y],
-                [-0.5 * footprint_size_x, -0.5 * footprint_size_y],
-                int(1.0 / footprint_spacing) + 1,
-            ),
-        ]
+    footprint_size_xy = (1.0, 0.4)
+    footprint = construct_rectangle_polygon(
+        center_xy=(0.0, 0.0),
+        size_xy=footprint_size_xy,
     )
-    footprint = np.array(
-        [
-            [-0.5 * footprint_size_x, -0.5 * footprint_size_y],
-            [0.5 * footprint_size_x, -0.5 * footprint_size_y],
-            [0.5 * footprint_size_x, 0.5 * footprint_size_y],
-            [-0.5 * footprint_size_x, 0.5 * footprint_size_y],
-        ]
+    footprint = densify_polygon(
+        polygon=footprint,
+        spacing=footprint_spacing,
     )
-    print(footprint)
     emap2d = EnvironmentMap2D.from_empty(
         size_xy=(5.0, 5.0),
         resolution=0.1,

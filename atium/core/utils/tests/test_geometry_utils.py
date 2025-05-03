@@ -27,6 +27,7 @@ def test_normalize_angle() -> None:
 
 def test_construct_rectangle_polygon() -> None:
     polygon = construct_rectangle_polygon(
+        center_xy=(0.0, 0.0),
         size_xy=(1.0, 2.0),
     )
     expected_polygon = np.array(
@@ -44,14 +45,34 @@ def test_construct_rectangle_polygon() -> None:
         atol=1e-12,
     )
 
+    polygon = construct_rectangle_polygon(
+        center_xy=(1.0, 2.0),
+        size_xy=(1.0, 2.0),
+    )
+    expected_polygon = np.array(
+        [
+            [0.5, 1.0],
+            [1.5, 1.0],
+            [1.5, 3.0],
+            [0.5, 3.0],
+        ],
+        dtype=np.float64,
+    )
+    np.testing.assert_allclose(
+        polygon,
+        expected_polygon,
+        atol=1e-12,
+    )
+
 
 def test_densify_polygon() -> None:
     polygon = construct_rectangle_polygon(
+        center_xy=(0.0, 0.0),
         size_xy=(8.0, 6.0),
     )
     dense_polygon = densify_polygon(
         polygon=polygon,
-        distance_between_points=1.0,
+        spacing=1.0,
     )
     expected_polygon = np.array(
         [
@@ -64,6 +85,11 @@ def test_densify_polygon() -> None:
             [2.0, -3.0],
             [3.0, -3.0],
             [4.0, -3.0],
+            [4.0, -2.0],
+            [4.0, -1.0],
+            [4.0, 0.0],
+            [4.0, 1.0],
+            [4.0, 2.0],
             [4.0, 3.0],
             [3.0, 3.0],
             [2.0, 3.0],
@@ -72,6 +98,12 @@ def test_densify_polygon() -> None:
             [-1.0, 3.0],
             [-2.0, 3.0],
             [-3.0, 3.0],
+            [-4.0, 3.0],
+            [-4.0, 2.0],
+            [-4.0, 1.0],
+            [-4.0, 0.0],
+            [-4.0, -1.0],
+            [-4.0, -2.0],
         ],
         dtype=np.float64,
     )
