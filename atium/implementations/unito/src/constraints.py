@@ -121,6 +121,9 @@ def obstacle_constraint_func(
     h, w = signed_distance_map.shape
 
     for i in range(manager.params.M):
+        c_theta_i_vars = manager.get_c_theta_i_vars(all_vars=func_vars, i=i)
+        c_s_i_vars = manager.get_c_s_i_vars(all_vars=func_vars, i=i)
+
         for j in range(manager.params.n):
             x_ij = manager.compute_x_ij_exp(
                 all_vars=func_vars,
@@ -134,11 +137,16 @@ def obstacle_constraint_func(
                 i=i,
                 j=j,
             )
-            theta_ij = manager.compute_t_ijl_exp(
+            t_ijl = manager.compute_t_ijl_exp(
                 t_i_var=manager.get_t_i_var(func_vars, i),
                 j=j,
                 l=0,
             )
+            theta_ij = manager.compute_sigma_i_exp(
+                c_theta_i_vars=c_theta_i_vars,
+                c_s_i_vars=c_s_i_vars,
+                t_exp=t_ijl,
+            )[0]
             # Need to spell this transform out so that we get gradient information.
             # TODO: Support Autodiff in transform utils.
             rotation_matrix = np.array(

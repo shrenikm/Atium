@@ -231,7 +231,7 @@ class Unito:
 
         distance = np.linalg.norm(inputs.final_state_inputs.final_xy - inputs.initial_state_inputs.initial_xy)
         distance_per_segment = distance / self.params.M
-        nominal_v = 1.0
+        nominal_v = 10.0
         nominal_t = distance_per_segment / nominal_v
         if np.isclose(nominal_t, 0.):
             nominal_t = 0.1
