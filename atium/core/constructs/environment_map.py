@@ -181,3 +181,13 @@ class EnvironmentMap2D:
             )
 
         return rgb_img
+
+    def visualize(self) -> None:
+        """
+        Visualize the environment map.
+        """
+        cv2.imshow(
+            "Environment Map 2D",
+            self.create_rgb_viz(),
+        )
+        cv2.waitKey(0)
