@@ -90,16 +90,15 @@ class Unito:
         c_s_f_vars = self.manager.get_c_s_i_vars(all_vars=all_vars, i=self.params.M - 1)
         t_f_var = t_vars[-1]
 
-        for derivative, initial_ms_state in inputs.initial_state_inputs.initial_ms_map.items():
+        for derivative, initial_ms in inputs.initial_state_inputs.initial_ms_map.items():
             # Get the initial state.
             assert derivative <= self.params.h - 1
-            assert initial_ms_state.shape == (2,)
 
             # Add the constraints.
             self._prog.AddConstraint(
                 func=partial(
                     initial_ms_constraint_func,
-                    initial_ms_state=initial_ms_state,
+                    initial_ms_vector=initial_ms.to_vector(),
                     derivative=derivative,
                     manager=self.manager,
                 ),
@@ -109,10 +108,9 @@ class Unito:
                 description=f"Initial MS constraint for derivative: {derivative}",
             )
 
-        for derivative, final_ms_state in inputs.final_state_inputs.final_ms_map.items():
+        for derivative, final_ms in inputs.final_state_inputs.final_ms_map.items():
             # Get the final state.
             assert derivative <= self.params.h - 1
-            assert final_ms_state.shape == (2,)
 
             if derivative == 0:
                 # For the 0th derivative, Only theta constraints can be added.
@@ -121,7 +119,8 @@ class Unito:
                         c_theta_i_vars=c_theta_f_vars,
                         c_s_i_vars=c_s_f_vars,
                         t_exp=t_f_var,
-                    )[0] - final_ms_state[0],
+                    )[0]
+                    - final_ms.theta,
                     -self.params.final_state_equality_tolerance,
                     self.params.final_state_equality_tolerance,
                 )
@@ -130,7 +129,7 @@ class Unito:
                 self._prog.AddConstraint(
                     func=partial(
                         final_ms_constraint_func,
-                        final_ms_state=final_ms_state,
+                        final_ms_vector=final_ms.to_vector(),
                         derivative=derivative,
                         manager=self.manager,
                     ),
@@ -205,7 +204,7 @@ class Unito:
         # If the start theta value is given, we set c_i_theta[0] to that value.
         c_theta_initial_guess = np.zeros(2 * self.params.h * self.params.M)
         if 0 in inputs.initial_state_inputs.initial_ms_map:
-            c_theta_initial_guess[0] = inputs.initial_state_inputs.initial_ms_map[0][0]
+            c_theta_initial_guess[0] = inputs.initial_state_inputs.initial_ms_map[0].theta
 
         # If the start s value is given, we set c_i_s[0] to that value.
         # c_s_initial_guess = np.zeros(2 * params.h * params.M)
@@ -216,7 +215,7 @@ class Unito:
             num=2 * self.params.h * self.params.M,
         )
         if 0 in inputs.initial_state_inputs.initial_ms_map:
-            c_s_initial_guess[0] = inputs.initial_state_inputs.initial_ms_map[0][1]
+            c_s_initial_guess[0] = inputs.initial_state_inputs.initial_ms_map[0].s
 
         # For t, we initialize them by a constant value.
         t_initial_guess = 1 * np.ones(self.params.M)
@@ -244,14 +243,14 @@ class Unito:
         # If the start theta value is given, we the c_i_theta[0] to that value (for each segment)
         if 0 in inputs.initial_state_inputs.initial_ms_map:
             for i in range(self.params.M):
-                c_theta_initial_guess[i * 2 * self.params.h] = inputs.initial_state_inputs.initial_ms_map[0][0]
+                c_theta_initial_guess[i * 2 * self.params.h] = inputs.initial_state_inputs.initial_ms_map[0].theta
 
         # We initialize s such that it forms a straight line between the start and end points.
         # To do this, we divide the segments into equal lengths and set s_i[0] and s_i[1] so that it forms a straight line
         #  within that segment.
         initial_s = 0.0
         if 0 in inputs.initial_state_inputs.initial_ms_map:
-            initial_s = inputs.initial_state_inputs.initial_ms_map[0][1]
+            initial_s = inputs.initial_state_inputs.initial_ms_map[0].s
 
         for i in range(self.params.M):
             c_s_initial_guess[i * 2 * self.params.h] = initial_s + i * distance_per_segment

@@ -7,7 +7,7 @@ from atium.implementations.unito.src.unito_variable_manager import UnitoVariable
 
 def initial_ms_constraint_func(
     func_vars: np.ndarray,
-    initial_ms_state: StateVector,
+    initial_ms_vector: StateVector,
     derivative: int,
     manager: UnitoVariableManager,
 ) -> np.ndarray:
@@ -22,12 +22,12 @@ def initial_ms_constraint_func(
         t_exp=0.0,
         derivative=derivative,
     )
-    return sigma_0 - initial_ms_state
+    return sigma_0 - initial_ms_vector
 
 
 def final_ms_constraint_func(
     func_vars: np.ndarray,
-    final_ms_state: StateVector,
+    final_ms_vector: StateVector,
     derivative: int,
     manager: UnitoVariableManager,
 ) -> np.ndarray:
@@ -47,7 +47,7 @@ def final_ms_constraint_func(
         t_exp=t_f_var,
         derivative=derivative,
     )
-    return sigma_f - final_ms_state
+    return sigma_f - final_ms_vector
 
 
 def continuity_constraint_func(

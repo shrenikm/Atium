@@ -1,8 +1,6 @@
-import math
 
 import attr
 import numpy as np
-from pydrake.autodiffutils import AutoDiffXd
 from pydrake.solvers import MathematicalProgram
 from pydrake.symbolic import Expression, Variable
 

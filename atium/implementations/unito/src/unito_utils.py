@@ -1,14 +1,12 @@
 import attr
+import numpy as np
 
 from atium.core.constructs.environment_map import EnvironmentMap2D
 from atium.core.utils.attrs_utils import AttrsValidators
 from atium.core.utils.custom_types import (
     NpMatrix22f64,
-    NpVector2f64,
-    PointXYArray,
     PolygonXYArray,
     PositionXYVector,
-    StateDerivativeVector,
     StateVector,
 )
 
@@ -36,15 +34,29 @@ class UnitoParams:
     # continuity_equality_tolerance: float = 1e-6
     # initial_state_equality_tolerance: float = 1e-6
     # final_state_equality_tolerance: float = 1e-6
-    continuity_equality_tolerance: float = 0.
-    initial_state_equality_tolerance: float = 0.
-    final_state_equality_tolerance: float = 0.
+    continuity_equality_tolerance: float = 0.0
+    initial_state_equality_tolerance: float = 0.0
+    final_state_equality_tolerance: float = 0.0
     final_xy_equality_tolerance: float = 1e-2
 
 
 @attr.frozen
+class UnitoMotionState:
+    """
+    Motion state expressed in the paper. Consists of a theta and s value.
+    These could also correspond to the derivatives of theta and s.
+    """
+
+    theta: float
+    s: float
+
+    def to_vector(self) -> StateVector:
+        return np.array([self.theta, self.s], dtype=np.float64)
+
+
+@attr.frozen
 class UnitoInitialStateInputs:
-    initial_ms_map: dict[int, StateVector | StateDerivativeVector]
+    initial_ms_map: dict[int, UnitoMotionState]
     initial_xy: PositionXYVector
 
 
@@ -58,7 +70,7 @@ class UnitoFinalStateInputs:
     So any constraint on the final (0 derivative) s value is ignored.
     """
 
-    final_ms_map: dict[int, StateVector | StateDerivativeVector]
+    final_ms_map: dict[int, UnitoMotionState]
     final_xy: PositionXYVector
 
 
