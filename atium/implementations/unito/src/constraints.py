@@ -183,10 +183,6 @@ def obstacle_constraint_func(
                 sd6 = sd3 * (1 - dx) + sd4 * dx
                 sd = sd5 * (1 - dy) + sd6 * dy
 
-                print(fx, fy, emap2d.array[h - 1 - px_y0, px_x0])
-                print(sd1, sd2, sd3, sd4, sd)
-                print("===")
-
                 constraint_vector.append(sd - obstacle_clearance)
 
     return np.array(constraint_vector)
