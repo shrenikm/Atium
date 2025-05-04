@@ -121,24 +121,24 @@ class Unito:
                         c_theta_i_vars=c_theta_f_vars,
                         c_s_i_vars=c_s_f_vars,
                         t_exp=t_f_var,
-                    )[1],
+                    )[0] - final_ms_state[0],
                     -self.params.final_state_equality_tolerance,
                     self.params.final_state_equality_tolerance,
                 )
-
-            # Add the constraints.
-            self._prog.AddConstraint(
-                func=partial(
-                    final_ms_constraint_func,
-                    final_ms_state=final_ms_state,
-                    derivative=derivative,
-                    manager=self.manager,
-                ),
-                lb=np.full(2, -self.params.final_state_equality_tolerance),
-                ub=np.full(2, self.params.final_state_equality_tolerance),
-                vars=np.hstack((c_theta_f_vars, c_s_f_vars, t_f_var)),
-                description=f"Final MS constraint for derivative: {derivative}",
-            )
+            else:
+                # Add the constraints.
+                self._prog.AddConstraint(
+                    func=partial(
+                        final_ms_constraint_func,
+                        final_ms_state=final_ms_state,
+                        derivative=derivative,
+                        manager=self.manager,
+                    ),
+                    lb=np.full(2, -self.params.final_state_equality_tolerance),
+                    ub=np.full(2, self.params.final_state_equality_tolerance),
+                    vars=np.hstack((c_theta_f_vars, c_s_f_vars, t_f_var)),
+                    description=f"Final MS constraint for derivative: {derivative}",
+                )
 
         for derivative in range(self.params.h):
             for i in range(self.params.M - 1):

@@ -118,8 +118,12 @@ class EnvironmentMap2D:
         size_px = self.xy_to_px(xy=size_xy)
 
         # Calculate the top-left and bottom-right corners of the rectangle
-        top_left = (center_px[0] - size_px[0] // 2, center_px[1] - size_px[1] // 2)
-        bottom_right = (center_px[0] + size_px[0] // 2, center_px[1] + size_px[1] // 2)
+        top_left = self.get_cv2_coordinates(
+            position_px=(center_px[0] - size_px[0] // 2, center_px[1] - size_px[1] // 2),
+        )
+        bottom_right = self.get_cv2_coordinates(
+            position_px=(center_px[0] + size_px[0] // 2, center_px[1] + size_px[1] // 2),
+        )
 
         cv2.rectangle(
             self.array,
