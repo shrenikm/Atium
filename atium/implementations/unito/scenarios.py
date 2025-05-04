@@ -45,7 +45,7 @@ def scenario1() -> UnitoInputs:
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
-            # 0: np.array([0.0, 0.0]),
+            0: np.array([1.5, 0.0]),
         },
         final_xy=np.array([4.0, 2.0]),
     )
@@ -93,7 +93,7 @@ def scenario2() -> UnitoInputs:
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
-            # 0: np.array([0.0, 0.0]),
+            0: np.array([0.0, 0.0]),
         },
         final_xy=np.array([4.0, 2.5]),
     )
@@ -117,7 +117,7 @@ def scenario3() -> UnitoInputs:
         resolution=0.01,
     )
     # Add walls.
-    wall_clearance = 1.5
+    wall_clearance = 0.1
     wall_length = 3.0
     wall_thickness = 0.2
     wall_y = 3.0
