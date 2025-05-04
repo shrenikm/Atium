@@ -3,7 +3,12 @@ import numpy as np
 from atium.core.constructs.environment_map import EnvironmentLabels, EnvironmentMap2D
 from atium.core.utils.custom_types import PolygonXYArray, SizeXY
 from atium.core.utils.geometry_utils import construct_rectangle_polygon, densify_polygon
-from atium.implementations.unito.src.unito_utils import UnitoFinalStateInputs, UnitoInitialStateInputs, UnitoInputs
+from atium.implementations.unito.src.unito_utils import (
+    UnitoFinalStateInputs,
+    UnitoInitialStateInputs,
+    UnitoInputs,
+    UnitoMotionState,
+)
 
 
 def get_scenario_footprint(footprint_size_xy: SizeXY) -> PolygonXYArray:
@@ -39,13 +44,13 @@ def scenario1() -> UnitoInputs:
     obstacle_clearance = 0.2
     initial_state_inputs = UnitoInitialStateInputs(
         initial_ms_map={
-            0: np.array([0.0, 0.0]),
+            0: UnitoMotionState(theta=0.0, s=0.0),
         },
         initial_xy=np.array([1.0, 2.0]),
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
-            0: np.array([1.5, 0.0]),
+            0: UnitoMotionState(theta=0.0, s=0.0),
         },
         final_xy=np.array([4.0, 2.0]),
     )
@@ -87,13 +92,13 @@ def scenario2() -> UnitoInputs:
     obstacle_clearance = 0.0
     initial_state_inputs = UnitoInitialStateInputs(
         initial_ms_map={
-            0: np.array([0.0, 0.0]),
+            0: UnitoMotionState(theta=0.0, s=0.0),
         },
         initial_xy=np.array([1.0, 2.5]),
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
-            0: np.array([0.0, 0.0]),
+            0: UnitoMotionState(theta=0.0, s=0.0),
         },
         final_xy=np.array([4.0, 2.5]),
     )
@@ -136,13 +141,13 @@ def scenario3() -> UnitoInputs:
     obstacle_clearance = 0.0
     initial_state_inputs = UnitoInitialStateInputs(
         initial_ms_map={
-            0: np.array([0.0, 0.0]),
+            0: UnitoMotionState(theta=0.0, s=0.0),
         },
         initial_xy=np.array([1.0, 1.0]),
     )
     final_state_inputs = UnitoFinalStateInputs(
         final_ms_map={
-            0: np.array([np.pi / 2.0, 0.0]),
+            0: UnitoMotionState(theta=np.pi / 2.0, s=0.0),
         },
         final_xy=np.array([2.5, wall_y]),
     )

@@ -38,13 +38,13 @@ def visualize_unito_result(
     initial_pose = np.zeros(3)
     initial_pose[:2] = unito_inputs.initial_state_inputs.initial_xy
     if 0 in unito_inputs.initial_state_inputs.initial_ms_map:
-        initial_pose[2] = unito_inputs.initial_state_inputs.initial_ms_map[0][0]
+        initial_pose[2] = unito_inputs.initial_state_inputs.initial_ms_map[0].theta
 
     # All x and y values.
     x_values = [unito_inputs.initial_state_inputs.initial_xy[0]]
     y_values = [unito_inputs.initial_state_inputs.initial_xy[1]]
     heading_values = [
-        unito_inputs.initial_state_inputs.initial_ms_map[0][0]
+        unito_inputs.initial_state_inputs.initial_ms_map[0].theta
         if unito_inputs.initial_state_inputs.initial_ms_map
         else 0.0
     ]

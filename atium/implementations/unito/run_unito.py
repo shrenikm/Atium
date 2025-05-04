@@ -33,7 +33,7 @@ if __name__ == "__main__":
         epsilon_t=0,
         W=1e-2 * np.ones((2, 2), dtype=np.float64),
     )
-    unito_inputs = sc.scenario3()
+    unito_inputs = sc.scenario1()
     debug_solver = True
     visualize_solution = True
 
