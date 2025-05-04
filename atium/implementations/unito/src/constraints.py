@@ -147,13 +147,12 @@ def obstacle_constraint_func(
                     [np.sin(theta_ij), np.cos(theta_ij)],
                 ]
             )
-            transformed_footprint = rotation_matrix @ footprint.T + np.array([[x_ij], [y_ij]])
-            transformed_footprint = transformed_footprint.T
+            transformed_footprint = footprint @ rotation_matrix.T + np.array([x_ij, y_ij])
 
             for footprint_i in range(transformed_footprint.shape[0]):
                 # Bilinear interpolation.
-                fx = transformed_footprint[footprint_i][0]
-                fy = transformed_footprint[footprint_i][1]
+                fx = transformed_footprint[footprint_i, 0]
+                fy = transformed_footprint[footprint_i, 1]
 
                 px_x, px_y = emap2d.xy_to_px(
                     xy=(fx, fy),
@@ -161,18 +160,21 @@ def obstacle_constraint_func(
                 )
 
                 px_x0, px_y0 = int(np.floor(px_x)), int(np.floor(px_y))
-                px_x1, px_y1 = px_x0 + 1, px_y0 + 1
-
-                # TODO: Maybe make this an emap2d function.
+                # TODO: Add clipping to emap2d
                 px_x0 = np.clip(px_x0, 0, w - 1)
-                px_x1 = np.clip(px_x1, 0, w - 1)
                 px_y0 = np.clip(px_y0, 0, h - 1)
+
+                px_x1, px_y1 = px_x0 + 1, px_y0 + 1
+                px_x1 = np.clip(px_x1, 0, w - 1)
                 px_y1 = np.clip(px_y1, 0, h - 1)
 
-                sd1 = signed_distance_map[px_y0, px_x0]
-                sd2 = signed_distance_map[px_y0, px_x1]
-                sd3 = signed_distance_map[px_y1, px_x0]
-                sd4 = signed_distance_map[px_y1, px_x1]
+                # Note: px_x, py_x are the x and y pixel coordinates (bottom left origin).
+                # To access the array, we need to flip the y coordinate (due to top left origin)
+                # and also access it as h - px_y, px_x
+                sd1 = signed_distance_map[h - 1 - px_y0, px_x0]
+                sd2 = signed_distance_map[h - 1 - px_y0, px_x1]
+                sd3 = signed_distance_map[h - 1 - px_y1, px_x0]
+                sd4 = signed_distance_map[h - 1 - px_y1, px_x1]
 
                 dx = px_x - px_x0
                 dy = px_y - px_y0
@@ -180,6 +182,10 @@ def obstacle_constraint_func(
                 sd5 = sd1 * (1 - dx) + sd2 * dx
                 sd6 = sd3 * (1 - dx) + sd4 * dx
                 sd = sd5 * (1 - dy) + sd6 * dy
+
+                print(fx, fy, emap2d.array[h - 1 - px_y0, px_x0])
+                print(sd1, sd2, sd3, sd4, sd)
+                print("===")
 
                 constraint_vector.append(sd - obstacle_clearance)
 

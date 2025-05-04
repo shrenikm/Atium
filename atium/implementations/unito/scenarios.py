@@ -158,3 +158,51 @@ def scenario3() -> UnitoInputs:
         initial_state_inputs=initial_state_inputs,
         final_state_inputs=final_state_inputs,
     )
+
+
+def scenario4() -> UnitoInputs:
+    """
+    Scenario 4: U-turn in a narrow corridor where it needs to make the turn outside the corridor
+    """
+    footprint_size_xy = (1.0, 0.4)
+    footprint = get_scenario_footprint(footprint_size_xy=footprint_size_xy)
+    emap2d = EnvironmentMap2D.from_empty(
+        size_xy=(5.0, 5.0),
+        resolution=0.01,
+    )
+    # Add walls.
+    wall_clearance = 0.1
+    wall_length = 3.0
+    wall_thickness = 0.5
+    offset = 0.5 * (footprint_size_xy[1] + wall_thickness) + wall_clearance
+    emap2d.add_rectangular_obstacle(
+        center_xy=(1.5, 2.5 + offset),
+        size_xy=(wall_length, wall_thickness),
+        label=EnvironmentLabels.STATIC_OBSTACLE,
+    )
+    emap2d.add_rectangular_obstacle(
+        center_xy=(1.5, 2.5 - offset),
+        size_xy=(wall_length, wall_thickness),
+        label=EnvironmentLabels.STATIC_OBSTACLE,
+    )
+
+    obstacle_clearance = 0.0001
+    initial_state_inputs = UnitoInitialStateInputs(
+        initial_ms_map={
+            0: UnitoMotionState(theta=0.0, s=0.0),
+        },
+        initial_xy=np.array([2.5, 2.5]),
+    )
+    final_state_inputs = UnitoFinalStateInputs(
+        final_ms_map={
+            0: UnitoMotionState(theta=np.pi, s=0.0),
+        },
+        final_xy=np.array([2.5, 2.5]),
+    )
+    return UnitoInputs(
+        footprint=footprint,
+        emap2d=emap2d,
+        obstacle_clearance=obstacle_clearance,
+        initial_state_inputs=initial_state_inputs,
+        final_state_inputs=final_state_inputs,
+    )
