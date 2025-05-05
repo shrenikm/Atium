@@ -24,7 +24,40 @@ def get_scenario_footprint(footprint_size_xy: SizeXY) -> PolygonXYArray:
 
 def scenario1() -> UnitoInputs:
     """
-    Scenario 1: Planning around a single rectangular obstacle.
+    Scenario 1: Planning in a space with no obstacles.
+    """
+    footprint_size_xy = (1.0, 0.4)
+    footprint = get_scenario_footprint(footprint_size_xy=footprint_size_xy)
+    emap2d = EnvironmentMap2D.from_empty(
+        size_xy=(5.0, 5.0),
+        resolution=0.1,
+    )
+
+    obstacle_clearance = 0.0
+    initial_state_inputs = UnitoInitialStateInputs(
+        initial_ms_map={
+            0: UnitoMotionState(theta=0.0, s=0.0),
+        },
+        initial_xy=np.array([1.0, 2.0]),
+    )
+    final_state_inputs = UnitoFinalStateInputs(
+        final_ms_map={
+            0: UnitoMotionState(theta=0.0, s=0.0),
+        },
+        final_xy=np.array([2.0, 3.0]),
+    )
+    return UnitoInputs(
+        footprint=footprint,
+        emap2d=emap2d,
+        obstacle_clearance=obstacle_clearance,
+        initial_state_inputs=initial_state_inputs,
+        final_state_inputs=final_state_inputs,
+    )
+
+
+def scenario2() -> UnitoInputs:
+    """
+    Scenario 2: Planning around a single rectangular obstacle.
     """
     footprint_size_xy = (1.0, 0.4)
     footprint = get_scenario_footprint(footprint_size_xy=footprint_size_xy)
@@ -63,9 +96,9 @@ def scenario1() -> UnitoInputs:
     )
 
 
-def scenario2() -> UnitoInputs:
+def scenario3() -> UnitoInputs:
     """
-    Scenario 2: Planning throw a narrow corridor
+    Scenario 3: Planning throw a narrow corridor
     """
     footprint_size_xy = (1.0, 0.4)
     footprint = get_scenario_footprint(footprint_size_xy=footprint_size_xy)
@@ -111,9 +144,9 @@ def scenario2() -> UnitoInputs:
     )
 
 
-def scenario3() -> UnitoInputs:
+def scenario4() -> UnitoInputs:
     """
-    Scenario 3: Tight turn into a narrow corridor
+    Scenario 4: Tight turn into a narrow corridor
     """
     footprint_size_xy = (1.0, 0.4)
     footprint = get_scenario_footprint(footprint_size_xy=footprint_size_xy)
@@ -160,9 +193,9 @@ def scenario3() -> UnitoInputs:
     )
 
 
-def scenario4() -> UnitoInputs:
+def scenario5() -> UnitoInputs:
     """
-    Scenario 4: U-turn in a narrow corridor where it needs to make the turn outside the corridor
+    Scenario 5: U-turn in a narrow corridor where it needs to make the turn outside the corridor
     """
     footprint_size_xy = (1.0, 0.4)
     footprint = get_scenario_footprint(footprint_size_xy=footprint_size_xy)
