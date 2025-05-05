@@ -1,6 +1,6 @@
 import numpy as np
 
-from atium.core.constructs.environment_map import EnvironmentMap2D
+from atium.core.definitions.environment_map import EnvironmentMap2D
 from atium.core.utils.custom_types import MatrixMNf32, PolygonXYArray, PositionXYVector, StateVector
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
 

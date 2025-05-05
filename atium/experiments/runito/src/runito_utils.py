@@ -1,13 +1,11 @@
 import attr
-import numpy as np
 
 from atium.core.constructs.environment_map import EnvironmentMap2D
+from atium.core.definitions.concrete_states import Pose2D, Velocity2D
 from atium.core.utils.attrs_utils import AttrsValidators
 from atium.core.utils.custom_types import (
     NpMatrix22f64,
     PolygonXYArray,
-    PositionXYVector,
-    StateVector,
 )
 
 
@@ -41,43 +39,21 @@ class RunitoParams:
 
 
 @attr.frozen
-class RunitoMotionState:
-    """
-    Motion state expressed in the paper. Consists of a theta and s value.
-    These could also correspond to the derivatives of theta and s.
-    """
-
-    theta: float
-    s: float
-
-    def to_vector(self) -> StateVector:
-        return np.array([self.theta, self.s], dtype=np.float64)
-
-
-@attr.frozen
 class UnitoInitialStateInputs:
-    initial_ms_map: dict[int, UnitoMotionState]
-    initial_xy: PositionXYVector
+    initial_pose: Pose2D
+    initial_velocity: Velocity2D
 
 
 @attr.frozen
 class UnitoFinalStateInputs:
-    """
-    Note that this gets used a bit differently than the initial ms state.
-    For example, we cannot have a constraint on the final s value (0 derivative) as this isn't really known until the end of the optimization.
-    Final s constraints on non zero derivatives are fine as these correspond to velocities, accelerations, etc.
-    But we can have a constraint on the final theta value.
-    So any constraint on the final (0 derivative) s value is ignored.
-    """
-
-    final_ms_map: dict[int, UnitoMotionState]
-    final_xy: PositionXYVector
+    final_pose: Pose2D
+    final_velocity: Velocity2D | None = None
 
 
 @attr.frozen
 class UnitoInputs:
     """
-    Unito solve inputs.
+    Runito solve inputs.
     """
 
     footprint: PolygonXYArray

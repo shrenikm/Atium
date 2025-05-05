@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import pytest
 
-from atium.core.constructs.environment_map import EnvironmentLabels, EnvironmentMap2D
+from atium.core.definitions.environment_map import EnvironmentLabels, EnvironmentMap2D
 from atium.core.utils.color_utils import ColorType
 
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-from atium.core.constructs.environment_map import EnvironmentLabels, EnvironmentMap2D
+from atium.core.definitions.environment_map import EnvironmentLabels, EnvironmentMap2D
 from atium.core.utils.custom_types import PolygonXYArray, SizeXY
 from atium.core.utils.geometry_utils import construct_rectangle_polygon, densify_polygon
 from atium.implementations.unito.src.unito_utils import (

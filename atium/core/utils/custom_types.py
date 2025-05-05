@@ -153,6 +153,8 @@ PositionXYVector = Vector2f64
 VelocityXYVector = Vector2f64
 # State derivative: dx/dt = f(x, u). We dont' explicitly include t.
 StateDerivativeFn = Callable[[StateVector, ControlInputVector], StateDerivativeVector]
+Pose2DVector = Vector2f64
+Velocity2DVector = Vector2f64
 
 
 VelocityXYArray = MatrixN2f64
