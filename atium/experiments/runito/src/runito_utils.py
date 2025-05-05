@@ -1,7 +1,7 @@
 import attr
 
-from atium.core.constructs.environment_map import EnvironmentMap2D
 from atium.core.definitions.concrete_states import Pose2D, Velocity2D
+from atium.core.definitions.environment_map import EnvironmentMap2D
 from atium.core.utils.attrs_utils import AttrsValidators
 from atium.core.utils.custom_types import (
     NpMatrix22f64,
