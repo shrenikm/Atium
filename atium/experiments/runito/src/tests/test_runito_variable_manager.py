@@ -6,8 +6,8 @@ from pydrake.solvers import MathematicalProgram
 from pydrake.symbolic import Expression, Variable
 
 from atium.core.utils.custom_types import DecisionVariablesVector
-from atium.implementations.unito.src.unito_utils import UnitoParams
-from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
+from atium.experiments.runito.src.runito_utils import RunitoParams
+from atium.experiments.runito.src.runito_variable_manager import RunitoVariableManager
 
 
 @pytest.fixture(scope="module")
@@ -16,8 +16,8 @@ def rng() -> np.random.RandomState:
 
 
 @pytest.fixture(scope="module")
-def params() -> UnitoParams:
-    return UnitoParams(
+def params() -> RunitoParams:
+    return RunitoParams(
         h=3,
         M=3,
         n=4,
@@ -27,40 +27,78 @@ def params() -> UnitoParams:
 
 
 @pytest.fixture(scope="module")
-def all_vars_values(params: UnitoParams) -> DecisionVariablesVector:
+def all_vars_values(params: RunitoParams) -> DecisionVariablesVector:
     """
     Floating point decision variables for testing.
-    c_theta_i_j will be a number 1{i}{j} where i is the segment and j is the sample.
-    c_s_i_j will be a number 2{i}{j} where i is the segment and j is the sample.
-    theta_i  will be a number 3{i} where i is the segment.
+    c_x_i_j will be a number 1{i}{j} where i is the segment and j is the sample.
+    c_y_i_j will be a number 2{i}{j} where i is the segment and j is the sample.
+    c_theta_i_j will be a number 3{i}{j} where i is the segment and j is the sample.
+    theta_i  will be a number 4{i} where i is the segment.
     """
-    c_theta = np.array([int(f"1{i}{j}") for i in range(params.M) for j in range(2 * params.h)], dtype=np.float64)
-    c_s = np.array([int(f"2{i}{j}") for i in range(params.M) for j in range(2 * params.h)], dtype=np.float64)
-    t = np.array([int(f"3{i}") for i in range(params.M)], dtype=np.float64)
-    return np.concatenate((c_theta, c_s, t), axis=0)
+    c_x = np.array([int(f"1{i}{j}") for i in range(params.M) for j in range(2 * params.h)], dtype=np.float64)
+    c_y = np.array([int(f"2{i}{j}") for i in range(params.M) for j in range(2 * params.h)], dtype=np.float64)
+    c_theta = np.array([int(f"3{i}{j}") for i in range(params.M) for j in range(2 * params.h)], dtype=np.float64)
+    t = np.array([int(f"4{i}") for i in range(params.M)], dtype=np.float64)
+    return np.concatenate((c_x, c_y, c_theta, t), axis=0)
 
 
 @pytest.fixture(scope="module")
-def manager(params: UnitoParams) -> UnitoVariableManager:
-    return UnitoVariableManager(params=params)
+def manager(params: RunitoParams) -> RunitoVariableManager:
+    return RunitoVariableManager(params=params)
 
 
 @pytest.fixture(scope="function")
-def prog(manager: UnitoVariableManager) -> MathematicalProgram:
+def prog(manager: RunitoVariableManager) -> MathematicalProgram:
     prog = MathematicalProgram()
     manager.create_decision_variables(prog)
     return prog
 
 
 def test_create_decision_variables(
-    manager: UnitoVariableManager,
+    manager: RunitoVariableManager,
     prog: MathematicalProgram,
 ) -> None:
-    assert prog.num_vars() == 4 * manager.params.h * manager.params.M + manager.params.M
+    assert prog.num_vars() == 6 * manager.params.h * manager.params.M + manager.params.M
+
+
+def test_get_c_x_vars(
+    manager: RunitoVariableManager,
+    prog: MathematicalProgram,
+    all_vars_values: DecisionVariablesVector,
+) -> None:
+    all_vars = prog.decision_variables()
+    vars_c_x = manager.get_c_x_vars(all_vars)
+    assert vars_c_x.shape == (2 * manager.params.h * manager.params.M,)
+
+    for i in range(len(vars_c_x)):
+        assert vars_c_x[i].get_name() == f"{RunitoVariableManager.VARS_C_X_NAME}({i})"
+
+    # Test with actual values.
+    vars_c_x_values = manager.get_c_x_vars(all_vars_values)
+    for value in vars_c_x_values:
+        assert str(value)[0] == "1"
+
+
+def test_get_c_y_vars(
+    manager: RunitoVariableManager,
+    prog: MathematicalProgram,
+    all_vars_values: DecisionVariablesVector,
+) -> None:
+    all_vars = prog.decision_variables()
+    vars_c_y = manager.get_c_y_vars(all_vars)
+    assert vars_c_y.shape == (2 * manager.params.h * manager.params.M,)
+
+    for i in range(len(vars_c_y)):
+        assert vars_c_y[i].get_name() == f"{RunitoVariableManager.VARS_C_Y_NAME}({i})"
+
+    # Test with actual values.
+    vars_c_y_values = manager.get_c_y_vars(all_vars_values)
+    for value in vars_c_y_values:
+        assert str(value)[0] == "2"
 
 
 def test_get_c_theta_vars(
-    manager: UnitoVariableManager,
+    manager: RunitoVariableManager,
     prog: MathematicalProgram,
     all_vars_values: DecisionVariablesVector,
 ) -> None:
@@ -69,34 +107,16 @@ def test_get_c_theta_vars(
     assert vars_c_theta.shape == (2 * manager.params.h * manager.params.M,)
 
     for i in range(len(vars_c_theta)):
-        assert vars_c_theta[i].get_name() == f"{UnitoVariableManager.VARS_C_THETA_NAME}({i})"
+        assert vars_c_theta[i].get_name() == f"{RunitoVariableManager.VARS_C_THETA_NAME}({i})"
 
     # Test with actual values.
     vars_c_theta_values = manager.get_c_theta_vars(all_vars_values)
     for value in vars_c_theta_values:
-        assert str(value)[0] == "1"
-
-
-def test_get_c_s_vars(
-    manager: UnitoVariableManager,
-    prog: MathematicalProgram,
-    all_vars_values: DecisionVariablesVector,
-) -> None:
-    all_vars = prog.decision_variables()
-    vars_c_s = manager.get_c_s_vars(all_vars)
-    assert vars_c_s.shape == (2 * manager.params.h * manager.params.M,)
-
-    for i in range(len(vars_c_s)):
-        assert vars_c_s[i].get_name() == f"{UnitoVariableManager.VARS_C_S_NAME}({i})"
-
-    # Test with actual values.
-    vars_c_s_values = manager.get_c_s_vars(all_vars_values)
-    for value in vars_c_s_values:
-        assert str(value)[0] == "2"
+        assert str(value)[0] == "3"
 
 
 def test_get_t_vars(
-    manager: UnitoVariableManager,
+    manager: RunitoVariableManager,
     prog: MathematicalProgram,
     all_vars_values: DecisionVariablesVector,
 ) -> None:
@@ -105,16 +125,62 @@ def test_get_t_vars(
     assert vars_t.shape == (manager.params.M,)
 
     for i in range(len(vars_t)):
-        assert vars_t[i].get_name() == f"{UnitoVariableManager.VARS_T_NAME}({i})"
+        assert vars_t[i].get_name() == f"{RunitoVariableManager.VARS_T_NAME}({i})"
 
     # Test with actual values.
     vars_t_values = manager.get_t_vars(all_vars_values)
     for value in vars_t_values:
-        assert str(value)[0] == "3"
+        assert str(value)[0] == "4"
+
+
+def test_get_c_x_i_vars(
+    manager: RunitoVariableManager,
+    prog: MathematicalProgram,
+    all_vars_values: DecisionVariablesVector,
+) -> None:
+    all_vars = prog.decision_variables()
+    for i in range(manager.params.M):
+        vars_c_x_i = manager.get_c_x_i_vars(all_vars, i)
+        assert vars_c_x_i.shape == (2 * manager.params.h,)
+
+        for j in range(len(vars_c_x_i)):
+            assert vars_c_x_i[j].get_name() == f"{RunitoVariableManager.VARS_C_X_NAME}({i * 2 * manager.params.h + j})"
+
+    # Test with actual values.
+    for i in range(manager.params.M):
+        # Test with actual values.
+        vars_c_x_i_values = manager.get_c_x_i_vars(all_vars_values, i)
+        for j in range(manager.params.n):
+            value = vars_c_x_i_values[j]
+            assert str(value)[0] == "1"
+            assert str(value)[1:].startswith(f"{i}{j}")
+
+
+def test_get_c_y_i_vars(
+    manager: RunitoVariableManager,
+    prog: MathematicalProgram,
+    all_vars_values: DecisionVariablesVector,
+) -> None:
+    all_vars = prog.decision_variables()
+    for i in range(manager.params.M):
+        vars_c_y_i = manager.get_c_y_i_vars(all_vars, i)
+        assert vars_c_y_i.shape == (2 * manager.params.h,)
+
+        for j in range(len(vars_c_y_i)):
+            assert vars_c_y_i[j].get_name() == f"{RunitoVariableManager.VARS_C_Y_NAME}({i * 2 * manager.params.h + j})"
+
+    # Test with actual values.
+    for i in range(manager.params.M):
+        # Test with actual values.
+        vars_c_y_i_values = manager.get_c_y_i_vars(all_vars_values, i)
+        for j in range(manager.params.n):
+            value = vars_c_y_i_values[j]
+            assert str(value)[0] == "2"
+            assert str(value)[1:].startswith(f"{i}{j}")
 
 
 def test_get_c_theta_i_vars(
-    manager: UnitoVariableManager,
+    manager: RunitoVariableManager,
     prog: MathematicalProgram,
     all_vars_values: DecisionVariablesVector,
 ) -> None:
@@ -126,7 +192,7 @@ def test_get_c_theta_i_vars(
         for j in range(len(vars_c_theta_i)):
             assert (
                 vars_c_theta_i[j].get_name()
-                == f"{UnitoVariableManager.VARS_C_THETA_NAME}({i * 2 * manager.params.h + j})"
+                == f"{RunitoVariableManager.VARS_C_THETA_NAME}({i * 2 * manager.params.h + j})"
             )
 
     # Test with actual values.
@@ -135,35 +201,12 @@ def test_get_c_theta_i_vars(
         vars_c_theta_i_values = manager.get_c_theta_i_vars(all_vars_values, i)
         for j in range(manager.params.n):
             value = vars_c_theta_i_values[j]
-            assert str(value)[0] == "1"
-            assert str(value)[1:].startswith(f"{i}{j}")
-
-
-def test_get_c_s_i_vars(
-    manager: UnitoVariableManager,
-    prog: MathematicalProgram,
-    all_vars_values: DecisionVariablesVector,
-) -> None:
-    all_vars = prog.decision_variables()
-    for i in range(manager.params.M):
-        vars_c_s_i = manager.get_c_s_i_vars(all_vars, i)
-        assert vars_c_s_i.shape == (2 * manager.params.h,)
-
-        for j in range(len(vars_c_s_i)):
-            assert vars_c_s_i[j].get_name() == f"{UnitoVariableManager.VARS_C_S_NAME}({i * 2 * manager.params.h + j})"
-
-    # Test with actual values.
-    for i in range(manager.params.M):
-        # Test with actual values.
-        vars_c_s_i_values = manager.get_c_s_i_vars(all_vars_values, i)
-        for j in range(manager.params.n):
-            value = vars_c_s_i_values[j]
-            assert str(value)[0] == "2"
+            assert str(value)[0] == "3"
             assert str(value)[1:].startswith(f"{i}{j}")
 
 
 def test_get_t_i_var(
-    manager: UnitoVariableManager,
+    manager: RunitoVariableManager,
     prog: MathematicalProgram,
     all_vars_values: DecisionVariablesVector,
 ) -> None:
@@ -171,18 +214,18 @@ def test_get_t_i_var(
     for i in range(manager.params.M):
         var_t_i = manager.get_t_i_var(all_vars, i)
         assert isinstance(var_t_i, Variable)
-        assert var_t_i.get_name() == f"{UnitoVariableManager.VARS_T_NAME}({i})"
+        assert var_t_i.get_name() == f"{RunitoVariableManager.VARS_T_NAME}({i})"
 
     # Test with actual values.
     for i in range(manager.params.M):
         # Test with actual values.
         value = manager.get_t_i_var(all_vars_values, i)
-        assert str(value)[0] == "3"
+        assert str(value)[0] == "4"
         assert str(value)[1:].startswith(f"{i}")
 
 
 def test_compute_t_ijl_exp(
-    manager: UnitoVariableManager,
+    manager: RunitoVariableManager,
     prog: MathematicalProgram,
     all_vars_values: DecisionVariablesVector,
 ) -> None:
@@ -213,7 +256,7 @@ def test_compute_t_ijl_exp(
 
 
 def test_compute_basis_vector_exp(
-    manager: UnitoVariableManager,
+    manager: RunitoVariableManager,
     prog: MathematicalProgram,
 ) -> None:
     all_vars = prog.decision_variables()
@@ -240,7 +283,7 @@ def test_compute_basis_vector_exp(
 
 def test_compute_sigma_i_exp(
     rng: np.random.RandomState,
-    manager: UnitoVariableManager,
+    manager: RunitoVariableManager,
     prog: MathematicalProgram,
 ) -> None:
     all_vars = prog.decision_variables()
@@ -252,41 +295,47 @@ def test_compute_sigma_i_exp(
                 l=0,
             )
             sigma_i = manager.compute_sigma_i_exp(
+                c_x_i_vars=manager.get_c_x_i_vars(all_vars, i),
+                c_y_i_vars=manager.get_c_y_i_vars(all_vars, i),
                 c_theta_i_vars=manager.get_c_theta_i_vars(all_vars, i),
-                c_s_i_vars=manager.get_c_s_i_vars(all_vars, i),
                 t_exp=t_ijl_exp,
                 derivative=0,
             )
             assert isinstance(sigma_i, np.ndarray)
-            assert sigma_i.shape == (2,)
+            assert sigma_i.shape == (3,)
 
     # Test with actual values.
+    c_x_i_vars = rng.rand(2 * manager.params.h)
+    c_y_i_vars = rng.rand(2 * manager.params.h)
     c_theta_i_vars = rng.rand(2 * manager.params.h)
-    c_s_i_vars = rng.rand(2 * manager.params.h)
     t_exp = 0.0
 
     basis_vector = np.zeros((2 * manager.params.h,), dtype=np.float64)
     basis_vector[0] = 1.0
 
     sigma_i = manager.compute_sigma_i_exp(
+        c_x_i_vars=c_x_i_vars,
+        c_y_i_vars=c_y_i_vars,
         c_theta_i_vars=c_theta_i_vars,
-        c_s_i_vars=c_s_i_vars,
         t_exp=t_exp,
     )
-    np.testing.assert_allclose(sigma_i[0], c_theta_i_vars @ basis_vector, atol=1e-12)
-    np.testing.assert_allclose(sigma_i[1], c_s_i_vars @ basis_vector, atol=1e-12)
+    np.testing.assert_allclose(sigma_i[0], c_x_i_vars @ basis_vector, atol=1e-12)
+    np.testing.assert_allclose(sigma_i[1], c_y_i_vars @ basis_vector, atol=1e-12)
+    np.testing.assert_allclose(sigma_i[2], c_theta_i_vars @ basis_vector, atol=1e-12)
 
     basis_vector = np.zeros((2 * manager.params.h,), dtype=np.float64)
     basis_vector[1] = 1.0
 
     sigma_i = manager.compute_sigma_i_exp(
+        c_x_i_vars=c_x_i_vars,
+        c_y_i_vars=c_y_i_vars,
         c_theta_i_vars=c_theta_i_vars,
-        c_s_i_vars=c_s_i_vars,
         t_exp=t_exp,
         derivative=1,
     )
-    np.testing.assert_allclose(sigma_i[0], c_theta_i_vars @ basis_vector, atol=1e-12)
-    np.testing.assert_allclose(sigma_i[1], c_s_i_vars @ basis_vector, atol=1e-12)
+    np.testing.assert_allclose(sigma_i[0], c_x_i_vars @ basis_vector, atol=1e-12)
+    np.testing.assert_allclose(sigma_i[1], c_y_i_vars @ basis_vector, atol=1e-12)
+    np.testing.assert_allclose(sigma_i[2], c_theta_i_vars @ basis_vector, atol=1e-12)
 
 
 if __name__ == "__main__":

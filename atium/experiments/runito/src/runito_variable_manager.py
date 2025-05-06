@@ -7,7 +7,7 @@ from atium.experiments.runito.src.runito_utils import RunitoParams
 
 
 @attr.define
-class UnitoVariableManager:
+class RunitoVariableManager:
     VARS_C_X_NAME = "c_x"
     VARS_C_Y_NAME = "c_y"
     VARS_C_THETA_NAME = "c_theta"
