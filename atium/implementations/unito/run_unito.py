@@ -1,6 +1,6 @@
 import numpy as np
 
-import atium.implementations.unito.scenarios as sc
+import atium.implementations.unito.unito_scenarios as sc
 from atium.implementations.unito.src.unito import Unito
 from atium.implementations.unito.src.unito_utils import UnitoInputs, UnitoParams
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager

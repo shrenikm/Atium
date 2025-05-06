@@ -15,7 +15,6 @@ from pydrake.solvers import (
 )
 
 from atium.core.utils.custom_types import NpVectorNf64
-from atium.core.utils.geometry_utils import normalize_angle
 from atium.core.utils.logging_utils import AtiumLogger
 from atium.experiments.runito.src.runito_constraints import (
     continuity_constraint_func,
@@ -28,6 +27,7 @@ from atium.experiments.runito.src.runito_constraints import (
 from atium.experiments.runito.src.runito_costs import control_cost_func, time_regularization_cost_func
 from atium.experiments.runito.src.runito_utils import RunitoInputs, RunitoParams
 from atium.experiments.runito.src.runito_variable_manager import RunitoVariableManager
+from atium.experiments.runito.src.runito_visualization import visualize_runito_result
 
 
 @attr.define
@@ -127,17 +127,18 @@ class Runito:
         )
 
         # Final velocity constraint.
-        self._prog.AddConstraint(
-            func=partial(
-                final_velocity_constraint_func,
-                final_velocity=inputs.final_state_inputs.final_velocity,
-                manager=self.manager,
-            ),
-            lb=np.full(2, -self.params.initial_state_equality_tolerance),
-            ub=np.full(2, self.params.initial_state_equality_tolerance),
-            vars=np.hstack((c_x_f_vars, c_y_f_vars, c_theta_f_vars, t_f_var)),
-            description="Final velocity constraint",
-        )
+        if inputs.final_state_inputs.final_velocity is not None:
+            self._prog.AddConstraint(
+                func=partial(
+                    final_velocity_constraint_func,
+                    final_velocity=inputs.final_state_inputs.final_velocity,
+                    manager=self.manager,
+                ),
+                lb=np.full(2, -self.params.initial_state_equality_tolerance),
+                ub=np.full(2, self.params.initial_state_equality_tolerance),
+                vars=np.hstack((c_x_f_vars, c_y_f_vars, c_theta_f_vars, t_f_var)),
+                description="Final velocity constraint",
+            )
 
         # Continuity constraints.
         for derivative in range(self.params.h):
@@ -277,7 +278,7 @@ class Runito:
             self._logger.info(f"t: {res.GetSolution(self.manager.get_t_vars(self._prog.decision_variables()))}")
 
         if visualize_solution:
-            visualize_unito_result(
+            visualize_runito_result(
                 manager=self.manager,
                 unito_inputs=inputs,
                 all_vars_solution=res.GetSolution(self._prog.decision_variables()),

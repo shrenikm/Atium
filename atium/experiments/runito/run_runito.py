@@ -1,24 +1,24 @@
 import numpy as np
 
-import atium.implementations.unito.scenarios as sc
-from atium.implementations.unito.src.unito import Unito
-from atium.implementations.unito.src.unito_utils import UnitoInputs, UnitoParams
-from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
+import atium.experiments.runito.runito_scenarios as sc
+from atium.experiments.runito.src.runito import Runito
+from atium.experiments.runito.src.runito_utils import RunitoInputs, RunitoParams
+from atium.experiments.runito.src.runito_variable_manager import RunitoVariableManager
 
 
-def run_unito_scenario(
-    unito_params: UnitoParams,
-    unito_inputs: UnitoInputs,
+def run_runito_scenario(
+    runito_params: RunitoParams,
+    runito_inputs: RunitoInputs,
     debug_solver: bool,
     visualize_solution: bool,
 ) -> None:
-    manager = UnitoVariableManager(params=unito_params)
-    unito = Unito(manager=manager)
+    manager = RunitoVariableManager(params=runito_params)
+    runito = Runito(manager=manager)
 
-    unito.setup_optimization_program(inputs=unito_inputs)
-    initial_guess = unito.compute_initial_guess(inputs=unito_inputs)
-    unito.solve(
-        inputs=unito_inputs,
+    runito.setup_optimization_program(inputs=runito_inputs)
+    initial_guess = runito.compute_initial_guess(inputs=runito_inputs)
+    runito.solve(
+        inputs=runito_inputs,
         initial_guess=initial_guess,
         debug_solver=debug_solver,
         visualize_solution=visualize_solution,
@@ -26,20 +26,20 @@ def run_unito_scenario(
 
 
 if __name__ == "__main__":
-    unito_params = UnitoParams(
+    runito_params = RunitoParams(
         h=3,
         M=3,
         n=4,
         epsilon_t=0,
-        W=1e-2 * np.ones((2, 2), dtype=np.float64),
+        W=1e-2 * np.ones((3, 3), dtype=np.float64),
     )
-    unito_inputs = sc.scenario2()
+    runito_inputs = sc.scenario1()
     debug_solver = True
     visualize_solution = True
 
-    run_unito_scenario(
-        unito_params=unito_params,
-        unito_inputs=unito_inputs,
+    run_runito_scenario(
+        runito_params=runito_params,
+        runito_inputs=runito_inputs,
         debug_solver=debug_solver,
         visualize_solution=visualize_solution,
     )
