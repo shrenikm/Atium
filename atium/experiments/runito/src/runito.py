@@ -156,8 +156,8 @@ class Runito:
                         derivative=derivative,
                         manager=self.manager,
                     ),
-                    lb=np.full(2, -self.params.continuity_equality_tolerance),
-                    ub=np.full(2, self.params.continuity_equality_tolerance),
+                    lb=np.full(3, -self.params.continuity_equality_tolerance),
+                    ub=np.full(3, self.params.continuity_equality_tolerance),
                     vars=np.hstack(
                         (
                             prev_c_x_vars,
@@ -174,20 +174,20 @@ class Runito:
 
         # Obstacle avoidance constraints.
         signed_distance_map = inputs.emap2d.compute_signed_distance_transform()
-        self._prog.AddConstraint(
-            func=partial(
-                obstacle_constraint_func,
-                footprint=inputs.footprint,
-                emap2d=inputs.emap2d,
-                signed_distance_map=signed_distance_map,
-                obstacle_clearance=inputs.obstacle_clearance,
-                manager=self.manager,
-            ),
-            lb=np.full(self.params.M * self.params.n * inputs.footprint.shape[0], 0.0),
-            ub=np.full(self.params.M * self.params.n * inputs.footprint.shape[0], np.inf),
-            vars=all_vars,
-            description="Obstacle avoidance constraint",
-        )
+        # self._prog.AddConstraint(
+        #     func=partial(
+        #         obstacle_constraint_func,
+        #         footprint=inputs.footprint,
+        #         emap2d=inputs.emap2d,
+        #         signed_distance_map=signed_distance_map,
+        #         obstacle_clearance=inputs.obstacle_clearance,
+        #         manager=self.manager,
+        #     ),
+        #     lb=np.full(self.params.M * self.params.n * inputs.footprint.shape[0], 0.0),
+        #     ub=np.full(self.params.M * self.params.n * inputs.footprint.shape[0], np.inf),
+        #     vars=all_vars,
+        #     description="Obstacle avoidance constraint",
+        # )
 
         self._prog.AddBoundingBoxConstraint(
             0.0,

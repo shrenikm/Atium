@@ -94,11 +94,11 @@ def visualize_runito_result(
 
         ax1.plot(t_values[-1], x_values[-1], "o", color=sigma_color)
         ax2.plot(t_values[-1], y_values[-1], "o", color=sigma_color)
-        ax3.plot(t_values[-1], theta_values[-1], "o", color=ms_color)
+        ax3.plot(t_values[-1], theta_values[-1], "o", color=sigma_color)
 
     # Draw the environment map.
     emap_size_xy = unito_inputs.emap2d.size_xy
-    ax3.imshow(
+    ax4.imshow(
         unito_inputs.emap2d.create_rgb_viz(color_type=ColorType.RGB),
         extent=[0, emap_size_xy[0], 0, emap_size_xy[1]],
         origin="lower",
@@ -117,7 +117,7 @@ def visualize_runito_result(
         fill=False,
         linewidth=1,
     )
-    ax3.add_patch(polygon)
+    ax4.add_patch(polygon)
 
     # Draw the footprint at each sampling point.
     for i in range(len(full_x_values)):
@@ -139,11 +139,11 @@ def visualize_runito_result(
     # Plot xy
     ax4.plot(full_x_values, full_y_values, color=xy_color, label="xy")
     for k in range(len(x_segment_values)):
-        ax3.plot(x_segment_values[k], y_segment_values[k], "o", color=xy_color)
+        ax4.plot(x_segment_values[k], y_segment_values[k], "o", color=xy_color)
 
     # Plot heading.
     if draw_heading:
-        ax3.quiver(
+        ax4.quiver(
             full_x_values,
             full_y_values,
             np.cos(full_theta_values),
