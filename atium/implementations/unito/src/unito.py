@@ -29,7 +29,7 @@ from atium.implementations.unito.src.unito_utils import (
     UnitoParams,
 )
 from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
-from atium.implementations.unito.src.visualization import visualize_unito_result
+from atium.implementations.unito.src.unito_visualization import visualize_unito_result
 
 
 @attr.define
@@ -233,7 +233,7 @@ class Unito:
         distance_per_segment = distance / self.params.M
         nominal_v = 10.0
         nominal_t = distance_per_segment / nominal_v
-        if np.isclose(nominal_t, 0.):
+        if np.isclose(nominal_t, 0.0):
             nominal_t = 0.1
         print(f"Nominal t: {nominal_t}")
 
