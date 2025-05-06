@@ -2,7 +2,7 @@ import numpy as np
 
 from atium.core.definitions.concrete_states import Pose2D, Velocity2D
 from atium.core.definitions.environment_map import EnvironmentMap2D
-from atium.core.utils.custom_types import MatrixMNf32, PolygonXYArray, PositionXYVector, StateVector
+from atium.core.utils.custom_types import MatrixMNf32, PolygonXYArray
 from atium.experiments.runito.src.runito_variable_manager import RunitoVariableManager
 
 
@@ -49,7 +49,6 @@ def initial_velocity_constraint_func(
 def final_pose_constraint_func(
     func_vars: np.ndarray,
     final_pose: Pose2D,
-    derivative: int,
     manager: RunitoVariableManager,
 ) -> np.ndarray:
     assert func_vars.shape == (6 * manager.params.h + 1,)
@@ -68,9 +67,33 @@ def final_pose_constraint_func(
         c_y_i_vars=c_y_f_vars,
         c_theta_i_vars=c_theta_f_vars,
         t_exp=t_f_var,
-        derivative=derivative,
     )
     return sigma_f - final_pose.to_vector()
+
+
+def final_velocity_constraint_func(
+    func_vars: np.ndarray,
+    final_velocity: Velocity2D,
+    manager: RunitoVariableManager,
+) -> np.ndarray:
+    assert func_vars.shape == (6 * manager.params.h + 1,)
+
+    c_f_vars = func_vars[:-1]
+    t_f_var = func_vars[-1]
+
+    assert c_f_vars.shape == (6 * manager.params.h,)
+
+    c_x_f_vars = c_f_vars[: 2 * manager.params.h]
+    c_y_f_vars = c_f_vars[2 * manager.params.h : 4 * manager.params.h]
+    c_theta_f_vars = c_f_vars[4 * manager.params.h : 6 * manager.params.h]
+
+    gamma_f = manager.compute_gamma_i_exp(
+        c_x_i_vars=c_x_f_vars,
+        c_y_i_vars=c_y_f_vars,
+        c_theta_i_vars=c_theta_f_vars,
+        t_exp=t_f_var,
+    )
+    return gamma_f - final_velocity.to_vector()
 
 
 def continuity_constraint_func(
@@ -115,8 +138,7 @@ def obstacle_constraint_func(
     # in order to avoid recomputing it each time the constraint is evaluated.
     signed_distance_map: MatrixMNf32,
     obstacle_clearance: float,
-    initial_xy: PositionXYVector,
-    manager: UnitoVariableManager,
+    manager: RunitoVariableManager,
 ) -> np.ndarray:
     assert func_vars.shape == (4 * manager.params.h * manager.params.M + manager.params.M,)
 

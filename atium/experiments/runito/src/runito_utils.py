@@ -39,19 +39,19 @@ class RunitoParams:
 
 
 @attr.frozen
-class UnitoInitialStateInputs:
+class RunitoInitialStateInputs:
     initial_pose: Pose2D
     initial_velocity: Velocity2D
 
 
 @attr.frozen
-class UnitoFinalStateInputs:
+class RunitoFinalStateInputs:
     final_pose: Pose2D
     final_velocity: Velocity2D | None = None
 
 
 @attr.frozen
-class UnitoInputs:
+class RunitoInputs:
     """
     Runito solve inputs.
     """
@@ -60,5 +60,5 @@ class UnitoInputs:
     emap2d: EnvironmentMap2D
     obstacle_clearance: float
     velocity_limits: Velocity2D
-    initial_state_inputs: UnitoInitialStateInputs
-    final_state_inputs: UnitoFinalStateInputs
+    initial_state_inputs: RunitoInitialStateInputs
+    final_state_inputs: RunitoFinalStateInputs

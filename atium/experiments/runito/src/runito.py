@@ -16,25 +16,22 @@ from pydrake.solvers import (
 
 from atium.core.utils.custom_types import NpVectorNf64
 from atium.core.utils.logging_utils import AtiumLogger
-from atium.implementations.unito.src.unito_constraints import (
+from atium.experiments.runito.src.runito_constraints import (
     continuity_constraint_func,
-    final_ms_constraint_func,
-    final_xy_constraint_func,
-    initial_ms_constraint_func,
+    final_pose_constraint_func,
+    final_velocity_constraint_func,
+    initial_pose_constraint_func,
+    initial_velocity_constraint_func,
     obstacle_constraint_func,
 )
-from atium.implementations.unito.src.unito_costs import control_cost_func, time_regularization_cost_func
-from atium.implementations.unito.src.unito_utils import (
-    UnitoInputs,
-    UnitoParams,
-)
-from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
-from atium.implementations.unito.src.visualization import visualize_unito_result
+from atium.experiments.runito.src.runito_costs import control_cost_func, time_regularization_cost_func
+from atium.experiments.runito.src.runito_utils import RunitoInputs, RunitoParams
+from atium.experiments.runito.src.runito_variable_manager import RunitoVariableManager
 
 
 @attr.define
-class Unito:
-    manager: UnitoVariableManager
+class Runito:
+    manager: RunitoVariableManager
 
     # Optimization variables
     _prog: MathematicalProgram = attr.ib(init=False)
@@ -49,25 +46,22 @@ class Unito:
         return AtiumLogger(self.__class__.__name__)
 
     @cached_property
-    def params(self) -> UnitoParams:
+    def params(self) -> RunitoParams:
         """
         Get the parameters for the Unito problem.
         """
         return self.manager.params
 
-    @staticmethod
-    def start_constraints_callable():
-        pass
-
-    def setup_optimization_program(self, inputs: UnitoInputs) -> None:
+    def setup_optimization_program(self, inputs: RunitoInputs) -> None:
         """
         Initialize the optimization problem.
         """
         self.manager.create_decision_variables(self._prog)
 
         all_vars = self._prog.decision_variables()
+        c_x_vars = self.manager.get_c_x_vars(all_vars)
+        c_y_vars = self.manager.get_c_y_vars(all_vars)
         c_theta_vars = self.manager.get_c_theta_vars(all_vars)
-        c_s_vars = self.manager.get_c_s_vars(all_vars)
         t_vars = self.manager.get_t_vars(all_vars)
 
         # Costs.
@@ -83,68 +77,76 @@ class Unito:
         )
 
         # Constraints.
+        c_x_0_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=0)
+        c_y_0_vars = self.manager.get_c_y_i_vars(all_vars=all_vars, i=0)
         c_theta_0_vars = self.manager.get_c_theta_i_vars(all_vars=all_vars, i=0)
-        c_s_0_vars = self.manager.get_c_s_i_vars(all_vars=all_vars, i=0)
         t_0_var = t_vars[0]
+        c_x_f_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=self.params.M - 1)
+        c_y_f_vars = self.manager.get_c_y_i_vars(all_vars=all_vars, i=self.params.M - 1)
         c_theta_f_vars = self.manager.get_c_theta_i_vars(all_vars=all_vars, i=self.params.M - 1)
-        c_s_f_vars = self.manager.get_c_s_i_vars(all_vars=all_vars, i=self.params.M - 1)
         t_f_var = t_vars[-1]
 
-        for derivative, initial_ms in inputs.initial_state_inputs.initial_ms_map.items():
-            # Get the initial state.
-            assert derivative <= self.params.h - 1
+        # Initial pose constraint.
+        self._prog.AddConstraint(
+            func=partial(
+                initial_pose_constraint_func,
+                initial_pose=inputs.initial_state_inputs.initial_pose,
+                manager=self.manager,
+            ),
+            lb=np.full(3, -self.params.initial_state_equality_tolerance),
+            ub=np.full(3, self.params.initial_state_equality_tolerance),
+            vars=np.hstack((c_x_0_vars, c_y_0_vars, c_theta_0_vars)),
+            description="Initial pose constraint",
+        )
 
-            # Add the constraints.
-            self._prog.AddConstraint(
-                func=partial(
-                    initial_ms_constraint_func,
-                    initial_ms_vector=initial_ms.to_vector(),
-                    derivative=derivative,
-                    manager=self.manager,
-                ),
-                lb=np.full(2, -self.params.initial_state_equality_tolerance),
-                ub=np.full(2, self.params.initial_state_equality_tolerance),
-                vars=np.hstack((c_theta_0_vars, c_s_0_vars)),
-                description=f"Initial MS constraint for derivative: {derivative}",
-            )
+        # Initial velocity constraint.
+        self._prog.AddConstraint(
+            func=partial(
+                initial_velocity_constraint_func,
+                initial_velocity=inputs.initial_state_inputs.initial_velocity,
+                manager=self.manager,
+            ),
+            lb=np.full(2, -self.params.initial_state_equality_tolerance),
+            ub=np.full(2, self.params.initial_state_equality_tolerance),
+            vars=np.hstack((c_x_0_vars, c_y_0_vars, c_theta_0_vars)),
+            description="Initial velocity constraint",
+        )
 
-        for derivative, final_ms in inputs.final_state_inputs.final_ms_map.items():
-            # Get the final state.
-            assert derivative <= self.params.h - 1
+        # Final pose constraint.
+        self._prog.AddConstraint(
+            func=partial(
+                final_pose_constraint_func,
+                final_pose=inputs.final_state_inputs.final_pose,
+                manager=self.manager,
+            ),
+            lb=np.full(3, -self.params.initial_state_equality_tolerance),
+            ub=np.full(3, self.params.initial_state_equality_tolerance),
+            vars=np.hstack((c_x_f_vars, c_y_f_vars, c_theta_f_vars, t_f_var)),
+            description="Final pose constraint",
+        )
 
-            if derivative == 0:
-                # For the 0th derivative, Only theta constraints can be added.
-                self._prog.AddConstraint(
-                    self.manager.compute_sigma_i_exp(
-                        c_theta_i_vars=c_theta_f_vars,
-                        c_s_i_vars=c_s_f_vars,
-                        t_exp=t_f_var,
-                    )[0]
-                    - final_ms.theta,
-                    -self.params.final_state_equality_tolerance,
-                    self.params.final_state_equality_tolerance,
-                )
-            else:
-                # Add the constraints.
-                self._prog.AddConstraint(
-                    func=partial(
-                        final_ms_constraint_func,
-                        final_ms_vector=final_ms.to_vector(),
-                        derivative=derivative,
-                        manager=self.manager,
-                    ),
-                    lb=np.full(2, -self.params.final_state_equality_tolerance),
-                    ub=np.full(2, self.params.final_state_equality_tolerance),
-                    vars=np.hstack((c_theta_f_vars, c_s_f_vars, t_f_var)),
-                    description=f"Final MS constraint for derivative: {derivative}",
-                )
+        # Final velocity constraint.
+        self._prog.AddConstraint(
+            func=partial(
+                final_velocity_constraint_func,
+                final_velocity=inputs.final_state_inputs.final_velocity,
+                manager=self.manager,
+            ),
+            lb=np.full(2, -self.params.initial_state_equality_tolerance),
+            ub=np.full(2, self.params.initial_state_equality_tolerance),
+            vars=np.hstack((c_x_f_vars, c_y_f_vars, c_theta_f_vars, t_f_var)),
+            description="Final velocity constraint",
+        )
 
+        # Continuity constraints.
         for derivative in range(self.params.h):
             for i in range(self.params.M - 1):
+                prev_c_x_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=i)
+                prev_c_y_vars = self.manager.get_c_y_i_vars(all_vars=all_vars, i=i)
                 prev_c_theta_vars = self.manager.get_c_theta_i_vars(all_vars=all_vars, i=i)
-                prev_c_s_vars = self.manager.get_c_s_i_vars(all_vars=all_vars, i=i)
+                next_c_x_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=i + 1)
+                next_c_y_vars = self.manager.get_c_y_i_vars(all_vars=all_vars, i=i + 1)
                 next_c_theta_vars = self.manager.get_c_theta_i_vars(all_vars=all_vars, i=i + 1)
-                next_c_s_vars = self.manager.get_c_s_i_vars(all_vars=all_vars, i=i + 1)
                 prev_t_var = t_vars[i]
                 self._prog.AddConstraint(
                     func=partial(
@@ -154,23 +156,19 @@ class Unito:
                     ),
                     lb=np.full(2, -self.params.continuity_equality_tolerance),
                     ub=np.full(2, self.params.continuity_equality_tolerance),
-                    vars=np.hstack((prev_c_theta_vars, prev_c_s_vars, next_c_theta_vars, next_c_s_vars, prev_t_var)),
+                    vars=np.hstack(
+                        (
+                            prev_c_x_vars,
+                            prev_c_y_vars,
+                            prev_c_theta_vars,
+                            next_c_x_vars,
+                            next_c_y_vars,
+                            next_c_theta_vars,
+                            prev_t_var,
+                        )
+                    ),
                     description=f"Continuity constraint between segments {i} and {i + 1}, and derivative {derivative}",
                 )
-
-        # Add the final position constraint.
-        self._prog.AddConstraint(
-            func=partial(
-                final_xy_constraint_func,
-                final_xy=inputs.final_state_inputs.final_xy,
-                initial_xy=inputs.initial_state_inputs.initial_xy,
-                manager=self.manager,
-            ),
-            lb=np.full(2, -self.params.final_xy_equality_tolerance),
-            ub=np.full(2, self.params.final_xy_equality_tolerance),
-            vars=all_vars,
-            description="Final xy constraint",
-        )
 
         # Obstacle avoidance constraints.
         signed_distance_map = inputs.emap2d.compute_signed_distance_transform()
@@ -181,7 +179,6 @@ class Unito:
                 emap2d=inputs.emap2d,
                 signed_distance_map=signed_distance_map,
                 obstacle_clearance=inputs.obstacle_clearance,
-                initial_xy=inputs.initial_state_inputs.initial_xy,
                 manager=self.manager,
             ),
             lb=np.full(self.params.M * self.params.n * inputs.footprint.shape[0], 0.0),
@@ -196,35 +193,7 @@ class Unito:
             t_vars,
         )
 
-    def compute_initial_guess_old(self, inputs: UnitoInputs) -> NpVectorNf64:
-        """
-        Compute the initial guess for the optimization problem.
-        """
-
-        # If the start theta value is given, we set c_i_theta[0] to that value.
-        c_theta_initial_guess = np.zeros(2 * self.params.h * self.params.M)
-        if 0 in inputs.initial_state_inputs.initial_ms_map:
-            c_theta_initial_guess[0] = inputs.initial_state_inputs.initial_ms_map[0].theta
-
-        # If the start s value is given, we set c_i_s[0] to that value.
-        # c_s_initial_guess = np.zeros(2 * params.h * params.M)
-        distance = np.linalg.norm(inputs.final_state_inputs.final_xy - inputs.initial_state_inputs.initial_xy)
-        c_s_initial_guess = np.linspace(
-            0.0,
-            distance,
-            num=2 * self.params.h * self.params.M,
-        )
-        if 0 in inputs.initial_state_inputs.initial_ms_map:
-            c_s_initial_guess[0] = inputs.initial_state_inputs.initial_ms_map[0].s
-
-        # For t, we initialize them by a constant value.
-        t_initial_guess = 1 * np.ones(self.params.M)
-
-        initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
-
-        return initial_guess
-
-    def compute_initial_guess(self, inputs: UnitoInputs) -> NpVectorNf64:
+    def compute_initial_guess(self, inputs: RunitoInputs) -> NpVectorNf64:
         """
         Compute the initial guess for the optimization problem.
         """
@@ -233,7 +202,7 @@ class Unito:
         distance_per_segment = distance / self.params.M
         nominal_v = 10.0
         nominal_t = distance_per_segment / nominal_v
-        if np.isclose(nominal_t, 0.):
+        if np.isclose(nominal_t, 0.0):
             nominal_t = 0.1
         print(f"Nominal t: {nominal_t}")
 
@@ -283,7 +252,7 @@ class Unito:
 
     def solve(
         self,
-        inputs: UnitoInputs,
+        inputs: RunitoInputs,
         initial_guess: NpVectorNf64,
         debug_solver: bool = False,
         visualize_solution: bool = False,
