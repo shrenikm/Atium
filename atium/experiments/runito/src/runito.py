@@ -15,6 +15,7 @@ from pydrake.solvers import (
 )
 
 from atium.core.utils.custom_types import NpVectorNf64
+from atium.core.utils.geometry_utils import normalize_angle
 from atium.core.utils.logging_utils import AtiumLogger
 from atium.experiments.runito.src.runito_constraints import (
     continuity_constraint_func,
@@ -197,55 +198,48 @@ class Runito:
         """
         Compute the initial guess for the optimization problem.
         """
+        initial_pose_vector = inputs.initial_state_inputs.initial_pose.to_vector()
+        final_pose_vector = inputs.final_state_inputs.final_pose.to_vector()
 
-        distance = np.linalg.norm(inputs.final_state_inputs.final_xy - inputs.initial_state_inputs.initial_xy)
+        distance = np.linalg.norm(final_pose_vector - initial_pose_vector)
         distance_per_segment = distance / self.params.M
+        x_delta_per_segment = (final_pose_vector[0] - initial_pose_vector[0]) / self.params.M
+        y_delta_per_segment = (final_pose_vector[1] - initial_pose_vector[1]) / self.params.M
         nominal_v = 10.0
         nominal_t = distance_per_segment / nominal_v
         if np.isclose(nominal_t, 0.0):
             nominal_t = 0.1
-        print(f"Nominal t: {nominal_t}")
 
+        # We initialize x, y, theta as a straight line between the start and end points.
+        # Note that the polynomial coefficients (first two values) need to be initialized to reflect this linear inteprolation.
+        c_x_initial_guess = np.zeros(2 * self.params.h * self.params.M)
+        c_y_initial_guess = np.zeros(2 * self.params.h * self.params.M)
         c_theta_initial_guess = np.zeros(2 * self.params.h * self.params.M)
-        c_s_initial_guess = np.zeros(2 * self.params.h * self.params.M)
         # For t, we initialize them by a constant value.
         t_initial_guess = nominal_t * np.ones(self.params.M)
-
-        # If the start theta value and end value is given, we set c_i_theta[0] and c_i_theta[1] such that
-        # it makes the interpolated theta value from (start to end) at that segment.
-        initial_theta, final_theta = 0.0, 0.0
-        # Note that we don't handle the case where the initial theta is given but the final theta well as it becomes hard to define the guess.
-        if 0 in inputs.initial_state_inputs.initial_ms_map:
-            initial_theta = inputs.initial_state_inputs.initial_ms_map[0].theta
-        if 0 in inputs.final_state_inputs.final_ms_map:
-            final_theta = inputs.final_state_inputs.final_ms_map[0].theta
-        theta_per_segment = (final_theta - initial_theta) / self.params.M
+        theta_delta_per_segment = (final_pose_vector[2] - initial_pose_vector[2]) / self.params.M
 
         for i in range(self.params.M):
-            c_theta_initial_guess[i * 2 * self.params.h] = initial_theta + i * theta_per_segment
+            c_x_initial_guess[i * 2 * self.params.h] = initial_pose_vector[0] + i * x_delta_per_segment
+            c_x_initial_guess[i * 2 * self.params.h + 1] = (
+                (i + 1) * distance_per_segment - c_x_initial_guess[i * 2 * self.params.h]
+            ) / nominal_t
+
+            c_y_initial_guess[i * 2 * self.params.h] = initial_pose_vector[1] + i * y_delta_per_segment
+            c_y_initial_guess[i * 2 * self.params.h + 1] = (
+                (i + 1) * distance_per_segment - c_y_initial_guess[i * 2 * self.params.h]
+            ) / nominal_t
+
+            c_theta_initial_guess[i * 2 * self.params.h] = initial_pose_vector[0] + i * theta_delta_per_segment
             c_theta_initial_guess[i * 2 * self.params.h + 1] = (
-                (i + 1) * theta_per_segment - c_theta_initial_guess[i * 2 * self.params.h]
+                (i + 1) * theta_delta_per_segment - c_theta_initial_guess[i * 2 * self.params.h]
             ) / nominal_t
 
-        # We initialize s such that it forms a straight line between the start and end points.
-        # To do this, we divide the segments into equal lengths and set s_i[0] and s_i[1] so that it forms a straight line
-        #  within that segment.
-        initial_s = 0.0
-        if 0 in inputs.initial_state_inputs.initial_ms_map:
-            initial_s = inputs.initial_state_inputs.initial_ms_map[0].s
-
-        for i in range(self.params.M):
-            c_s_initial_guess[i * 2 * self.params.h] = initial_s + i * distance_per_segment
-            # The first two values correspond to the coefficients of 1 and t
-            # So c_s_i[0] + t * c_s_i[1] = distance up until the ith segment = (i + 1) * distance_per_segment
-            # => c_s_i[1] = ((i + 1) * distance_per_segment - c_s_i[0]) / t
-            c_s_initial_guess[i * 2 * self.params.h + 1] = (
-                (i + 1) * distance_per_segment - c_s_initial_guess[i * 2 * self.params.h]
-            ) / nominal_t
-
-        initial_guess = np.hstack((c_theta_initial_guess, c_s_initial_guess, t_initial_guess))
+        initial_guess = np.hstack((c_x_initial_guess, c_y_initial_guess, c_theta_initial_guess, t_initial_guess))
+        print(f"Nominal t: {nominal_t}")
+        print(f"X initial guess: {c_x_initial_guess}")
+        print(f"Y initial guess: {c_y_initial_guess}")
         print(f"Theta initial guess: {c_theta_initial_guess}")
-        print(f"S initial guess: {c_s_initial_guess}")
         print(f"T initial guess: {t_initial_guess}")
 
         return initial_guess
@@ -275,10 +269,11 @@ class Runito:
             self._logger.info("=" * 20)
             self._logger.info("Solution:")
             self._logger.info("=" * 20)
+            self._logger.info(f"c_x: {res.GetSolution(self.manager.get_c_x_vars(self._prog.decision_variables()))}")
+            self._logger.info(f"c_y: {res.GetSolution(self.manager.get_c_y_vars(self._prog.decision_variables()))}")
             self._logger.info(
                 f"c_theta: {res.GetSolution(self.manager.get_c_theta_vars(self._prog.decision_variables()))}"
             )
-            self._logger.info(f"c_s: {res.GetSolution(self.manager.get_c_s_vars(self._prog.decision_variables()))}")
             self._logger.info(f"t: {res.GetSolution(self.manager.get_t_vars(self._prog.decision_variables()))}")
 
         if visualize_solution:
