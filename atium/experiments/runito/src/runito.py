@@ -22,6 +22,7 @@ from atium.experiments.runito.src.runito_constraints import (
     final_velocity_constraint_func,
     initial_pose_constraint_func,
     initial_velocity_constraint_func,
+    kinematic_constraint_func,
     obstacle_constraint_func,
 )
 from atium.experiments.runito.src.runito_costs import control_cost_func, time_regularization_cost_func
@@ -172,22 +173,36 @@ class Runito:
                     description=f"Continuity constraint between segments {i} and {i + 1}, and derivative {derivative}",
                 )
 
+        # Kinematic constraints.
+        self._prog.AddConstraint(
+            func=partial(
+                kinematic_constraint_func,
+                manager=self.manager,
+            ),
+            # lb=np.full(2 * self.params.M * self.params.n, -self.params.kinematic_equality_tolerance),
+            # ub=np.full(2 * self.params.M * self.params.n, self.params.kinematic_equality_tolerance),
+            lb=np.full(2 * self.params.M, -self.params.kinematic_equality_tolerance),
+            ub=np.full(2 * self.params.M, self.params.kinematic_equality_tolerance),
+            vars=all_vars,
+            description="Kinematic constraint",
+        )
+
         # Obstacle avoidance constraints.
         signed_distance_map = inputs.emap2d.compute_signed_distance_transform()
-        # self._prog.AddConstraint(
-        #     func=partial(
-        #         obstacle_constraint_func,
-        #         footprint=inputs.footprint,
-        #         emap2d=inputs.emap2d,
-        #         signed_distance_map=signed_distance_map,
-        #         obstacle_clearance=inputs.obstacle_clearance,
-        #         manager=self.manager,
-        #     ),
-        #     lb=np.full(self.params.M * self.params.n * inputs.footprint.shape[0], 0.0),
-        #     ub=np.full(self.params.M * self.params.n * inputs.footprint.shape[0], np.inf),
-        #     vars=all_vars,
-        #     description="Obstacle avoidance constraint",
-        # )
+        self._prog.AddConstraint(
+            func=partial(
+                obstacle_constraint_func,
+                footprint=inputs.footprint,
+                emap2d=inputs.emap2d,
+                signed_distance_map=signed_distance_map,
+                obstacle_clearance=inputs.obstacle_clearance,
+                manager=self.manager,
+            ),
+            lb=np.full(self.params.M * self.params.n * inputs.footprint.shape[0], 0.0),
+            ub=np.full(self.params.M * self.params.n * inputs.footprint.shape[0], np.inf),
+            vars=all_vars,
+            description="Obstacle avoidance constraint",
+        )
 
         self._prog.AddBoundingBoxConstraint(
             0.0,

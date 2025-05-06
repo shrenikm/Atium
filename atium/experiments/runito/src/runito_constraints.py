@@ -130,6 +130,53 @@ def continuity_constraint_func(
     return prev_sigma - next_sigma
 
 
+def kinematic_constraint_func(
+    func_vars: np.ndarray,
+    manager: RunitoVariableManager,
+) -> np.ndarray:
+    assert func_vars.shape == (6 * manager.params.h * manager.params.M + manager.params.M,)
+
+    constraint_vector = []
+
+    for i in range(manager.params.M):
+        c_x_i_vars = manager.get_c_x_i_vars(all_vars=func_vars, i=i)
+        c_y_i_vars = manager.get_c_y_i_vars(all_vars=func_vars, i=i)
+        c_theta_i_vars = manager.get_c_theta_i_vars(all_vars=func_vars, i=i)
+        t_i_var = manager.get_t_i_var(func_vars, i)
+
+        # for j in range(manager.params.n):
+        for j in [0]:
+            t_ijl = manager.compute_t_ijl_exp(
+                t_i_var=t_i_var,
+                j=j,
+                l=0,
+            )
+
+            sigma_i = manager.compute_sigma_i_exp(
+                c_x_i_vars=c_x_i_vars,
+                c_y_i_vars=c_y_i_vars,
+                c_theta_i_vars=c_theta_i_vars,
+                t_exp=t_ijl,
+            )
+            sigma_i_dot = manager.compute_sigma_i_exp(
+                c_x_i_vars=c_x_i_vars,
+                c_y_i_vars=c_y_i_vars,
+                c_theta_i_vars=c_theta_i_vars,
+                t_exp=t_ijl,
+                derivative=1,
+            )
+
+            # v = np.sqrt(sigma_i_dot[0] ** 2 + sigma_i_dot[1] ** 2)
+            # constraint_vector.append(sigma_i_dot[0] - v * np.cos(sigma_i[2]))
+            # constraint_vector.append(sigma_i_dot[1] - v * np.sin(sigma_i[2]))
+
+            v_square = sigma_i_dot[0] ** 2 + sigma_i_dot[1] ** 2
+            constraint_vector.append(sigma_i_dot[0] ** 2 - v_square * np.cos(sigma_i[2]) ** 2)
+            constraint_vector.append(sigma_i_dot[1] ** 2 - v_square * np.sin(sigma_i[2]) ** 2)
+
+    return np.array(constraint_vector)
+
+
 def obstacle_constraint_func(
     func_vars: np.ndarray,
     footprint: PolygonXYArray,
@@ -140,7 +187,7 @@ def obstacle_constraint_func(
     obstacle_clearance: float,
     manager: RunitoVariableManager,
 ) -> np.ndarray:
-    assert func_vars.shape == (4 * manager.params.h * manager.params.M + manager.params.M,)
+    assert func_vars.shape == (6 * manager.params.h * manager.params.M + manager.params.M,)
 
     constraint_vector = []
     h, w = signed_distance_map.shape
