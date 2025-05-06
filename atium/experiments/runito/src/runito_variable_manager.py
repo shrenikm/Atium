@@ -134,3 +134,27 @@ class RunitoVariableManager:
         y_i = beta @ c_y_i_vars
         theta_i = beta @ c_theta_i_vars
         return np.array([x_i, y_i, theta_i])
+
+    def compute_gamma_i_exp(
+        self,
+        c_x_i_vars: np.ndarray,
+        c_y_i_vars: np.ndarray,
+        c_theta_i_vars: np.ndarray,
+        t_exp: float | Variable | Expression,
+    ) -> np.ndarray:
+        """
+        Sigma_i = [ linear_velocity_i, angular_velocity_i ]
+        """
+        sigma_i_dot = self.compute_sigma_i_exp(
+            c_x_i_vars=c_x_i_vars,
+            c_y_i_vars=c_y_i_vars,
+            c_theta_i_vars=c_theta_i_vars,
+            t_exp=t_exp,
+            derivative=1,
+        )
+        return np.array(
+            [
+                np.sqrt(sigma_i_dot[0] ** 2 + sigma_i_dot[1] ** 2),
+                sigma_i_dot[2],
+            ]
+        )

@@ -1,19 +1,20 @@
 import numpy as np
 from pydrake.autodiffutils import AutoDiffXd
 
-from atium.implementations.unito.src.unito_variable_manager import UnitoVariableManager
+from atium.experiments.runito.src.runito_variable_manager import RunitoVariableManager
 
 
 def control_cost_func(
     all_vars: np.ndarray,
-    manager: UnitoVariableManager,
+    manager: RunitoVariableManager,
 ) -> float | AutoDiffXd:
     cost = 0.0
     for i in range(manager.params.M):
         t_i_var = manager.get_t_i_var(all_vars, i=i)
         sigma_i = manager.compute_sigma_i_exp(
+            c_x_i_vars=manager.get_c_x_i_vars(all_vars, i),
+            c_y_i_vars=manager.get_c_y_i_vars(all_vars, i),
             c_theta_i_vars=manager.get_c_theta_i_vars(all_vars, i),
-            c_s_i_vars=manager.get_c_s_i_vars(all_vars, i),
             t_exp=t_i_var,
             derivative=manager.params.h,
         )
@@ -23,7 +24,7 @@ def control_cost_func(
 
 def time_regularization_cost_func(
     t_vars: np.ndarray,
-    manager: UnitoVariableManager,
+    manager: RunitoVariableManager,
 ) -> float | AutoDiffXd:
     """
     Cost on the time taken to traverse all segments.

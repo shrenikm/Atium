@@ -16,14 +16,14 @@ from pydrake.solvers import (
 
 from atium.core.utils.custom_types import NpVectorNf64
 from atium.core.utils.logging_utils import AtiumLogger
-from atium.implementations.unito.src.constraints import (
+from atium.implementations.unito.src.unito_constraints import (
     continuity_constraint_func,
     final_ms_constraint_func,
     final_xy_constraint_func,
     initial_ms_constraint_func,
     obstacle_constraint_func,
 )
-from atium.implementations.unito.src.costs import control_cost_func, time_regularization_cost_func
+from atium.implementations.unito.src.unito_costs import control_cost_func, time_regularization_cost_func
 from atium.implementations.unito.src.unito_utils import (
     UnitoInputs,
     UnitoParams,

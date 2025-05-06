@@ -59,5 +59,6 @@ class UnitoInputs:
     footprint: PolygonXYArray
     emap2d: EnvironmentMap2D
     obstacle_clearance: float
+    velocity_limits: Velocity2D
     initial_state_inputs: UnitoInitialStateInputs
     final_state_inputs: UnitoFinalStateInputs
