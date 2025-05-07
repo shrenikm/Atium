@@ -157,6 +157,7 @@ def kinematic_constraint_func(
                 c_y_i_vars=c_y_i_vars,
                 c_theta_i_vars=c_theta_i_vars,
                 t_exp=t_ijl,
+                derivative=0,
             )
             sigma_i_dot = manager.compute_sigma_i_exp(
                 c_x_i_vars=c_x_i_vars,
@@ -166,13 +167,13 @@ def kinematic_constraint_func(
                 derivative=1,
             )
 
-            # v = np.sqrt(sigma_i_dot[0] ** 2 + sigma_i_dot[1] ** 2)
-            # constraint_vector.append(sigma_i_dot[0] - v * np.cos(sigma_i[2]))
-            # constraint_vector.append(sigma_i_dot[1] - v * np.sin(sigma_i[2]))
+            v = np.sqrt(sigma_i_dot[0] ** 2 + sigma_i_dot[1] ** 2)
+            constraint_vector.append(sigma_i_dot[0] - v * np.cos(sigma_i[2]))
+            constraint_vector.append(sigma_i_dot[1] - v * np.sin(sigma_i[2]))
 
-            v_square = sigma_i_dot[0] ** 2 + sigma_i_dot[1] ** 2
-            constraint_vector.append(sigma_i_dot[0] ** 2 - v_square * np.cos(sigma_i[2]) ** 2)
-            constraint_vector.append(sigma_i_dot[1] ** 2 - v_square * np.sin(sigma_i[2]) ** 2)
+            # v_square = sigma_i_dot[0] ** 2 + sigma_i_dot[1] ** 2
+            # constraint_vector.append(sigma_i_dot[0] ** 2 - v_square * np.cos(sigma_i[2]) ** 2)
+            # constraint_vector.append(sigma_i_dot[1] ** 2 - v_square * np.sin(sigma_i[2]) ** 2)
 
     return np.array(constraint_vector)
 
