@@ -35,7 +35,7 @@ def scenario1() -> RunitoInputs:
         initial_velocity=Velocity2D.from_vector(np.zeros(2)),
     )
     final_state_inputs = RunitoFinalStateInputs(
-        final_pose=Pose2D.from_vector(np.array([2.0, 3.0, 0.0])),
+        final_pose=Pose2D.from_vector(np.array([5.0, 2.0, 0.0])),
     )
     velocity_limits = Velocity2D.from_vector(np.zeros(2))
     return RunitoInputs(

@@ -144,8 +144,7 @@ def kinematic_constraint_func(
         c_theta_i_vars = manager.get_c_theta_i_vars(all_vars=func_vars, i=i)
         t_i_var = manager.get_t_i_var(func_vars, i)
 
-        # for j in range(manager.params.n):
-        for j in [0]:
+        for j in range(manager.params.n):
             t_ijl = manager.compute_t_ijl_exp(
                 t_i_var=t_i_var,
                 j=j,
@@ -167,13 +166,14 @@ def kinematic_constraint_func(
                 derivative=1,
             )
 
-            v = np.sqrt(sigma_i_dot[0] ** 2 + sigma_i_dot[1] ** 2)
+            # TODO: We get a divide by zero error here if both xdot and ydot end up being 0.
+            # So we add an epsilon.
+            epsilon = 0
+            if sigma_i_dot[0] == 0 and sigma_i_dot[1] == 0:
+                epsilon = 1e-6
+            v = np.sqrt(sigma_i_dot[0] ** 2 + sigma_i_dot[1] ** 2 + epsilon)
             constraint_vector.append(sigma_i_dot[0] - v * np.cos(sigma_i[2]))
             constraint_vector.append(sigma_i_dot[1] - v * np.sin(sigma_i[2]))
-
-            # v_square = sigma_i_dot[0] ** 2 + sigma_i_dot[1] ** 2
-            # constraint_vector.append(sigma_i_dot[0] ** 2 - v_square * np.cos(sigma_i[2]) ** 2)
-            # constraint_vector.append(sigma_i_dot[1] ** 2 - v_square * np.sin(sigma_i[2]) ** 2)
 
     return np.array(constraint_vector)
 

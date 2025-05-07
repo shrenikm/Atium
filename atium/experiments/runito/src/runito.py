@@ -179,10 +179,8 @@ class Runito:
                 kinematic_constraint_func,
                 manager=self.manager,
             ),
-            # lb=np.full(2 * self.params.M * self.params.n, -self.params.kinematic_equality_tolerance),
-            # ub=np.full(2 * self.params.M * self.params.n, self.params.kinematic_equality_tolerance),
-            lb=np.full(2 * self.params.M, -self.params.kinematic_equality_tolerance),
-            ub=np.full(2 * self.params.M, self.params.kinematic_equality_tolerance),
+            lb=np.full(2 * self.params.M * self.params.n, -self.params.kinematic_equality_tolerance),
+            ub=np.full(2 * self.params.M * self.params.n, self.params.kinematic_equality_tolerance),
             vars=all_vars,
             description="Kinematic constraint",
         )
@@ -296,5 +294,7 @@ class Runito:
             visualize_runito_result(
                 manager=self.manager,
                 unito_inputs=inputs,
+                all_vars_guess=initial_guess,
                 all_vars_solution=res.GetSolution(self._prog.decision_variables()),
+                draw_heading=False,
             )
