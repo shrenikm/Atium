@@ -70,16 +70,6 @@ class RunitoVisualizationData:
             y_values += yv
             theta_values += thetav
 
-        print(f"x_i_values: {x_i_values}")
-        print(f"y_i_values: {y_i_values}")
-        print(f"theta_i_values: {theta_i_values}")
-        print(f"t_i_values: {t_i_values}")
-        print(f"x_values: {x_values}")
-        print(f"y_values: {y_values}")
-        print(f"theta_values: {theta_values}")
-        print(len(x_i_values), len(y_i_values), len(theta_i_values), len(t_i_values))
-        print(len(x_values), len(y_values), len(theta_values))
-
         return cls(
             x_i_values=x_i_values,
             y_i_values=y_i_values,
@@ -187,7 +177,6 @@ class RunitoVisualizationAxes:
         draw_heading: bool = False,
     ) -> None:
         initial_pose_vector = unito_inputs.initial_state_inputs.initial_pose.to_vector()
-        final_pose_vector = unito_inputs.final_state_inputs.final_pose.to_vector()
 
         # Draw the environment map.
         emap_size_xy = unito_inputs.emap2d.size_xy

@@ -225,7 +225,7 @@ class Runito:
             nominal_t = 0.1
 
         # We initialize x, y, theta as a straight line between the start and end points.
-        # Note that the polynomial coefficients (first two values) need to be initialized to reflect this linear inteprolation.
+        # Note that the polynomial coefficients (first two values) need to be initialized to reflect this linear interpolation.
         c_x_initial_guess = np.zeros(2 * self.params.h * self.params.M)
         c_y_initial_guess = np.zeros(2 * self.params.h * self.params.M)
         c_theta_initial_guess = np.zeros(2 * self.params.h * self.params.M)
@@ -236,17 +236,19 @@ class Runito:
         for i in range(self.params.M):
             c_x_initial_guess[i * 2 * self.params.h] = initial_pose_vector[0] + i * x_delta_per_segment
             c_x_initial_guess[i * 2 * self.params.h + 1] = (
-                (i + 1) * distance_per_segment - c_x_initial_guess[i * 2 * self.params.h]
+                initial_pose_vector[0] + (i + 1) * x_delta_per_segment - c_x_initial_guess[i * 2 * self.params.h]
             ) / nominal_t
 
             c_y_initial_guess[i * 2 * self.params.h] = initial_pose_vector[1] + i * y_delta_per_segment
             c_y_initial_guess[i * 2 * self.params.h + 1] = (
-                (i + 1) * distance_per_segment - c_y_initial_guess[i * 2 * self.params.h]
+                initial_pose_vector[1] + (i + 1) * y_delta_per_segment - c_y_initial_guess[i * 2 * self.params.h]
             ) / nominal_t
 
-            c_theta_initial_guess[i * 2 * self.params.h] = initial_pose_vector[0] + i * theta_delta_per_segment
+            c_theta_initial_guess[i * 2 * self.params.h] = initial_pose_vector[2] + i * theta_delta_per_segment
             c_theta_initial_guess[i * 2 * self.params.h + 1] = (
-                (i + 1) * theta_delta_per_segment - c_theta_initial_guess[i * 2 * self.params.h]
+                initial_pose_vector[2]
+                + (i + 1) * theta_delta_per_segment
+                - c_theta_initial_guess[i * 2 * self.params.h]
             ) / nominal_t
 
         initial_guess = np.hstack((c_x_initial_guess, c_y_initial_guess, c_theta_initial_guess, t_initial_guess))
