@@ -60,6 +60,7 @@ class RunitoInputs:
     footprint: PolygonXYArray
     emap2d: EnvironmentMap2D
     obstacle_clearance: float
-    velocity_limits: Velocity2D
+    upper_velocity_limits: Velocity2D
+    lower_velocity_limits: Velocity2D
     initial_state_inputs: RunitoInitialStateInputs
     final_state_inputs: RunitoFinalStateInputs

@@ -24,6 +24,7 @@ from atium.experiments.runito.src.runito_constraints import (
     initial_velocity_constraint_func,
     kinematic_constraint_func,
     obstacle_constraint_func,
+    velocity_limits_constraint_func,
 )
 from atium.experiments.runito.src.runito_costs import control_cost_func, time_regularization_cost_func
 from atium.experiments.runito.src.runito_utils import RunitoInputs, RunitoParams
@@ -140,6 +141,24 @@ class Runito:
                 vars=np.hstack((c_x_f_vars, c_y_f_vars, c_theta_f_vars, t_f_var)),
                 description="Final velocity constraint",
             )
+
+        # Velocity limit constraints.
+        v_min, v_max = inputs.lower_velocity_limits.to_vector()
+        w_min, w_max = inputs.upper_velocity_limits.to_vector()
+        self._prog.AddConstraint(
+            func=partial(
+                velocity_limits_constraint_func,
+                manager=self.manager,
+            ),
+            lb=np.hstack(
+                (np.full(self.params.M * self.params.n, v_min), np.full(self.params.M * self.params.n, w_min))
+            ),
+            ub=np.hstack(
+                (np.full(self.params.M * self.params.n, v_max), np.full(self.params.M * self.params.n, w_max))
+            ),
+            vars=all_vars,
+            description="Velocity limits constraint",
+        )
 
         # Continuity constraints.
         for derivative in range(self.params.h):

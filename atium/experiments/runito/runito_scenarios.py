@@ -18,6 +18,15 @@ def get_scenario_footprint(footprint_size_xy: SizeXY) -> PolygonXYArray:
     )
 
 
+def get_scenario_velocity_limits() -> tuple[Velocity2D, Velocity2D]:
+    v_min, v_max = 0.0, 1.0
+    w_min, w_max = -1.0, 1.0
+    return (
+        Velocity2D(linear=v_min, angular=w_min),
+        Velocity2D(linear=v_max, angular=w_max),
+    )
+
+
 def scenario1() -> RunitoInputs:
     """
     Scenario 1: Planning in a space with no obstacles.
@@ -37,12 +46,13 @@ def scenario1() -> RunitoInputs:
     final_state_inputs = RunitoFinalStateInputs(
         final_pose=Pose2D.from_vector(np.array([3.0, 3.0, 0.0])),
     )
-    velocity_limits = Velocity2D.from_vector(np.zeros(2))
+    lower_velocity_limits, upper_velocity_limits = get_scenario_velocity_limits()
     return RunitoInputs(
         footprint=footprint,
         emap2d=emap2d,
         obstacle_clearance=obstacle_clearance,
-        velocity_limits=velocity_limits,
+        lower_velocity_limits=lower_velocity_limits,
+        upper_velocity_limits=upper_velocity_limits,
         initial_state_inputs=initial_state_inputs,
         final_state_inputs=final_state_inputs,
     )
@@ -76,12 +86,13 @@ def scenario2() -> RunitoInputs:
     final_state_inputs = RunitoFinalStateInputs(
         final_pose=Pose2D.from_vector(np.array([4.0, robot_y, 0.0])),
     )
-    velocity_limits = Velocity2D.from_vector(np.zeros(2))
+    lower_velocity_limits, upper_velocity_limits = get_scenario_velocity_limits()
     return RunitoInputs(
         footprint=footprint,
         emap2d=emap2d,
         obstacle_clearance=obstacle_clearance,
-        velocity_limits=velocity_limits,
+        lower_velocity_limits=lower_velocity_limits,
+        upper_velocity_limits=upper_velocity_limits,
         initial_state_inputs=initial_state_inputs,
         final_state_inputs=final_state_inputs,
     )
@@ -121,12 +132,13 @@ def scenario3() -> RunitoInputs:
     final_state_inputs = RunitoFinalStateInputs(
         final_pose=Pose2D.from_vector(np.array([4.0, 2.5, 0.0])),
     )
-    velocity_limits = Velocity2D.from_vector(np.zeros(2))
+    lower_velocity_limits, upper_velocity_limits = get_scenario_velocity_limits()
     return RunitoInputs(
         footprint=footprint,
         emap2d=emap2d,
         obstacle_clearance=obstacle_clearance,
-        velocity_limits=velocity_limits,
+        lower_velocity_limits=lower_velocity_limits,
+        upper_velocity_limits=upper_velocity_limits,
         initial_state_inputs=initial_state_inputs,
         final_state_inputs=final_state_inputs,
     )
@@ -167,12 +179,13 @@ def scenario4() -> RunitoInputs:
     final_state_inputs = RunitoFinalStateInputs(
         final_pose=Pose2D.from_vector(np.array([2.5, wall_y, np.pi / 2.0])),
     )
-    velocity_limits = Velocity2D.from_vector(np.zeros(2))
+    lower_velocity_limits, upper_velocity_limits = get_scenario_velocity_limits()
     return RunitoInputs(
         footprint=footprint,
         emap2d=emap2d,
         obstacle_clearance=obstacle_clearance,
-        velocity_limits=velocity_limits,
+        lower_velocity_limits=lower_velocity_limits,
+        upper_velocity_limits=upper_velocity_limits,
         initial_state_inputs=initial_state_inputs,
         final_state_inputs=final_state_inputs,
     )
@@ -212,12 +225,13 @@ def scenario5() -> RunitoInputs:
     final_state_inputs = RunitoFinalStateInputs(
         final_pose=Pose2D.from_vector(np.array([1.5, 2.5, np.pi])),
     )
-    velocity_limits = Velocity2D.from_vector(np.zeros(2))
+    lower_velocity_limits, upper_velocity_limits = get_scenario_velocity_limits()
     return RunitoInputs(
         footprint=footprint,
         emap2d=emap2d,
         obstacle_clearance=obstacle_clearance,
-        velocity_limits=velocity_limits,
+        lower_velocity_limits=lower_velocity_limits,
+        upper_velocity_limits=upper_velocity_limits,
         initial_state_inputs=initial_state_inputs,
         final_state_inputs=final_state_inputs,
     )
