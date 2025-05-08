@@ -66,9 +66,21 @@ class RunitoVisualizationData:
             theta_i_values.append(thetav)
             t_i_values.append(tv)
 
-            x_values += xv
-            y_values += yv
-            theta_values += thetav
+            for j in range(manager.params.n):
+                t_ijl = manager.compute_t_ijl_exp(
+                    t_i_var=t_i_value,
+                    j=j,
+                    l=0,
+                )
+                sigma_i = manager.compute_sigma_i_exp(
+                    c_x_i_vars=c_x_i_values,
+                    c_y_i_vars=c_y_i_values,
+                    c_theta_i_vars=c_theta_i_values,
+                    t_exp=t_ijl,
+                )
+                x_values.append(sigma_i[0])
+                y_values.append(sigma_i[1])
+                theta_values.append(sigma_i[2])
 
         return cls(
             x_i_values=x_i_values,

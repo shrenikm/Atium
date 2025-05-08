@@ -62,9 +62,6 @@ class Runito:
         self.manager.create_decision_variables(self._prog)
 
         all_vars = self._prog.decision_variables()
-        c_x_vars = self.manager.get_c_x_vars(all_vars)
-        c_y_vars = self.manager.get_c_y_vars(all_vars)
-        c_theta_vars = self.manager.get_c_theta_vars(all_vars)
         t_vars = self.manager.get_t_vars(all_vars)
 
         # Costs.
@@ -83,7 +80,6 @@ class Runito:
         c_x_0_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=0)
         c_y_0_vars = self.manager.get_c_y_i_vars(all_vars=all_vars, i=0)
         c_theta_0_vars = self.manager.get_c_theta_i_vars(all_vars=all_vars, i=0)
-        t_0_var = t_vars[0]
         c_x_f_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=self.params.M - 1)
         c_y_f_vars = self.manager.get_c_y_i_vars(all_vars=all_vars, i=self.params.M - 1)
         c_theta_f_vars = self.manager.get_c_theta_i_vars(all_vars=all_vars, i=self.params.M - 1)
@@ -103,17 +99,17 @@ class Runito:
         )
 
         # Initial velocity constraint.
-        self._prog.AddConstraint(
-            func=partial(
-                initial_velocity_constraint_func,
-                initial_velocity=inputs.initial_state_inputs.initial_velocity,
-                manager=self.manager,
-            ),
-            lb=np.full(2, -self.params.initial_state_equality_tolerance),
-            ub=np.full(2, self.params.initial_state_equality_tolerance),
-            vars=np.hstack((c_x_0_vars, c_y_0_vars, c_theta_0_vars)),
-            description="Initial velocity constraint",
-        )
+        # self._prog.AddConstraint(
+        #     func=partial(
+        #         initial_velocity_constraint_func,
+        #         initial_velocity=inputs.initial_state_inputs.initial_velocity,
+        #         manager=self.manager,
+        #     ),
+        #     lb=np.full(2, -self.params.initial_state_equality_tolerance),
+        #     ub=np.full(2, self.params.initial_state_equality_tolerance),
+        #     vars=np.hstack((c_x_0_vars, c_y_0_vars, c_theta_0_vars)),
+        #     description="Initial velocity constraint",
+        # )
 
         # Final pose constraint.
         self._prog.AddConstraint(
@@ -145,17 +141,14 @@ class Runito:
         # Velocity limit constraints.
         v_min, w_min = inputs.lower_velocity_limits.to_vector()
         v_max, w_max = inputs.upper_velocity_limits.to_vector()
+        constraint_size = self.params.M * (self.params.n - 2)
         self._prog.AddConstraint(
             func=partial(
                 velocity_limits_constraint_func,
                 manager=self.manager,
             ),
-            lb=np.hstack(
-                (np.full(self.params.M * (self.params.n - 2), v_min), np.full(self.params.M * (self.params.n - 2), w_min))
-            ),
-            ub=np.hstack(
-                (np.full(self.params.M * (self.params.n - 2), v_max), np.full(self.params.M * (self.params.n - 2), w_max))
-            ),
+            lb=np.hstack((np.full(constraint_size, v_min), np.full(constraint_size, w_min))),
+            ub=np.hstack((np.full(constraint_size, v_max), np.full(constraint_size, w_max))),
             vars=all_vars,
             description="Velocity limits constraint",
         )
@@ -238,7 +231,7 @@ class Runito:
         distance_per_segment = distance / self.params.M
         x_delta_per_segment = (final_pose_vector[0] - initial_pose_vector[0]) / self.params.M
         y_delta_per_segment = (final_pose_vector[1] - initial_pose_vector[1]) / self.params.M
-        nominal_v = 1.0
+        nominal_v = inputs.upper_velocity_limits.linear
         nominal_t = distance_per_segment / nominal_v
         if np.isclose(nominal_t, 0.0):
             nominal_t = 0.1
