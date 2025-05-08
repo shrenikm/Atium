@@ -111,7 +111,7 @@ def velocity_limits_constraint_func(
         c_theta_i_vars = manager.get_c_theta_i_vars(all_vars=func_vars, i=i)
         t_i_var = manager.get_t_i_var(func_vars, i)
 
-        for j in range(manager.params.n):
+        for j in range(1, manager.params.n - 1):
             t_ijl = manager.compute_t_ijl_exp(
                 t_i_var=t_i_var,
                 j=j,

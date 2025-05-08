@@ -143,18 +143,18 @@ class Runito:
             )
 
         # Velocity limit constraints.
-        v_min, v_max = inputs.lower_velocity_limits.to_vector()
-        w_min, w_max = inputs.upper_velocity_limits.to_vector()
+        v_min, w_min = inputs.lower_velocity_limits.to_vector()
+        v_max, w_max = inputs.upper_velocity_limits.to_vector()
         self._prog.AddConstraint(
             func=partial(
                 velocity_limits_constraint_func,
                 manager=self.manager,
             ),
             lb=np.hstack(
-                (np.full(self.params.M * self.params.n, v_min), np.full(self.params.M * self.params.n, w_min))
+                (np.full(self.params.M * (self.params.n - 2), v_min), np.full(self.params.M * (self.params.n - 2), w_min))
             ),
             ub=np.hstack(
-                (np.full(self.params.M * self.params.n, v_max), np.full(self.params.M * self.params.n, w_max))
+                (np.full(self.params.M * (self.params.n - 2), v_max), np.full(self.params.M * (self.params.n - 2), w_max))
             ),
             vars=all_vars,
             description="Velocity limits constraint",
@@ -238,7 +238,7 @@ class Runito:
         distance_per_segment = distance / self.params.M
         x_delta_per_segment = (final_pose_vector[0] - initial_pose_vector[0]) / self.params.M
         y_delta_per_segment = (final_pose_vector[1] - initial_pose_vector[1]) / self.params.M
-        nominal_v = 10.0
+        nominal_v = 1.0
         nominal_t = distance_per_segment / nominal_v
         if np.isclose(nominal_t, 0.0):
             nominal_t = 0.1
