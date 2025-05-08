@@ -159,9 +159,5 @@ class RunitoVariableManager:
         if sigma_i_dot[0] == 0 and sigma_i_dot[1] == 0:
             epsilon = 1e-6
         v = np.sqrt(sigma_i_dot[0] ** 2 + sigma_i_dot[1] ** 2 + epsilon)
-        return np.array(
-            [
-                v,
-                sigma_i_dot[2],
-            ]
-        )
+        w = sigma_i_dot[2]
+        return np.array([v, w])

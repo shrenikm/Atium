@@ -96,6 +96,41 @@ def final_velocity_constraint_func(
     return gamma_f - final_velocity.to_vector()
 
 
+def velocity_limits_constraint_func(
+    func_vars: np.ndarray,
+    manager: RunitoVariableManager,
+) -> np.ndarray:
+    assert func_vars.shape == (6 * manager.params.h * manager.params.M + manager.params.M,)
+
+    linear_constraint_vector = []
+    angular_constraint_vector = []
+
+    for i in range(manager.params.M):
+        c_x_i_vars = manager.get_c_x_i_vars(all_vars=func_vars, i=i)
+        c_y_i_vars = manager.get_c_y_i_vars(all_vars=func_vars, i=i)
+        c_theta_i_vars = manager.get_c_theta_i_vars(all_vars=func_vars, i=i)
+        t_i_var = manager.get_t_i_var(func_vars, i)
+
+        for j in range(manager.params.n):
+            t_ijl = manager.compute_t_ijl_exp(
+                t_i_var=t_i_var,
+                j=j,
+                l=0,
+            )
+
+            gamma_i = manager.compute_gamma_i_exp(
+                c_x_i_vars=c_x_i_vars,
+                c_y_i_vars=c_y_i_vars,
+                c_theta_i_vars=c_theta_i_vars,
+                t_exp=t_ijl,
+            )
+
+            linear_constraint_vector.append(gamma_i[0])
+            angular_constraint_vector.append(gamma_i[1])
+
+    return np.hstack((linear_constraint_vector, angular_constraint_vector))
+
+
 def continuity_constraint_func(
     func_vars: np.ndarray,
     derivative: int,
