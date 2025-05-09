@@ -33,9 +33,10 @@ class RunitoParams:
     final_state_equality_tolerance: float = 1e-6
     continuity_equality_tolerance: float = 1e-6
     kinematic_equality_tolerance: float = 1e-6
-    # continuity_equality_tolerance: float = 0.0
     # initial_state_equality_tolerance: float = 0.0
     # final_state_equality_tolerance: float = 0.0
+    # continuity_equality_tolerance: float = 0.0
+    # kinematic_equality_tolerance: float = 0.0
     final_xy_equality_tolerance: float = 1e-2
 
 

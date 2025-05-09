@@ -21,6 +21,10 @@ class RunitoVariableManager:
     def num_c(self) -> int:
         return 2 * self.params.h * self.params.M
 
+    @cached_property
+    def num_ci(self) -> int:
+        return 2 * self.params.h
+
     def create_decision_variables(
         self,
         prog: MathematicalProgram,
@@ -62,7 +66,7 @@ class RunitoVariableManager:
         """
         assert 0 <= i < self.params.M
         offset = 0
-        return all_vars[offset + i * 2 * self.params.h : offset + (i + 1) * 2 * self.params.h]
+        return all_vars[offset + i * self.num_ci : offset + (i + 1) * self.num_ci]
 
     def get_c_y_i_vars(self, all_vars: np.ndarray, i: int) -> np.ndarray:
         """
@@ -72,7 +76,7 @@ class RunitoVariableManager:
         """
         assert 0 <= i < self.params.M
         offset = self.num_c
-        return all_vars[offset + i * 2 * self.params.h : offset + (i + 1) * 2 * self.params.h]
+        return all_vars[offset + i * self.num_ci : offset + (i + 1) * self.num_ci]
 
     def get_c_theta_i_vars(self, all_vars: np.ndarray, i: int) -> np.ndarray:
         """
@@ -82,7 +86,7 @@ class RunitoVariableManager:
         """
         assert 0 <= i < self.params.M
         offset = 2 * self.num_c
-        return all_vars[offset + i * 2 * self.params.h : offset + (i + 1) * 2 * self.params.h]
+        return all_vars[offset + i * self.num_ci : offset + (i + 1) * self.num_ci]
 
     def get_t_i_var(self, all_vars: np.ndarray, i: int) -> Variable:
         """
@@ -112,9 +116,9 @@ class RunitoVariableManager:
         Compute the derivative of the basis vector for the time corresponding to the ith segment and jth sample point.
         The derivative is a polynomial of degree 2*h-2.
         """
-        assert 0 <= derivative < 2 * self.params.h - 1
-        basis = np.zeros((2 * self.params.h,), dtype=type(t_exp))
-        for k in range(2 * self.params.h):
+        assert 0 <= derivative < self.num_ci - 1
+        basis = np.zeros((self.num_ci,), dtype=type(t_exp))
+        for k in range(self.num_ci):
             scalar = np.prod(range(k - derivative + 1, k + 1))
             if k == derivative:
                 basis[k] = scalar
