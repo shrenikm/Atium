@@ -141,7 +141,7 @@ class Runito:
         # Velocity limit constraints.
         v_min, w_min = inputs.lower_velocity_limits.to_vector()
         v_max, w_max = inputs.upper_velocity_limits.to_vector()
-        constraint_size = self.params.M * (self.params.n - 2)
+        constraint_size = self.params.M * (self.params.n)
         self._prog.AddConstraint(
             func=partial(
                 velocity_limits_constraint_func,

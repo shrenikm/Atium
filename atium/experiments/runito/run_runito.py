@@ -27,13 +27,13 @@ def run_runito_scenario(
 
 if __name__ == "__main__":
     runito_params = RunitoParams(
-        h=3,
+        h=4,
         M=3,
         n=4,
         epsilon_t=0,
-        W=1e-2 * np.ones((3, 3), dtype=np.float64),
+        W=1e-2 * np.eye(3, dtype=np.float64),
     )
-    runito_inputs = sc.scenario1()
+    runito_inputs = sc.scenario2()
     debug_solver = True
     visualize_solution = True
 
