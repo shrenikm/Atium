@@ -11,11 +11,11 @@ def initial_pose_constraint_func(
     initial_pose: Pose2D,
     manager: RunitoVariableManager,
 ) -> np.ndarray:
-    assert func_vars.shape == (6 * manager.params.h,)
+    assert func_vars.shape == (3 * manager.num_ci,)
 
-    c_x_0_vars = func_vars[: 2 * manager.params.h]
-    c_y_0_vars = func_vars[2 * manager.params.h : 4 * manager.params.h]
-    c_theta_0_vars = func_vars[4 * manager.params.h : 6 * manager.params.h]
+    c_x_0_vars = func_vars[: manager.num_ci]
+    c_y_0_vars = func_vars[manager.num_ci : 2 * manager.num_ci]
+    c_theta_0_vars = func_vars[2 * manager.num_ci : 3 * manager.num_ci]
 
     sigma_0 = manager.compute_sigma_i_exp(
         c_x_i_vars=c_x_0_vars,
@@ -33,9 +33,9 @@ def initial_velocity_constraint_func(
 ) -> np.ndarray:
     assert func_vars.shape == (6 * manager.params.h,)
 
-    c_x_0_vars = func_vars[: 2 * manager.params.h]
-    c_y_0_vars = func_vars[2 * manager.params.h : 4 * manager.params.h]
-    c_theta_0_vars = func_vars[4 * manager.params.h : 6 * manager.params.h]
+    c_x_0_vars = func_vars[: manager.num_ci]
+    c_y_0_vars = func_vars[manager.num_ci : 2 * manager.num_ci]
+    c_theta_0_vars = func_vars[2 * manager.num_ci : 3 * manager.num_ci]
 
     gamma_0 = manager.compute_gamma_i_exp(
         c_x_i_vars=c_x_0_vars,
@@ -51,16 +51,14 @@ def final_pose_constraint_func(
     final_pose: Pose2D,
     manager: RunitoVariableManager,
 ) -> np.ndarray:
-    assert func_vars.shape == (6 * manager.params.h + 1,)
+    assert func_vars.shape == (3 * manager.num_ci + 1,)
 
     c_f_vars = func_vars[:-1]
     t_f_var = func_vars[-1]
 
-    assert c_f_vars.shape == (6 * manager.params.h,)
-
-    c_x_f_vars = c_f_vars[: 2 * manager.params.h]
-    c_y_f_vars = c_f_vars[2 * manager.params.h : 4 * manager.params.h]
-    c_theta_f_vars = c_f_vars[4 * manager.params.h : 6 * manager.params.h]
+    c_x_f_vars = c_f_vars[: manager.num_ci]
+    c_y_f_vars = c_f_vars[manager.num_ci : 2 * manager.num_ci]
+    c_theta_f_vars = c_f_vars[2 * manager.num_ci : 3 * manager.num_ci]
 
     sigma_f = manager.compute_sigma_i_exp(
         c_x_i_vars=c_x_f_vars,
@@ -76,16 +74,14 @@ def final_velocity_constraint_func(
     final_velocity: Velocity2D,
     manager: RunitoVariableManager,
 ) -> np.ndarray:
-    assert func_vars.shape == (6 * manager.params.h + 1,)
+    assert func_vars.shape == (3 * manager.num_ci + 1,)
 
     c_f_vars = func_vars[:-1]
     t_f_var = func_vars[-1]
 
-    assert c_f_vars.shape == (6 * manager.params.h,)
-
-    c_x_f_vars = c_f_vars[: 2 * manager.params.h]
-    c_y_f_vars = c_f_vars[2 * manager.params.h : 4 * manager.params.h]
-    c_theta_f_vars = c_f_vars[4 * manager.params.h : 6 * manager.params.h]
+    c_x_f_vars = c_f_vars[: manager.num_ci]
+    c_y_f_vars = c_f_vars[manager.num_ci : 2 * manager.num_ci]
+    c_theta_f_vars = c_f_vars[2 * manager.num_ci : 3 * manager.num_ci]
 
     gamma_f = manager.compute_gamma_i_exp(
         c_x_i_vars=c_x_f_vars,
@@ -100,7 +96,7 @@ def velocity_limits_constraint_func(
     func_vars: np.ndarray,
     manager: RunitoVariableManager,
 ) -> np.ndarray:
-    assert func_vars.shape == (6 * manager.params.h * manager.params.M + manager.params.M,)
+    assert func_vars.shape == (3 * manager.num_c + manager.params.M,)
 
     linear_constraint_vector = []
     angular_constraint_vector = []
@@ -136,17 +132,17 @@ def continuity_constraint_func(
     derivative: int,
     manager: RunitoVariableManager,
 ) -> np.ndarray:
-    assert func_vars.shape == (6 * 2 * manager.params.h + 1,)
+    assert func_vars.shape == (6 * manager.num_ci + 1,)
 
-    prev_c_vars = func_vars[: 6 * manager.params.h]
-    next_c_vars = func_vars[6 * manager.params.h : 6 * 2 * manager.params.h]
+    prev_c_vars = func_vars[: 3 * manager.num_ci]
+    next_c_vars = func_vars[3 * manager.num_ci : 6 * manager.num_ci]
+    prev_c_x_vars = prev_c_vars[: manager.num_ci]
+    prev_c_y_vars = prev_c_vars[manager.num_ci : 2 * manager.num_ci]
+    prev_c_theta_vars = prev_c_vars[2 * manager.num_ci : 3 * manager.num_ci]
+    next_c_x_vars = next_c_vars[: manager.num_ci]
+    next_c_y_vars = next_c_vars[manager.num_ci : 2 * manager.num_ci]
+    next_c_theta_vars = next_c_vars[2 * manager.num_ci : 3 * manager.num_ci]
     prev_t_var = func_vars[-1]
-    prev_c_x_vars = prev_c_vars[: 2 * manager.params.h]
-    prev_c_y_vars = prev_c_vars[2 * manager.params.h : 4 * manager.params.h]
-    prev_c_theta_vars = prev_c_vars[4 * manager.params.h : 6 * manager.params.h]
-    next_c_x_vars = next_c_vars[: 2 * manager.params.h]
-    next_c_y_vars = next_c_vars[2 * manager.params.h : 4 * manager.params.h]
-    next_c_theta_vars = next_c_vars[4 * manager.params.h : 6 * manager.params.h]
 
     prev_sigma = manager.compute_sigma_i_exp(
         c_x_i_vars=prev_c_x_vars,
@@ -169,7 +165,7 @@ def kinematic_constraint_func(
     func_vars: np.ndarray,
     manager: RunitoVariableManager,
 ) -> np.ndarray:
-    assert func_vars.shape == (6 * manager.params.h * manager.params.M + manager.params.M,)
+    assert func_vars.shape == (3 * manager.num_c + manager.params.M,)
 
     constraint_vector = []
 
@@ -223,7 +219,7 @@ def obstacle_constraint_func(
     obstacle_clearance: float,
     manager: RunitoVariableManager,
 ) -> np.ndarray:
-    assert func_vars.shape == (6 * manager.params.h * manager.params.M + manager.params.M,)
+    assert func_vars.shape == (3 * manager.num_c + manager.params.M,)
 
     constraint_vector = []
     h, w = signed_distance_map.shape
