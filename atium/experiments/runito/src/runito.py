@@ -63,6 +63,13 @@ class Runito:
 
         all_vars = self._prog.decision_variables()
         t_vars = self.manager.get_t_vars(all_vars)
+        c_x_0_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=0)
+        c_y_0_vars = self.manager.get_c_y_i_vars(all_vars=all_vars, i=0)
+        c_theta_0_vars = self.manager.get_c_theta_i_vars(all_vars=all_vars, i=0)
+        c_x_f_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=self.params.M - 1)
+        c_y_f_vars = self.manager.get_c_y_i_vars(all_vars=all_vars, i=self.params.M - 1)
+        c_theta_f_vars = self.manager.get_c_theta_i_vars(all_vars=all_vars, i=self.params.M - 1)
+        t_f_var = t_vars[-1]
 
         # Costs.
         self._prog.AddCost(
@@ -77,13 +84,6 @@ class Runito:
         )
 
         # Constraints.
-        c_x_0_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=0)
-        c_y_0_vars = self.manager.get_c_y_i_vars(all_vars=all_vars, i=0)
-        c_theta_0_vars = self.manager.get_c_theta_i_vars(all_vars=all_vars, i=0)
-        c_x_f_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=self.params.M - 1)
-        c_y_f_vars = self.manager.get_c_y_i_vars(all_vars=all_vars, i=self.params.M - 1)
-        c_theta_f_vars = self.manager.get_c_theta_i_vars(all_vars=all_vars, i=self.params.M - 1)
-        t_f_var = t_vars[-1]
 
         # Initial pose constraint.
         self._prog.AddConstraint(

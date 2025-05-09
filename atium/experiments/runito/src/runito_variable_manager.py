@@ -1,3 +1,5 @@
+from functools import cached_property
+
 import attr
 import numpy as np
 from pydrake.solvers import MathematicalProgram
@@ -6,7 +8,7 @@ from pydrake.symbolic import Expression, Variable
 from atium.experiments.runito.src.runito_utils import RunitoParams
 
 
-@attr.define
+@attr.frozen
 class RunitoVariableManager:
     VARS_C_X_NAME = "c_x"
     VARS_C_Y_NAME = "c_y"
@@ -15,38 +17,42 @@ class RunitoVariableManager:
 
     params: RunitoParams
 
+    @cached_property
+    def num_c(self) -> int:
+        return 2 * self.params.h * self.params.M
+
     def create_decision_variables(
         self,
         prog: MathematicalProgram,
     ) -> None:
-        prog.NewContinuousVariables(2 * self.params.h * self.params.M, self.VARS_C_X_NAME)
-        prog.NewContinuousVariables(2 * self.params.h * self.params.M, self.VARS_C_Y_NAME)
-        prog.NewContinuousVariables(2 * self.params.h * self.params.M, self.VARS_C_THETA_NAME)
+        prog.NewContinuousVariables(self.num_c, self.VARS_C_X_NAME)
+        prog.NewContinuousVariables(self.num_c, self.VARS_C_Y_NAME)
+        prog.NewContinuousVariables(self.num_c, self.VARS_C_THETA_NAME)
         prog.NewContinuousVariables(self.params.M, self.VARS_T_NAME)
 
     def get_c_x_vars(self, all_vars: np.ndarray) -> np.ndarray:
         """
         Get the c_x variables from the decision variables.
         """
-        return all_vars[: 2 * self.params.h * self.params.M]
+        return all_vars[: self.num_c]
 
     def get_c_y_vars(self, all_vars: np.ndarray) -> np.ndarray:
         """
         Get the c_y variables from the decision variables.
         """
-        return all_vars[2 * self.params.h * self.params.M : 4 * self.params.h * self.params.M]
+        return all_vars[self.num_c : 2 * self.num_c]
 
     def get_c_theta_vars(self, all_vars: np.ndarray) -> np.ndarray:
         """
         Get the c_theta variables from the decision variables.
         """
-        return all_vars[4 * self.params.h * self.params.M : 6 * self.params.h * self.params.M]
+        return all_vars[2 * self.num_c : 3 * self.num_c]
 
     def get_t_vars(self, all_vars: np.ndarray) -> np.ndarray:
         """
         Get the t variables from the decision variables.
         """
-        return all_vars[6 * self.params.h * self.params.M :]
+        return all_vars[3 * self.num_c :]
 
     def get_c_x_i_vars(self, all_vars: np.ndarray, i: int) -> np.ndarray:
         """
@@ -65,7 +71,7 @@ class RunitoVariableManager:
         The offset is 2*h*M in this case as c_x appears before c_y.
         """
         assert 0 <= i < self.params.M
-        offset = 2 * self.params.h * self.params.M
+        offset = self.num_c
         return all_vars[offset + i * 2 * self.params.h : offset + (i + 1) * 2 * self.params.h]
 
     def get_c_theta_i_vars(self, all_vars: np.ndarray, i: int) -> np.ndarray:
@@ -75,7 +81,7 @@ class RunitoVariableManager:
         The offset is 4*h*M in this case as c_x and c_y appear before c_theta.
         """
         assert 0 <= i < self.params.M
-        offset = 4 * self.params.h * self.params.M
+        offset = 2 * self.num_c
         return all_vars[offset + i * 2 * self.params.h : offset + (i + 1) * 2 * self.params.h]
 
     def get_t_i_var(self, all_vars: np.ndarray, i: int) -> Variable:
@@ -83,7 +89,7 @@ class RunitoVariableManager:
         Get the value of t for the ith segment.
         """
         assert 0 <= i < self.params.M
-        offset = 6 * self.params.h * self.params.M
+        offset = 3 * self.num_c
         return all_vars[offset + i]
 
     def compute_t_ijl_exp(self, t_i_var: Variable, j: int, l: int) -> float | Expression:  # noqa: E741
@@ -157,7 +163,7 @@ class RunitoVariableManager:
         # So we add an epsilon.
         epsilon = 0
         if sigma_i_dot[0] == 0 and sigma_i_dot[1] == 0:
-            epsilon = 1e-6
+            epsilon = 1e-12
         v = np.sqrt(sigma_i_dot[0] ** 2 + sigma_i_dot[1] ** 2 + epsilon)
         w = sigma_i_dot[2]
         return np.array([v, w])
