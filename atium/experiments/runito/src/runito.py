@@ -154,7 +154,8 @@ class Runito:
         )
 
         # Continuity constraints.
-        for derivative in range(self.params.h):
+        #for derivative in range(self.params.h):
+        for derivative in [0, 1]:
             for i in range(self.params.M - 1):
                 prev_c_x_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=i)
                 prev_c_y_vars = self.manager.get_c_y_i_vars(all_vars=all_vars, i=i)
