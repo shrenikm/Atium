@@ -27,7 +27,7 @@ def run_runito_scenario(
 
 if __name__ == "__main__":
     runito_params = RunitoParams(
-        h=4,
+        h=3,
         M=3,
         n=4,
         epsilon_t=0,
