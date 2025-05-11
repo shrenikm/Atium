@@ -29,7 +29,7 @@ if __name__ == "__main__":
     runito_params = RunitoParams(
         h=6,
         M=3,
-        n=4,
+        n=6,
         epsilon_t=0,
         W=1e-2 * np.eye(3, dtype=np.float64),
     )
