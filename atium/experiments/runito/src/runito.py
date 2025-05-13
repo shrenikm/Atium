@@ -154,7 +154,7 @@ class Runito:
         )
 
         # Continuity constraints.
-        #for derivative in range(self.params.h):
+        # for derivative in range(self.params.h):
         for derivative in [0, 1]:
             for i in range(self.params.M - 1):
                 prev_c_x_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=i)
@@ -242,27 +242,44 @@ class Runito:
         c_x_initial_guess = np.zeros(2 * self.params.h * self.params.M)
         c_y_initial_guess = np.zeros(2 * self.params.h * self.params.M)
         c_theta_initial_guess = np.zeros(2 * self.params.h * self.params.M)
-        # For t, we initialize them by a constant value.
-        t_initial_guess = nominal_t * np.ones(self.params.M)
         theta_delta_per_segment = (final_pose_vector[2] - initial_pose_vector[2]) / self.params.M
 
         for i in range(self.params.M):
-            c_x_initial_guess[i * 2 * self.params.h] = initial_pose_vector[0] + i * x_delta_per_segment
+            x_guess = initial_pose_vector[0] + i * x_delta_per_segment
+            x_next_guess = initial_pose_vector[0] + (i + 1) * x_delta_per_segment
+            y_guess = initial_pose_vector[1] + i * y_delta_per_segment
+            y_next_guess = initial_pose_vector[1] + (i + 1) * y_delta_per_segment
+
+            # We initialize theta as the angles between pairwise segment point guesses.
+            # We fit a linear function using the current and next angles.
+            # The current angles is the angle from the previous to the current point
+            # and the next angle is the angle from the current to the next point.
+            if i == 0:
+                theta_guess = initial_pose_vector[2]
+                theta_next_guess = np.arctan2(y_next_guess - y_guess, x_next_guess - x_guess)
+            else:
+                x_prev_guess = initial_pose_vector[0] + (i - 1) * x_delta_per_segment
+                y_prev_guess = initial_pose_vector[1] + (i - 1) * y_delta_per_segment
+                theta_guess = np.arctan2(y_guess - y_prev_guess, x_guess - x_prev_guess)
+                theta_next_guess = np.arctan2(y_next_guess - y_guess, x_next_guess - x_guess)
+
+            c_x_initial_guess[i * 2 * self.params.h] = x_guess
             c_x_initial_guess[i * 2 * self.params.h + 1] = (
-                initial_pose_vector[0] + (i + 1) * x_delta_per_segment - c_x_initial_guess[i * 2 * self.params.h]
+                x_next_guess - c_x_initial_guess[i * 2 * self.params.h]
             ) / nominal_t
 
-            c_y_initial_guess[i * 2 * self.params.h] = initial_pose_vector[1] + i * y_delta_per_segment
+            c_y_initial_guess[i * 2 * self.params.h] = y_guess
             c_y_initial_guess[i * 2 * self.params.h + 1] = (
-                initial_pose_vector[1] + (i + 1) * y_delta_per_segment - c_y_initial_guess[i * 2 * self.params.h]
+                y_next_guess - c_y_initial_guess[i * 2 * self.params.h]
             ) / nominal_t
 
-            c_theta_initial_guess[i * 2 * self.params.h] = initial_pose_vector[2] + i * theta_delta_per_segment
+            c_theta_initial_guess[i * 2 * self.params.h] = theta_guess
             c_theta_initial_guess[i * 2 * self.params.h + 1] = (
-                initial_pose_vector[2]
-                + (i + 1) * theta_delta_per_segment
-                - c_theta_initial_guess[i * 2 * self.params.h]
+                theta_next_guess - c_theta_initial_guess[i * 2 * self.params.h]
             ) / nominal_t
+
+        # For t, we initialize them by a constant value.
+        t_initial_guess = nominal_t * np.ones(self.params.M)
 
         initial_guess = np.hstack((c_x_initial_guess, c_y_initial_guess, c_theta_initial_guess, t_initial_guess))
         print(f"Nominal t: {nominal_t}")
@@ -311,5 +328,5 @@ class Runito:
                 unito_inputs=inputs,
                 all_vars_guess=initial_guess,
                 all_vars_solution=res.GetSolution(self._prog.decision_variables()),
-                draw_heading=False,
+                draw_heading=True,
             )
