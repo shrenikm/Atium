@@ -70,7 +70,7 @@ def scenario2() -> RunitoInputs:
     )
     # Add rectangular obstacle
     obstacle_length = 1.0
-    obstacle_width = 0.1
+    obstacle_width = 0.2
     emap2d.add_rectangular_obstacle(
         center_xy=(2.5, 2.5),
         size_xy=(obstacle_width, obstacle_length),
