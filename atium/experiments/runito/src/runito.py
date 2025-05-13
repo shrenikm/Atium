@@ -328,5 +328,5 @@ class Runito:
                 unito_inputs=inputs,
                 all_vars_guess=initial_guess,
                 all_vars_solution=res.GetSolution(self._prog.decision_variables()),
-                draw_heading=True,
+                draw_heading=False,
             )

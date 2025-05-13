@@ -244,7 +244,7 @@ class RunitoVisualizationAxes:
                 np.sin(data.theta_values),
                 angles="xy",
                 scale_units="xy",
-                scale=1,
+                scale=5,
                 color=self.XY_COLOR,
             )
 
