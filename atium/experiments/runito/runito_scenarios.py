@@ -78,7 +78,7 @@ def scenario2() -> RunitoInputs:
     )
 
     obstacle_clearance = 0.2
-    robot_y = 2.0
+    robot_y = 2.
     initial_state_inputs = RunitoInitialStateInputs(
         initial_pose=Pose2D.from_vector(np.array([1.0, robot_y, 0.0])),
         initial_velocity=Velocity2D.from_vector(np.zeros(2)),

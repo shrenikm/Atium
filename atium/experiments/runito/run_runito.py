@@ -30,8 +30,8 @@ if __name__ == "__main__":
         h=6,
         M=3,
         n=4,
-        epsilon_t=0,
-        W=1e-2 * np.eye(3, dtype=np.float64),
+        epsilon_t=1e-4,
+        W=1e-4 * np.eye(3, dtype=np.float64),
     )
     runito_inputs = sc.scenario2()
     debug_solver = True
