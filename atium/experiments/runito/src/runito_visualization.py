@@ -67,6 +67,10 @@ class RunitoVisualizationData:
             t_i_values.append(tv)
 
             for j in range(manager.params.n):
+                # Compute the values at each sampling interval.
+                # There will be some duplicates doing it this way
+                # (l=0 of the next segment is the same as l=2 of the current segment)
+                # but it keeps things cleaner and doesn't affect the plot as it gets overwritten.
                 t_ij_vals = [
                     manager.compute_t_ijl_exp(
                         t_i_var=t_i_value,
