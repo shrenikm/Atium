@@ -133,6 +133,12 @@ class EnvironmentMap2D:
             thickness=thickness,
         )
 
+    def is_obstacle_free(self) -> bool:
+        """
+        Check if the map is free of obstacles.
+        """
+        return np.all(self.array == EnvironmentLabels.FREE)
+
     # Computation
     # --------------------------------------------------
 
@@ -144,7 +150,13 @@ class EnvironmentMap2D:
         To compute this, we subtract two distance transforms:
         1. The distance transform of the free space to obstacles.
         2. The distance transform of the obstacles to free space.
+
+        Note: If the map is obstacle free, then signed distance doesn't make any sense.
+        In this case, the value at each pixel is the distance of the longest line in the map (diagonal)
         """
+        if self.is_obstacle_free():
+            return np.full_like(self.array, fill_value=np.hypot(self.size_xy[0], self.size_xy[1]), dtype=np.float32)
+
         dtf_input = np.zeros_like(self.array, dtype=np.uint8)
         dtf_input[self.array == EnvironmentLabels.FREE] = 1
         dtf_free_map = cv2.distanceTransform(

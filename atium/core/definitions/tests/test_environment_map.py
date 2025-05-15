@@ -113,6 +113,37 @@ def test_emap2d_add_rectangular_obstacle(
         cv2.waitKey(0)
 
 
+def test_emap2d_is_obstacle_free() -> None:
+    # Test the is_free method.
+    emap2d = EnvironmentMap2D.from_empty(
+        size_xy=(20.0, 10.0),
+        resolution=0.1,
+    )
+    assert emap2d.is_obstacle_free()
+    emap2d.add_rectangular_obstacle(
+        center_xy=(10.0, 5.0),
+        size_xy=(1.0, 3.0),
+        label=EnvironmentLabels.STATIC_OBSTACLE,
+    )
+    assert not emap2d.is_obstacle_free()
+
+
+def test_emap2d_compute_signed_distance_transform_on_empty_map() -> None:
+    size_xy = (20.0, 10.0)
+    resolution = 0.1
+    emap2d = EnvironmentMap2D.from_empty(
+        size_xy=size_xy,
+        resolution=resolution,
+    )
+    signed_dtf = emap2d.compute_signed_distance_transform()
+    expected_signed_distance_value = np.hypot(size_xy[0], size_xy[1])
+    np.testing.assert_allclose(
+        signed_dtf,
+        expected_signed_distance_value,
+        atol=1e-12,
+    )
+
+
 def test_emap2d_compute_signed_distance_transform() -> None:
     array = np.zeros((10, 10), dtype=np.uint8)
     array[3:8, 3:8] = EnvironmentLabels.STATIC_OBSTACLE

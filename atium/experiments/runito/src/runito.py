@@ -198,7 +198,7 @@ class Runito:
             description="Kinematic constraint",
         )
 
-        # Obstacle avoidance constraints.
+        # Obstacle avoidance constraints (If there are obstacles).
         signed_distance_map = inputs.emap2d.compute_signed_distance_transform()
         self._prog.AddConstraint(
             func=partial(
