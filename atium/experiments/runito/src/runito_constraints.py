@@ -2,8 +2,22 @@ import numpy as np
 
 from atium.core.definitions.concrete_states import Pose2D, Velocity2D
 from atium.core.definitions.environment_map import EnvironmentMap2D
-from atium.core.utils.custom_types import MatrixMNf32, PolygonXYArray
+from atium.core.utils.custom_types import MatrixMNf32, PolygonXYArray, Pose2DVector
+from atium.core.utils.geometry_utils import normalize_angle, normalize_angle_differentiable
 from atium.experiments.runito.src.runito_variable_manager import RunitoVariableManager
+
+
+def _compute_pose_diff(
+    pose_vector: Pose2DVector,
+    expected_pose_vector: Pose2DVector,
+) -> np.ndarray:
+    """
+    Compute the difference between the pose vector (variable)
+    and the expected pose (construct).
+    """
+    pose_diff = pose_vector - expected_pose_vector
+    pose_diff[2] = normalize_angle_differentiable(pose_diff[2])
+    return pose_diff
 
 
 def initial_pose_constraint_func(
@@ -23,7 +37,10 @@ def initial_pose_constraint_func(
         c_theta_i_vars=c_theta_0_vars,
         t_exp=0.0,
     )
-    return sigma_0 - initial_pose.to_vector()
+    return _compute_pose_diff(
+        pose_vector=sigma_0,
+        expected_pose_vector=initial_pose.to_vector(),
+    )
 
 
 def initial_velocity_constraint_func(
@@ -66,7 +83,10 @@ def final_pose_constraint_func(
         c_theta_i_vars=c_theta_f_vars,
         t_exp=t_f_var,
     )
-    return sigma_f - final_pose.to_vector()
+    return _compute_pose_diff(
+        pose_vector=sigma_f,
+        expected_pose_vector=final_pose.to_vector(),
+    )
 
 
 def final_velocity_constraint_func(

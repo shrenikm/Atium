@@ -1,7 +1,12 @@
 import numpy as np
 import pytest
 
-from atium.core.utils.geometry_utils import construct_rectangle_polygon, densify_polygon, normalize_angle
+from atium.core.utils.geometry_utils import (
+    construct_rectangle_polygon,
+    densify_polygon,
+    normalize_angle,
+    normalize_angle_differentiable,
+)
 
 
 def test_normalize_angle() -> None:
@@ -18,6 +23,27 @@ def test_normalize_angle() -> None:
     ]
     for input_angle, expected_angle in input_and_expected_angles:
         normalized_angle = normalize_angle(input_angle)
+        np.testing.assert_allclose(
+            normalized_angle,
+            expected_angle,
+            atol=1e-12,
+        )
+
+
+def test_normalize_angle_differentiable() -> None:
+    input_and_expected_angles = [
+        (0.0, 0.0),
+        (1.0, 1.0),
+        (-1.0, -1.0),
+        (np.pi - 0.1, np.pi - 0.1),
+        (-np.pi + 0.1, -np.pi + 0.1),
+        (2 * np.pi, 0.0),
+        (-2 * np.pi, 0.0),
+        (5 * np.pi / 2.0, np.pi / 2.0),
+        (-5 * np.pi / 2.0, -np.pi / 2.0),
+    ]
+    for input_angle, expected_angle in input_and_expected_angles:
+        normalized_angle = normalize_angle_differentiable(input_angle)
         np.testing.assert_allclose(
             normalized_angle,
             expected_angle,

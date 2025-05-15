@@ -131,6 +131,7 @@ OptimizationGradOrHessFn = Union[OptimizationGradFn, OptimizationHessFn]
 
 
 # Geometry
+AngleRad = float
 AnglesRad = VectorNf64
 AngleOrAnglesRad = Union[float, AnglesRad]
 PointXYVector = Vector2f64
