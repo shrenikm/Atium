@@ -178,7 +178,10 @@ def continuity_constraint_func(
         t_exp=0.0,
         derivative=derivative,
     )
-    return prev_sigma - next_sigma
+    return _compute_pose_diff(
+        pose_vector=prev_sigma,
+        expected_pose_vector=next_sigma,
+    )
 
 
 def kinematic_constraint_func(
