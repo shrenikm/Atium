@@ -8,6 +8,8 @@ from atium.core.utils.custom_types import (
     PolygonXYArray,
 )
 
+DEFAULT_CONSTRAINT_TOLERANCE = 1e-2
+
 
 @attr.frozen
 class RunitoParams:
@@ -30,17 +32,12 @@ class RunitoParams:
 
     # Tolerances.
 
-    # initial_state_equality_tolerance: float = 1e-6
-    # final_state_equality_tolerance: float = 1e-6
-    # continuity_equality_tolerance: float = 1e-6
-    # kinematic_equality_tolerance: float = 1e-6
+    initial_state_equality_tolerance: float = DEFAULT_CONSTRAINT_TOLERANCE
+    final_state_equality_tolerance: float = DEFAULT_CONSTRAINT_TOLERANCE
+    continuity_equality_tolerance: float = DEFAULT_CONSTRAINT_TOLERANCE
+    kinematic_equality_tolerance: float = DEFAULT_CONSTRAINT_TOLERANCE
 
-    initial_state_equality_tolerance: float = 0.0
-    final_state_equality_tolerance: float = 0.0
-    continuity_equality_tolerance: float = 0.0
-    kinematic_equality_tolerance: float = 0.0
-
-    final_xy_equality_tolerance: float = 1e-2
+    final_xy_equality_tolerance: float = DEFAULT_CONSTRAINT_TOLERANCE
 
 
 @attr.frozen

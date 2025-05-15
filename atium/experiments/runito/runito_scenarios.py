@@ -8,7 +8,7 @@ from atium.experiments.runito.src.runito_utils import RunitoFinalStateInputs, Ru
 
 
 def get_scenario_footprint(footprint_size_xy: SizeXY) -> PolygonXYArray:
-    footprint_spacing = 0.2
+    footprint_spacing = 0.1
     return densify_polygon(
         polygon=construct_rectangle_polygon(
             center_xy=(0.0, 0.0),
@@ -44,7 +44,7 @@ def scenario1() -> RunitoInputs:
         initial_velocity=Velocity2D.from_vector(np.zeros(2)),
     )
     final_state_inputs = RunitoFinalStateInputs(
-        final_pose=Pose2D.from_vector(np.array([3.0, 2.0, 0.0])),
+        final_pose=Pose2D.from_vector(np.array([3.0, 4.0, 0.0])),
     )
     lower_velocity_limits, upper_velocity_limits = get_scenario_velocity_limits()
     return RunitoInputs(
@@ -78,7 +78,7 @@ def scenario2() -> RunitoInputs:
     )
 
     obstacle_clearance = 0.2
-    robot_y = 2.
+    robot_y = 2.0
     initial_state_inputs = RunitoInitialStateInputs(
         initial_pose=Pose2D.from_vector(np.array([1.0, robot_y, 0.0])),
         initial_velocity=Velocity2D.from_vector(np.zeros(2)),
