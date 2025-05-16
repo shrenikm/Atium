@@ -153,7 +153,7 @@ class RunitoVariableManager:
         t_exp: float | Variable | Expression,
     ) -> np.ndarray:
         """
-        Sigma_i = [ linear_velocity_i, angular_velocity_i ]
+        Gamma_i = [ linear_velocity_i, angular_velocity_i ]
         """
         sigma_i_dot = self.compute_sigma_i_exp(
             c_x_i_vars=c_x_i_vars,

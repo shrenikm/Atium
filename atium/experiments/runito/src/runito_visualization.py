@@ -21,6 +21,8 @@ class RunitoVisualizationData:
     x_i_values: list[list[float]]
     y_i_values: list[list[float]]
     theta_i_values: list[list[float]]
+    v_i_values: list[list[float]]
+    w_i_values: list[list[float]]
     t_i_values: list[list[float]]
     x_values: list[float]
     y_values: list[float]
@@ -33,7 +35,7 @@ class RunitoVisualizationData:
         all_vars: DecisionVariablesVector,
         num_samples_per_segment: int = 10,
     ) -> Self:
-        x_i_values, y_i_values, theta_i_values, t_i_values = [], [], [], []
+        x_i_values, y_i_values, theta_i_values, v_i_values, w_i_values, t_i_values = [], [], [], [], [], []
         x_values, y_values, theta_values = [], [], []
 
         for i in range(manager.params.M):
@@ -47,7 +49,7 @@ class RunitoVisualizationData:
             # the plot will be discontinuous in x.
             t_offset = np.sum(manager.get_t_vars(all_vars)[:i])
 
-            xv, yv, thetav, tv = [], [], [], []
+            xv, yv, thetav, vv, wv, tv = [], [], [], [], [], []
             for t_sample in np.linspace(0, t_i_value, num_samples_per_segment):
                 sigma_i = manager.compute_sigma_i_exp(
                     c_x_i_vars=c_x_i_values,
@@ -56,14 +58,24 @@ class RunitoVisualizationData:
                     t_exp=t_sample,
                     derivative=0,
                 )
+                gamma_i = manager.compute_gamma_i_exp(
+                    c_x_i_vars=c_x_i_values,
+                    c_y_i_vars=c_y_i_values,
+                    c_theta_i_vars=c_theta_i_values,
+                    t_exp=t_sample,
+                )
                 xv.append(sigma_i[0])
                 yv.append(sigma_i[1])
                 thetav.append(sigma_i[2])
+                vv.append(gamma_i[0])
+                wv.append(gamma_i[1])
                 tv.append(t_sample + t_offset)
 
             x_i_values.append(xv)
             y_i_values.append(yv)
             theta_i_values.append(thetav)
+            v_i_values.append(vv)
+            w_i_values.append(wv)
             t_i_values.append(tv)
 
             for j in range(manager.params.n):
@@ -97,6 +109,8 @@ class RunitoVisualizationData:
             x_i_values=x_i_values,
             y_i_values=y_i_values,
             theta_i_values=theta_i_values,
+            v_i_values=v_i_values,
+            w_i_values=w_i_values,
             t_i_values=t_i_values,
             x_values=x_values,
             y_values=y_values,
@@ -111,12 +125,15 @@ class RunitoVisualizationAxes:
     XY_COLOR = "slateblue"
     INITIAL_FOOTPRINT_COLOR = "brown"
     TRAJECTORY_FOOTPRINT_COLOR = "gray"
+    V_COLOR = "purple"
+    W_COLOR = "orange"
 
     fig: Figure
     x_axes: Axes
     y_axes: Axes
     theta_axes: Axes
     guess_xy_axes: Axes
+    vw_axes: Axes
     solution_xy_axes: Axes
 
     @classmethod
@@ -129,8 +146,9 @@ class RunitoVisualizationAxes:
         y_axes = fig.add_subplot(gs[0, 1])
         theta_axes = fig.add_subplot(gs[0, 2])
 
-        # Bottom row: guess and solution xy
+        # Bottom row: guess, vw and solution xy
         guess_xy_axes = fig.add_subplot(gs[1, 0])
+        vw_axes = fig.add_subplot(gs[1, 1])
         solution_xy_axes = fig.add_subplot(gs[1, 2])
 
         x_axes.set_xlabel("t (s)")
@@ -149,6 +167,9 @@ class RunitoVisualizationAxes:
         guess_xy_axes.set_ylabel("y (m)")
         guess_xy_axes.set_title("Guess XY")
 
+        vw_axes.set_xlabel("t (s)")
+        vw_axes.set_ylabel("v (m/s) / w (rad/s)")
+
         solution_xy_axes.set_xlabel("x (m)")
         solution_xy_axes.set_ylabel("y (m)")
         solution_xy_axes.set_title("Solution XY")
@@ -159,6 +180,7 @@ class RunitoVisualizationAxes:
             y_axes=y_axes,
             theta_axes=theta_axes,
             guess_xy_axes=guess_xy_axes,
+            vw_axes=vw_axes,
             solution_xy_axes=solution_xy_axes,
         )
 
@@ -190,6 +212,24 @@ class RunitoVisualizationAxes:
                 data.t_i_values[i], data.theta_i_values[i], color=sigma_color, label=f"Segment {i}: theta"
             )
             self.theta_axes.plot(data.t_i_values[i][-1], data.theta_i_values[i][-1], "o", color=sigma_color)
+
+    def plot_gamma(
+        self,
+        manager: RunitoVariableManager,
+        data: RunitoVisualizationData,
+    ) -> None:
+        # Validate the data.
+        assert len(data.v_i_values) == manager.params.M
+        assert len(data.w_i_values) == manager.params.M
+        assert all(len(vv) == len(data.v_i_values[0]) for vv in data.v_i_values)
+        assert all(len(wv) == len(data.w_i_values[0]) for wv in data.w_i_values)
+
+        for i in range(manager.params.M):
+            self.vw_axes.plot(data.t_i_values[i], data.v_i_values[i], color=self.V_COLOR, label=f"Segment {i}: v")
+            self.vw_axes.plot(data.t_i_values[i][-1], data.v_i_values[i][-1], "o", color=self.V_COLOR)
+
+            self.vw_axes.plot(data.t_i_values[i], data.w_i_values[i], color=self.W_COLOR, label=f"Segment {i}: w")
+            self.vw_axes.plot(data.t_i_values[i][-1], data.w_i_values[i][-1], "o", color=self.W_COLOR)
 
     def _plot_single_xy(
         self,
@@ -310,6 +350,7 @@ def visualize_runito_result(
 
     # Draw the sigma curves with the solution values.
     axes.plot_sigma(manager=manager, data=solution_data)
+    axes.plot_gamma(manager=manager, data=solution_data)
 
     # Draw the xy trajectories with both the guess and solution values.
     axes.plot_xy(
