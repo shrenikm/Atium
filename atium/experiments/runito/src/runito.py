@@ -141,11 +141,16 @@ class Runito:
         # Velocity limit constraints.
         v_min, w_min = inputs.lower_velocity_limits.to_vector()
         v_max, w_max = inputs.upper_velocity_limits.to_vector()
-        constraint_size = self.params.M * (self.params.n)
+        only_at_segment_endpoints = True
+        if only_at_segment_endpoints:
+            constraint_size = self.params.M
+        else:
+            constraint_size = self.params.M * (self.params.n)
         self._prog.AddConstraint(
             func=partial(
                 velocity_limits_constraint_func,
                 manager=self.manager,
+                only_at_segment_endpoints=only_at_segment_endpoints,
             ),
             lb=np.hstack((np.full(constraint_size, v_min), np.full(constraint_size, w_min))),
             ub=np.hstack((np.full(constraint_size, v_max), np.full(constraint_size, w_max))),
