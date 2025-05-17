@@ -99,17 +99,17 @@ class Runito:
         )
 
         # Initial velocity constraint.
-        # self._prog.AddConstraint(
-        #     func=partial(
-        #         initial_velocity_constraint_func,
-        #         initial_velocity=inputs.initial_state_inputs.initial_velocity,
-        #         manager=self.manager,
-        #     ),
-        #     lb=np.full(2, -self.params.initial_state_equality_tolerance),
-        #     ub=np.full(2, self.params.initial_state_equality_tolerance),
-        #     vars=np.hstack((c_x_0_vars, c_y_0_vars, c_theta_0_vars)),
-        #     description="Initial velocity constraint",
-        # )
+        self._prog.AddConstraint(
+            func=partial(
+                initial_velocity_constraint_func,
+                initial_velocity=inputs.initial_state_inputs.initial_velocity,
+                manager=self.manager,
+            ),
+            lb=np.full(2, -self.params.initial_state_equality_tolerance),
+            ub=np.full(2, self.params.initial_state_equality_tolerance),
+            vars=np.hstack((c_x_0_vars, c_y_0_vars, c_theta_0_vars)),
+            description="Initial velocity constraint",
+        )
 
         # Final pose constraint.
         self._prog.AddConstraint(
@@ -139,19 +139,19 @@ class Runito:
             )
 
         # Velocity limit constraints.
-        v_min, w_min = inputs.lower_velocity_limits.to_vector()
-        v_max, w_max = inputs.upper_velocity_limits.to_vector()
-        constraint_size = self.params.M * (self.params.n)
-        self._prog.AddConstraint(
-            func=partial(
-                velocity_limits_constraint_func,
-                manager=self.manager,
-            ),
-            lb=np.hstack((np.full(constraint_size, v_min), np.full(constraint_size, w_min))),
-            ub=np.hstack((np.full(constraint_size, v_max), np.full(constraint_size, w_max))),
-            vars=all_vars,
-            description="Velocity limits constraint",
-        )
+        # v_min, w_min = inputs.lower_velocity_limits.to_vector()
+        # v_max, w_max = inputs.upper_velocity_limits.to_vector()
+        # constraint_size = self.params.M * (self.params.n)
+        # self._prog.AddConstraint(
+        #     func=partial(
+        #         velocity_limits_constraint_func,
+        #         manager=self.manager,
+        #     ),
+        #     lb=np.hstack((np.full(constraint_size, v_min), np.full(constraint_size, w_min))),
+        #     ub=np.hstack((np.full(constraint_size, v_max), np.full(constraint_size, w_max))),
+        #     vars=all_vars,
+        #     description="Velocity limits constraint",
+        # )
 
         # Continuity constraints.
         # for derivative in range(self.params.h):

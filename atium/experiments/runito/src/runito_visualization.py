@@ -24,9 +24,9 @@ class RunitoVisualizationData:
     v_i_values: list[list[float]]
     w_i_values: list[list[float]]
     t_i_values: list[list[float]]
-    x_values: list[float]
-    y_values: list[float]
-    theta_values: list[float]
+    x_sampled_values: list[float]
+    y_sampled_values: list[float]
+    theta_sampled_values: list[float]
 
     @classmethod
     def create(
@@ -36,7 +36,7 @@ class RunitoVisualizationData:
         num_samples_per_segment: int = 10,
     ) -> Self:
         x_i_values, y_i_values, theta_i_values, v_i_values, w_i_values, t_i_values = [], [], [], [], [], []
-        x_values, y_values, theta_values = [], [], []
+        x_sampled_values, y_sampled_values, theta_sampled_values = [], [], []
 
         for i in range(manager.params.M):
             c_x_i_values = manager.get_c_x_i_vars(all_vars, i)
@@ -101,9 +101,9 @@ class RunitoVisualizationData:
                     for t_ijl in t_ij_vals
                 ]
                 for sigma_i in sigma_i_vals:
-                    x_values.append(sigma_i[0])
-                    y_values.append(sigma_i[1])
-                    theta_values.append(sigma_i[2])
+                    x_sampled_values.append(sigma_i[0])
+                    y_sampled_values.append(sigma_i[1])
+                    theta_sampled_values.append(sigma_i[2])
 
         return cls(
             x_i_values=x_i_values,
@@ -112,9 +112,9 @@ class RunitoVisualizationData:
             v_i_values=v_i_values,
             w_i_values=w_i_values,
             t_i_values=t_i_values,
-            x_values=x_values,
-            y_values=y_values,
-            theta_values=theta_values,
+            x_sampled_values=x_sampled_values,
+            y_sampled_values=y_sampled_values,
+            theta_sampled_values=theta_sampled_values,
         )
 
 
@@ -225,11 +225,13 @@ class RunitoVisualizationAxes:
         assert all(len(wv) == len(data.w_i_values[0]) for wv in data.w_i_values)
 
         for i in range(manager.params.M):
-            self.vw_axes.plot(data.t_i_values[i], data.v_i_values[i], color=self.V_COLOR)
+            self.vw_axes.plot(data.t_i_values[i], data.v_i_values[i], color=self.V_COLOR, label="v")
             self.vw_axes.plot(data.t_i_values[i][-1], data.v_i_values[i][-1], "o", color=self.V_COLOR)
 
-            self.vw_axes.plot(data.t_i_values[i], data.w_i_values[i], color=self.W_COLOR)
+            self.vw_axes.plot(data.t_i_values[i], data.w_i_values[i], color=self.W_COLOR, label="w")
             self.vw_axes.plot(data.t_i_values[i][-1], data.w_i_values[i][-1], "o", color=self.W_COLOR)
+
+
 
     def _plot_single_xy(
         self,
@@ -265,11 +267,11 @@ class RunitoVisualizationAxes:
         ax.add_patch(polygon)
 
         # Draw the footprint at each sampling point.
-        for i in range(len(data.x_values)):
+        for i in range(len(data.x_sampled_values)):
             transformed_footprint = transform_points_2d(
                 points=unito_inputs.footprint,
-                translation=[data.x_values[i], data.y_values[i]],
-                rotation=data.theta_values[i],
+                translation=[data.x_sampled_values[i], data.y_sampled_values[i]],
+                rotation=data.theta_sampled_values[i],
             )
             polygon = Polygon(
                 transformed_footprint,
@@ -282,17 +284,17 @@ class RunitoVisualizationAxes:
             ax.add_patch(polygon)
 
         # Plot the xy trajectory.
-        ax.plot(data.x_values, data.y_values, color=self.XY_COLOR, label="xy")
+        ax.plot(data.x_sampled_values, data.y_sampled_values, color=self.XY_COLOR, label="xy")
         for i in range(manager.params.M):
             ax.plot(data.x_i_values[i][-1], data.y_i_values[i][-1], "o", color=self.XY_COLOR)
 
         # Plot heading.
         if draw_heading:
             ax.quiver(
-                data.x_values,
-                data.y_values,
-                np.cos(data.theta_values),
-                np.sin(data.theta_values),
+                data.x_sampled_values,
+                data.y_sampled_values,
+                np.cos(data.theta_sampled_values),
+                np.sin(data.theta_sampled_values),
                 angles="xy",
                 scale_units="xy",
                 scale=5,
@@ -327,6 +329,7 @@ class RunitoVisualizationAxes:
         self.y_axes.legend()
         self.theta_axes.legend()
         self.guess_xy_axes.legend()
+        self.vw_axes.legend()
         self.solution_xy_axes.legend()
 
 

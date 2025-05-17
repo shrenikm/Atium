@@ -33,7 +33,7 @@ if __name__ == "__main__":
         epsilon_t=1e-6,
         W=1e-4 * np.eye(3, dtype=np.float64),
     )
-    runito_inputs = sc.scenario2()
+    runito_inputs = sc.scenario1()
     debug_solver = True
     visualize_solution = True
 
