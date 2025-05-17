@@ -124,8 +124,6 @@ class RunitoVariableManager:
                 basis[k] = scalar
             elif k > derivative:
                 basis[k] = scalar * t_exp ** (k - derivative)
-            else:
-                basis[k] = 0.0
         return basis
 
     def compute_sigma_i_exp(

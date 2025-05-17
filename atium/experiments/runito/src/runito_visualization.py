@@ -1,3 +1,4 @@
+from functools import cached_property
 from typing import Self
 
 import attr
@@ -27,6 +28,30 @@ class RunitoVisualizationData:
     x_sampled_values: list[float]
     y_sampled_values: list[float]
     theta_sampled_values: list[float]
+
+    @cached_property
+    def x_values(self) -> list[float]:
+        return [x for sublist in self.x_i_values for x in sublist]
+
+    @cached_property
+    def y_values(self) -> list[float]:
+        return [y for sublist in self.y_i_values for y in sublist]
+
+    @cached_property
+    def theta_values(self) -> list[float]:
+        return [theta for sublist in self.theta_i_values for theta in sublist]
+
+    @cached_property
+    def v_values(self) -> list[float]:
+        return [v for sublist in self.v_i_values for v in sublist]
+
+    @cached_property
+    def w_values(self) -> list[float]:
+        return [w for sublist in self.w_i_values for w in sublist]
+
+    @cached_property
+    def t_values(self) -> list[float]:
+        return [t for sublist in self.t_i_values for t in sublist]
 
     @classmethod
     def create(
@@ -224,14 +249,14 @@ class RunitoVisualizationAxes:
         assert all(len(vv) == len(data.v_i_values[0]) for vv in data.v_i_values)
         assert all(len(wv) == len(data.w_i_values[0]) for wv in data.w_i_values)
 
+        # Plot all the v, w values.
+        self.vw_axes.plot(data.t_values, data.v_values, color=self.V_COLOR, label="v")
+        self.vw_axes.plot(data.t_values, data.w_values, color=self.W_COLOR, label="w")
+
+        # Plot the v, w values at the end of each segment as points.
         for i in range(manager.params.M):
-            self.vw_axes.plot(data.t_i_values[i], data.v_i_values[i], color=self.V_COLOR, label="v")
             self.vw_axes.plot(data.t_i_values[i][-1], data.v_i_values[i][-1], "o", color=self.V_COLOR)
-
-            self.vw_axes.plot(data.t_i_values[i], data.w_i_values[i], color=self.W_COLOR, label="w")
             self.vw_axes.plot(data.t_i_values[i][-1], data.w_i_values[i][-1], "o", color=self.W_COLOR)
-
-
 
     def _plot_single_xy(
         self,

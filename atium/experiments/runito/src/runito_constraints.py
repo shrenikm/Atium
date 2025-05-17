@@ -178,10 +178,17 @@ def continuity_constraint_func(
         t_exp=0.0,
         derivative=derivative,
     )
-    return _compute_pose_diff(
-        pose_vector=prev_sigma,
-        expected_pose_vector=next_sigma,
-    )
+    # This can be sneakily bug prone. If the derivative is 0, we want to
+    # find the normalized angle diff while computing the pose delta
+    # IF derivative > 0, we shouldn't do any angle wrapping
+    # and so we just take the regular difference.
+    if derivative == 0:
+        return _compute_pose_diff(
+            pose_vector=prev_sigma,
+            expected_pose_vector=next_sigma,
+        )
+    else:
+        return prev_sigma - next_sigma
 
 
 def kinematic_constraint_func(
