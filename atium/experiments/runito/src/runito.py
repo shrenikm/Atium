@@ -139,23 +139,23 @@ class Runito:
             )
 
         # Velocity limit constraints.
-        # v_min, w_min = inputs.lower_velocity_limits.to_vector()
-        # v_max, w_max = inputs.upper_velocity_limits.to_vector()
-        # constraint_size = self.params.M * (self.params.n)
-        # self._prog.AddConstraint(
-        #     func=partial(
-        #         velocity_limits_constraint_func,
-        #         manager=self.manager,
-        #     ),
-        #     lb=np.hstack((np.full(constraint_size, v_min), np.full(constraint_size, w_min))),
-        #     ub=np.hstack((np.full(constraint_size, v_max), np.full(constraint_size, w_max))),
-        #     vars=all_vars,
-        #     description="Velocity limits constraint",
-        # )
+        v_min, w_min = inputs.lower_velocity_limits.to_vector()
+        v_max, w_max = inputs.upper_velocity_limits.to_vector()
+        constraint_size = self.params.M * (self.params.n)
+        self._prog.AddConstraint(
+            func=partial(
+                velocity_limits_constraint_func,
+                manager=self.manager,
+            ),
+            lb=np.hstack((np.full(constraint_size, v_min), np.full(constraint_size, w_min))),
+            ub=np.hstack((np.full(constraint_size, v_max), np.full(constraint_size, w_max))),
+            vars=all_vars,
+            description="Velocity limits constraint",
+        )
 
         # Continuity constraints.
         # for derivative in range(self.params.h):
-        for derivative in [0, 1]:
+        for derivative in range(2):
             for i in range(self.params.M - 1):
                 prev_c_x_vars = self.manager.get_c_x_i_vars(all_vars=all_vars, i=i)
                 prev_c_y_vars = self.manager.get_c_y_i_vars(all_vars=all_vars, i=i)
