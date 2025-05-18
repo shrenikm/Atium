@@ -19,8 +19,10 @@ def get_scenario_footprint(footprint_size_xy: SizeXY) -> PolygonXYArray:
 
 
 def get_scenario_velocity_limits() -> tuple[Velocity2D, Velocity2D]:
-    v_min, v_max = 0.0, 10.0
-    w_min, w_max = -10.0, 10.0
+    v_max_value = 10.0
+    w_max_value = 10.0
+    v_min, v_max = 0.0, v_max_value
+    w_min, w_max = -1.0 * w_max_value, w_max_value
     return (
         Velocity2D(linear=v_min, angular=w_min),
         Velocity2D(linear=v_max, angular=w_max),
