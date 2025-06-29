@@ -27,7 +27,7 @@ class CartpoleDynamics(IDynamics):
         Normalize the theta value.
         """
         normalized_state = np.copy(state)
-        normalized_state[1] = normalize_angle(angles=normalized_state[1])
+        normalized_state[1] = normalize_angle(angle=normalized_state[1])
         return normalized_state
 
     def compute_state_derivative(

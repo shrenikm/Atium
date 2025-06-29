@@ -7,7 +7,7 @@ import numpy as np
 from atium.core.dynamics.cartpole_dyn import CartpoleDynamics, CartpoleParams
 from atium.core.dynamics.constructs import ControlInputVectorLimits, StateVectorLimits
 from atium.core.simulation.silicon.silicon_simulator import SiliconSimulator
-from atium.core.utils.colors import AtiumColorsBGR
+from atium.core.utils.color_utils import AtiumColorsBGR
 from atium.core.utils.custom_types import ControlInputVector, StateVector
 from atium.core.utils.img_utils import create_canvas, draw_line_on_canvas, draw_rectangle_on_canvas
 

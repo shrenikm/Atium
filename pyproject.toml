@@ -15,17 +15,24 @@ readme = "README.md"
 license = { file = "LICENSE" }
 classifiers = []
 dependencies = [
+  # Core
   "attrs==25.3.0",
   "pytest==7.4.3",
   "pyyaml==6.0.2",
-  "numpy==1.26.4",
   "nptyping==2.5.0",
+
+  # Visualization/tooling
   "matplotlib==3.10.1",
   "opencv-python==4.11.0.86",
+  "notebook==7.4.0",
+
+  # Numerical
+  "numpy==1.26.4",
   "ortools==9.12.4544",
   # TODO: Separate install for CPU and GPU versions.
   "jax==0.5.3",
   "osqp==1.0.3",
+  "drake==1.40.0",
 ]
 
 [tool.black]

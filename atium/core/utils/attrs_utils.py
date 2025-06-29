@@ -1,9 +1,8 @@
 import inspect
-from typing import Optional
 
 import numpy as np
+import numpy.typing as npt
 
-from atium.core.utils.custom_exceptions import AtiumAttributeError
 from atium.core.utils.custom_types import AttrsConverterFunc, AttrsValidatorFunc, NpArrf64
 
 # TODO: Tests for these.
@@ -13,7 +12,7 @@ class AttrsConverters:
     @classmethod
     def np_f64_converter(
         cls,
-        precision: Optional[int] = None,
+        precision: int | None = None,
     ) -> AttrsConverterFunc:
         def _np_array_converter(value) -> NpArrf64:
             np_value = np.array(value, dtype=np.float64)
@@ -25,6 +24,29 @@ class AttrsConverters:
 
 
 class AttrsValidators:
+    @classmethod
+    def scalar_bounding_box_validator(
+        cls,
+        min_value: float = -np.inf,
+        max_value: float = np.inf,
+        inclusive: bool = True,
+    ) -> AttrsValidatorFunc:
+        def _scalar_bounding_box_validator(instance, attribute, value) -> None:
+            if not isinstance(value, (int, float, np.ndarray)):
+                raise ValueError(f"Value for {attribute} must be a scalar. Got {type(value)}.")
+            if isinstance(value, np.ndarray):
+                if value.ndim != 0:
+                    raise ValueError(f"Value for {attribute} must be a scalar. Got {value}.")
+                value = value.item()
+            if inclusive:
+                if value < min_value or value > max_value:
+                    raise ValueError(f"Value for {attribute} must be between {min_value} and {max_value}. Got {value}.")
+            else:
+                if value <= min_value or value >= max_value:
+                    raise ValueError(f"Value for {attribute} must be between {min_value} and {max_value}. Got {value}.")
+
+        return _scalar_bounding_box_validator
+
     @classmethod
     def num_args_validator(
         cls,
@@ -38,8 +60,23 @@ class AttrsValidators:
 
             valid_num_args = num_min_args <= num_args <= num_max_args
             if not valid_num_args:
-                raise AtiumAttributeError(
+                raise ValueError(
                     f"Number of arguments to {attribute} needs to be between {num_min_args} and {num_max_args}"
                 )
 
         return _num_args_validator
+
+    @classmethod
+    def array_2d_validator(
+        cls,
+        desired_dtype: npt.DTypeLike | None = None,
+    ) -> AttrsValidatorFunc:
+        def _2d_array_validator(instance, attribute, value) -> None:
+            if not isinstance(value, np.ndarray):
+                raise ValueError(f"Value for {attribute} must be a 2D numpy array. Got {type(value)}.")
+            if value.ndim != 2:
+                raise ValueError(f"Value for {attribute} must be a 2D numpy array. Got {value}.")
+            if desired_dtype is not None and value.dtype != desired_dtype:
+                raise ValueError(f"Value for {attribute} must be of dtype {desired_dtype}. Got {value.dtype}.")
+
+        return _2d_array_validator

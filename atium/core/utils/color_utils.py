@@ -1,4 +1,11 @@
+from enum import StrEnum
+
 import attr
+
+
+class ColorType(StrEnum):
+    RGB = "RGB"
+    BGR = "BGR"
 
 
 @attr.frozen
@@ -14,6 +21,8 @@ class AtiumColorsBGR:
     LIGHT_GREEN = (153, 255, 51)
     RED = (51, 51, 255)
     LIGHT_RED = (153, 153, 255)
+
+    PUMPKIN = (20, 109, 252)
 
     GRAY = (128, 128, 128)
     LIGHT_GRAY = (192, 192, 192)

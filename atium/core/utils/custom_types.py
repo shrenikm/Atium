@@ -1,5 +1,6 @@
-from typing import Annotated, Any, Callable, List, Literal, Tuple, TypeVar, Union
+from typing import Annotated, Any, Callable, Literal, TypeVar, Union
 
+import attr
 import jax
 import numpy as np
 import numpy.typing as npt
@@ -16,15 +17,18 @@ OutputVideoPath = str
 
 # Attrs stuff
 AttrsConverterFunc = Callable[[Any], Any]
-AttrsValidatorFunc = Callable
+AttrsValidatorFunc = Callable[[Any, attr.Attribute, Any], None]
 
 # Indices
-Index2D = Tuple[int, int]
-Indices2D = List[Index2D]
-Index3D = Tuple[int, int, int]
-Indices3D = List[Index3D]
+Shape2D = tuple[int, int]
+Index2D = tuple[int, int]
+Indices2D = list[Index2D]
+Shape3D = tuple[int, int, int]
+Index3D = tuple[int, int, int]
+Indices3D = list[Index3D]
 
 # General Array stuff
+f32 = np.float32
 f64 = np.float64
 i64 = np.int64
 ui8 = np.uint8
@@ -43,11 +47,15 @@ NpScalarf64 = Union[NpVector1f64, float]
 
 NpScalarOrVectorNf64 = Union[NpScalarf64, NpVectorNf64]
 
+NpMatrixMNf32 = Annotated[npt.NDArray[f32], Literal["M, N"]]
 NpMatrixMNf64 = Annotated[npt.NDArray[f64], Literal["M, N"]]
 NpMatrixNNf64 = Annotated[npt.NDArray[f64], Literal["N, N"]]
 NpMatrixN2f64 = Annotated[npt.NDArray[f64], Literal["N, 2"]]
+NpMatrix22f64 = Annotated[npt.NDArray[f64], Literal["2, 2"]]
+NpMatrix33f64 = Annotated[npt.NDArray[f64], Literal["3, 3"]]
 
 NpTensorLMNf64 = Annotated[npt.NDArray[f64], Literal["L, M, N"]]
+NpTensorMN2ui8 = Annotated[npt.NDArray[ui8], Literal["M, N, 2"]]
 NpTensorMN3ui8 = Annotated[npt.NDArray[ui8], Literal["M, N, 3"]]
 
 # JAX types.
@@ -59,11 +67,15 @@ JpScalarf64 = JpVector1f64
 
 JpScalarOrVectorNf64 = Union[JpScalarf64, JpVectorNf64]
 
+JpMatrixMNf32 = Annotated[jax.Array, Literal["M, N"]]
 JpMatrixMNf64 = Annotated[jax.Array, Literal["M, N"]]
 JpMatrixNNf64 = Annotated[jax.Array, Literal["N, N"]]
 JpMatrixN2f64 = Annotated[jax.Array, Literal["N, 2"]]
+JpMatrix22f64 = Annotated[jax.Array, Literal["2, 2"]]
+JpMatrix33f64 = Annotated[jax.Array, Literal["3, 3"]]
 
 JpTensorLMNf64 = Annotated[jax.Array, Literal["L, M, N"]]
+JpTensorMN2ui8 = Annotated[jax.Array, Literal["M, N, 2"]]
 JpTensorMN3ui8 = Annotated[jax.Array, Literal["M, N, 3"]]
 
 # Combined types.
@@ -75,13 +87,17 @@ Scalarf64 = Union[NpScalarf64, JpScalarf64]
 
 ScalarOrVectorNf64 = Union[Scalarf64, VectorNf64]
 
+MatrixMNf32 = Union[NpMatrixMNf32, JpMatrixMNf32]
 MatrixMNf64 = Union[NpMatrixMNf64, JpMatrixMNf64]
 MatrixNNf64 = Union[NpMatrixNNf64, JpMatrixNNf64]
 MatrixN2f64 = Union[NpMatrixN2f64, JpMatrixN2f64]
+Matrix22f64 = Union[NpMatrix22f64, JpMatrix22f64]
+Matrix33f64 = Union[NpMatrix33f64, JpMatrix33f64]
 
 VectorOrMatrixNf64 = Union[VectorNf64, MatrixMNf64]
 
 TensorLMNf64 = Union[NpTensorLMNf64, JpTensorLMNf64]
+TensorMN2ui8 = Union[NpTensorMN2ui8, JpTensorMN2ui8]
 TensorMN3ui8 = Union[NpTensorMN3ui8, JpTensorMN3ui8]
 
 
@@ -115,13 +131,17 @@ OptimizationGradOrHessFn = Union[OptimizationGradFn, OptimizationHessFn]
 
 
 # Geometry
+AngleRad = float
 AnglesRad = VectorNf64
 AngleOrAnglesRad = Union[float, AnglesRad]
 PointXYVector = Vector2f64
 PolygonXYArray = MatrixN2f64
 PointXYArray = MatrixN2f64
 SizeXYVector = Vector2f64
-CoordinateXY = Tuple[float, float]
+SizeXY = tuple[float, float]
+CoordinateXY = tuple[float, float]
+RotationMatrix2D = Matrix22f64
+TransformationMatrix2D = Matrix33f64
 
 
 # Kinematics/dynamics/control
@@ -130,9 +150,12 @@ BMatrix = MatrixMNf64
 StateVector = VectorNf64
 StateDerivativeVector = VectorNf64
 ControlInputVector = VectorNf64
+PositionXYVector = Vector2f64
 VelocityXYVector = Vector2f64
 # State derivative: dx/dt = f(x, u). We dont' explicitly include t.
 StateDerivativeFn = Callable[[StateVector, ControlInputVector], StateDerivativeVector]
+Pose2DVector = Vector2f64
+Velocity2DVector = Vector2f64
 
 
 VelocityXYArray = MatrixN2f64
@@ -140,9 +163,14 @@ StateTrajectoryArray = MatrixMNf64
 ControlTrajectoryArray = MatrixMNf64
 
 # Optimization
+DecisionVariablesVector = VectorNf64
 CostVector = VectorNf64
 CostMatrix = MatrixMNf64
 
+# Images/2d arrays
+DistanceMap2D = MatrixMNf32
+EnvironmentArray2D = TensorMN2ui8
+ImageArray3D = TensorMN3ui8
+
 # Visualization
-BGRColor = Tuple[int, int, int]
-Img3Channel = TensorMN3ui8
+BGRColor = tuple[int, int, int]

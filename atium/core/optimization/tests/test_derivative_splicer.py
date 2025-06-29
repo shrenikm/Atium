@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from atium.core.optimization.derivative_splicer import DerivativeSplicedOptFn
-from atium.core.utils.custom_exceptions import AtiumAttributeError
 from atium.core.utils.custom_types import MatrixNNf64, OptimizationFn, Scalarf64, Vector3f64, VectorNf64
 
 
@@ -33,13 +32,13 @@ def test_core_fn_validity(trivial_core_fn, use_jit: bool) -> None:
         del a, b, c
         return 2.0
 
-    with pytest.raises(AtiumAttributeError):
+    with pytest.raises(ValueError):
         DerivativeSplicedOptFn(
             core_fn=f1,
             use_jit=use_jit,
         )
 
-    with pytest.raises(AtiumAttributeError):
+    with pytest.raises(ValueError):
         DerivativeSplicedOptFn(
             core_fn=f2,
             use_jit=use_jit,
@@ -61,21 +60,21 @@ def test_invalid_custom_derivative_functions(trivial_core_fn, use_jit: bool) -> 
         y = x.reshape(len(x), 1)
         return params.b * np.dot(y, y.T)
 
-    with pytest.raises(AtiumAttributeError):
+    with pytest.raises(ValueError):
         DerivativeSplicedOptFn(
             core_fn=trivial_core_fn,
             use_jit=use_jit,
             grad_fn=_grad_fn,
         )
 
-    with pytest.raises(AtiumAttributeError):
+    with pytest.raises(ValueError):
         DerivativeSplicedOptFn(
             core_fn=trivial_core_fn,
             use_jit=use_jit,
             hess_fn=_hess_fn,
         )
 
-    with pytest.raises(AtiumAttributeError):
+    with pytest.raises(ValueError):
         DerivativeSplicedOptFn(
             core_fn=trivial_core_fn,
             use_jit=use_jit,
